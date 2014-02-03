@@ -1,0 +1,7 @@
+
+cp digital_ofdm_frame_sink.cc ../../gnuradio/gnuradio/gr-digital/lib/
+cp digital_ofdm_frame_sink.h  ../../gnuradio/gnuradio/gr-digital/include/
+cp gr_peak_detector_fb.cc gr_peak_detector_fb.h ../../gnuradio/gnuradio/build/gnuradio-core/src/lib/gengen
+
+cd ../../gnuradio/gnuradio/build
+sudo make install

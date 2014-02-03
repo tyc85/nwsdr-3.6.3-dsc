@@ -1,3 +1,6 @@
 *~
 *.pyc
 *.pyo
+
+# ignore build folder
+build/
