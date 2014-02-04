@@ -75,8 +75,20 @@ digital_ofdm_frame_sink::enter_have_header()
   // header consists of two 16-bit shorts in network byte order
   // payload length is lower 12 bits
   // whitener offset is upper 4 bits
-  d_packetlen = (d_header >> 16) & 0x0fff;
-  d_packet_whitener_offset = (d_header >> 28) & 0x000f;
+  // Modified by Xu Chen
+  //d_packetlen = (d_header >> 16) & 0x0fff; // Commented by Xu CHen
+  //d_packet_whitener_offset = (d_header >> 28) & 0x000f;	 // Commented by Xu Chen
+  // Hard coded packetlen and whitener_offset
+   
+  // 10104 FOR OFDM + 1/6 CC with 1670 RSLEN; 
+  // 3352 FOR OFDM + 1/2 CC with 1670 RSLEN; 
+  // 3400 FOR OFDM + 1/2 CC with 334 RSLEN; 
+  // 5034 FOR OFDM+1/3 CC with 1670 RSLEN
+  // 1446 for only OFDM
+   
+  d_packetlen = 5034; //3400; //1446; //10104; //3352;
+  d_packet_whitener_offset = 0;
+  ////////////////////////////////
   d_packetlen_cnt = 0;
 
   if (VERBOSE)
@@ -340,7 +352,11 @@ digital_ofdm_frame_sink::work (int noutput_items,
 	  fprintf(stderr, "got header: 0x%08x\n", d_header);
 	
 	// we have a full header, check to see if it has been received properly
-	if (header_ok()){
+	//if (header_ok()){
+	// Modified by Xu Chen
+	// Enter_have_header even if the header is corrupted
+	if(1) {
+	///////////////////////////////////////////
 	  enter_have_header();
 	  
 	  if (VERBOSE)
@@ -349,7 +365,8 @@ digital_ofdm_frame_sink::work (int noutput_items,
 	  while((j < bytes) && (d_packetlen_cnt < d_packetlen)) {
 	    d_packet[d_packetlen_cnt++] = d_bytes_out[j++];
 	  }
-	  
+
+	  //printf("Have Sync: d_packetlen_cnt = %d \n", d_packetlen_cnt);
 	  if(d_packetlen_cnt == d_packetlen) {
 	    gr_message_sptr msg =
 	      gr_make_message(0, d_packet_whitener_offset, 0, d_packetlen);
@@ -380,9 +397,12 @@ digital_ofdm_frame_sink::work (int noutput_items,
     while(j < bytes) {
       d_packet[d_packetlen_cnt++] = d_bytes_out[j++];
       
+      //printf("Have Header: d_packetlen_cnt = %d ", d_packetlen_cnt);
+      //printf("Bytes is %d ", bytes);
       if (d_packetlen_cnt == d_packetlen){		// packet is filled
 	// build a message
 	// NOTE: passing header field as arg1 is not scalable
+	//printf("Packet is filled! \n");
 	gr_message_sptr msg =
 	  gr_make_message(0, d_packet_whitener_offset, 0, d_packetlen_cnt);
 	memcpy(msg->msg(), d_packet, d_packetlen_cnt);

@@ -57,7 +57,7 @@ class DIGITAL_API digital_ofdm_frame_sink : public gr_sync_block
  private:
   enum state_t {STATE_SYNC_SEARCH, STATE_HAVE_SYNC, STATE_HAVE_HEADER};
 
-  static const int MAX_PKT_LEN    = 4096;
+  static const int MAX_PKT_LEN    = 30000;
   static const int HEADERBYTELEN   = 4;
 
   gr_msg_queue_sptr  d_target_queue;		// where to send the packet when received
