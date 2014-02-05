@@ -40,6 +40,7 @@ PATH: /usr/games
 PATH: /usr/local/games
 PATH: /home/tychen/android-sdk-linux/tools
 PATH: /home/tychen/android-sdk-linux/platform-tools
+PATH: /usr/local/lib
 
 
 ## ----------- ##

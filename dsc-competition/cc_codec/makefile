@@ -16,7 +16,8 @@ LIBS=cpu_mode_port.o fec.o sim.o viterbi27.o viterbi27_port.o viterbi29.o viterb
 	encode_rs_ccsds.o decode_rs_ccsds.o ccsds_tal.o \
 	dotprod.o dotprod_port.o \
 	peakval.o peakval_port.o \
-	sumsq.o sumsq_port.o
+	sumsq.o sumsq_port.o\
+	cat_codec.o # adding the rs code interface written by Dongning Guo
 
 CFLAGS=-g -O2 -I. -fPIC -Wall 
 
@@ -231,6 +232,10 @@ viterbi615_sse2.o: viterbi615_sse2.c fec.h
 cpu_mode_x86.o: cpu_mode_x86.c fec.h
 
 cpu_mode_ppc.o: cpu_mode_ppc.c fec.h
+
+#---- rs codedec interfact
+
+cat_codec.o: cat_codec.c fec.h
 
 
 clean:
