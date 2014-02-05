@@ -1,0 +1,6 @@
+_cat_cccodec.so is not copiled in 64 bit. need the makefile for thie share object library
+
+Q: I got an error where some .so files cannot be found is a certain path?
+A: 
+1. Do 'export LD_LIBRARY_PATH=/usr/local/lib' in the command line. 
+2. If 1. doesn't work, check the specific path (usually /usr/local/lib/) and see whether you have the .so file 
