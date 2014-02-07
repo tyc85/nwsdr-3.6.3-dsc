@@ -220,7 +220,7 @@ def main():
     options.cp_length = 30
     options.tx_amplitude = 1
     options.modulation = "bpsk"
-    options.tx_gain = 31.5
+    options.tx_gain = 15
     options.rx_gain = 38
     
     '''
@@ -288,4 +288,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        pass
+        shutdown_event.set()
+    pass

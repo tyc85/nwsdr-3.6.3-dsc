@@ -211,8 +211,8 @@ def main():
             try:
                 missing_packets.remove(pktno)
             except ValueError:
-                #print "Packet already received or incorrect"
-            	pass
+               # print "Packet already received or incorrect"
+                pass
 
             '''
             if len(missing_packets) == 0:
@@ -271,7 +271,7 @@ def main():
     options.occupied_tones = 300
     options.cp_length = 30
     options.modulation = "bpsk"
-    options.rx_gain = 38 
+    options.rx_gain = 15 
     options.tx_gain = 31.5
     options.tx_amplitude = 1   
 
@@ -282,7 +282,7 @@ def main():
             sys.exit(1)
 
     # packet_sink
-    serve = dsc_pkt_sink(options.server)
+    #serve = dsc_pkt_sink(options.server)
 
     # build the graph
     tb = my_top_block(rx_callback, options)
@@ -312,4 +312,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        pass
+        shutdown_event.set()
+    pass

@@ -3,9 +3,9 @@ echo "Creating wrapper..."
 swig -python cat_cccodec3.i
 echo "Compiling..."
 gcc -fPIC -c cat_cccodec3.c cat_cccodec3_wrap.c \
-    -I/usr/include/python2.7
+    -I /usr/include/python2.7
 echo "Linking..."
-gcc -shared cat_cccodec3.o cat_cccodec3_wrap.o \
+gcc -shared cat_cccodec3.o cat_cccodec3_wrap.o\
 	sumsq.o sumsq_port.o cpu_mode_port.o fec.o sim.o \
 	viterbi27.o viterbi27_port.o viterbi29.o viterbi29_port.o viterbi39.o viterbi39_port.o \
 	viterbi615.o viterbi615_port.o encode_rs_char.o encode_rs_int.o encode_rs_8.o \
@@ -14,7 +14,8 @@ gcc -shared cat_cccodec3.o cat_cccodec3_wrap.o \
 	encode_rs_ccsds.o decode_rs_ccsds.o ccsds_tal.o \
 	dotprod.o dotprod_port.o \
 	peakval.o peakval_port.o \
-	-o _cat_cccodec3.so
+	-o cat_libfec.so
+	#-o _cat_cccodec3.so
 	# cpu_mode_x86.o
 	# viterbi27_mmx.o mmxbfly27.o viterbi27_sse.o ssebfly27.o viterbi27_sse2.o sse2bfly27.o	\
 	# viterbi29_mmx.o mmxbfly29.o viterbi29_sse.o ssebfly29.o viterbi29_sse2.o sse2bfly29.o \
@@ -24,5 +25,5 @@ gcc -shared cat_cccodec3.o cat_cccodec3_wrap.o \
 	# sumsq_sse2.o sumsq_sse2_assist.o 	sumsq_mmx.o sumsq_mmx_assist.o \
 	# cpu_features.o 
 echo "Copying..."
-cp _cat_cccodec3.so _cat_cccodec3_temp.so
+cp _cat_cccodec3.so ../
 echo "Done"

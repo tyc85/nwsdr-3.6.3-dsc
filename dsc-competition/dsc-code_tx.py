@@ -315,7 +315,7 @@ def main():
     options.cp_length = 30
     options.tx_amplitude = 1
     options.modulation = "bpsk"
-    options.tx_gain = 31.5
+    options.tx_gain = 5
     options.rx_gain = 38
     
     if options.from_file is None:
@@ -325,7 +325,7 @@ def main():
             sys.exit(1)
 
     # packet_source
-    serve = dsc_pkt_src(options.server)
+    #serve = dsc_pkt_src(options.server)
 
     # build the graph
     tb = my_top_block(options)
@@ -344,7 +344,7 @@ def main():
             if first_run:
                 #data = serve.read()
 		# repeat the character "10" 1440 times and store in data
-		data = 1440* chr(10)
+                data = 1440* chr(10)
                 if len(data) != 1440: # End of file or Cannot fetch data
                     # print "No More"
 

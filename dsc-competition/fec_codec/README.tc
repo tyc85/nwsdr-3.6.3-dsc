@@ -1,0 +1,20 @@
+1. must add the flag -fPIC in the gcc flag in the makefile after ./configure
+2. the assembly file cpu_features.s need to be modified for 64bit system:
+.text
+.global cpu_features
+   .type cpu_features,@function
+cpu_features:
+   pushq %rbx
+   pushq %rcx
+   pushq %rdx
+   movq $1,%rax
+   cpuid
+   movq %rdx,%rax
+   popq %rdx
+   popq %rcx
+   popq %rbx
+   ret
+3. Add this line in makefile after cpu_mode_*.o
+cpu_features.o: cpu_features.S fec.h
+
+4. include cpu_mode_[x86 or ppc].o cpu_features.o in "LIBS = "

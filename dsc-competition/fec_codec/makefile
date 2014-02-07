@@ -8,7 +8,7 @@ prefix = /usr/local
 exec_prefix=${prefix}
 
 CC=gcc
-LIBS=cpu_mode_port.o fec.o sim.o viterbi27.o viterbi27_port.o viterbi29.o viterbi29_port.o \
+LIBS= fec.o sim.o viterbi27.o viterbi27_port.o viterbi29.o viterbi29_port.o \
 	viterbi39.o viterbi39_port.o \
 	viterbi615.o viterbi615_port.o encode_rs_char.o encode_rs_int.o encode_rs_8.o \
 	decode_rs_char.o decode_rs_int.o decode_rs_8.o \
@@ -16,10 +16,9 @@ LIBS=cpu_mode_port.o fec.o sim.o viterbi27.o viterbi27_port.o viterbi29.o viterb
 	encode_rs_ccsds.o decode_rs_ccsds.o ccsds_tal.o \
 	dotprod.o dotprod_port.o \
 	peakval.o peakval_port.o \
-	sumsq.o sumsq_port.o\
-	cat_codec.o # adding the rs code interface written by Dongning Guo
+	sumsq.o sumsq_port.o cpu_mode_x86.o cpu_features.o
 
-CFLAGS=-g -O2 -I. -fPIC -Wall 
+CFLAGS=-g -O2 -fPIC  -I. -Wall 
 
 SHARED_LIB=libfec.so
 
@@ -48,8 +47,8 @@ install: all
 	ldconfig
 	mkdir -p ${prefix}/include
 	install -m 644 -p fec.h ${prefix}/include
-	mkdir -m 0755 -p ${prefix}/man/man3
-	install -m 644 -p simd-viterbi.3 rs.3 dsp.3 ${prefix}/man/man3
+	mkdir -m 0755 -p ${prefix}/share/man/man3
+	install -m 644 -p simd-viterbi.3 rs.3 dsp.3 ${prefix}/share/man/man3
 
 peaktest: peaktest.o libfec.a
 	gcc -g -o $@ $^
@@ -233,10 +232,7 @@ cpu_mode_x86.o: cpu_mode_x86.c fec.h
 
 cpu_mode_ppc.o: cpu_mode_ppc.c fec.h
 
-#---- rs codedec interfact
-
-cat_codec.o: cat_codec.c fec.h
-
+cpu_features.o: cpu_features.S fec.h
 
 clean:
 	rm -f *.o $(SHARED_LIB) *.a rs_speedtest peaktest sumsq_test dtest vtest27 vtest29 vtest39 vtest615 rstest ccsds_tab.c ccsds_tal.c gen_ccsds gen_ccsds_tal core

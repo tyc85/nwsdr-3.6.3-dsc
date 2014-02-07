@@ -38,7 +38,8 @@ from uhd_interface import uhd_transmitter
 from receive_path import receive_path
 from uhd_interface import uhd_receiver
 
-BANDWIDTH_H = 5000000
+#BANDWIDTH_H = 5000000
+BANDWIDTH_H = 2000000
 BANDWIDTH_L = 2000000
 ROUNDSIZE = 1000
 
@@ -123,9 +124,10 @@ def main():
         global tb, tx_enabled, fbstate, pre_rcvd, pre_right, fdpkt_no
         
         flag=0
-	fdpkt_no = 0;
+    # !! is this indent done correct? 
+        fdpkt_no = 0;
         while not shutdown_event.is_set():
-            if time.time() % 10 <= 9 and tx_enabled==True:
+            if time.time() % 10 <= 10 and tx_enabled==True:
                 
                 if flag==0:
                     pre_rcvd = n_rcvd
@@ -144,15 +146,15 @@ def main():
                     tb.source.set_sample_rate(tb._opts.bandwidth)
                     
                     #print "H->L"
-		# IMPORTANT: fbstate can only be 9 or 7
+                # IMPORTANT: fbstate can only be 9 or 7
 
-		print "set tx_enabled false"
+                print "set tx_enabled false"
                 tx_enabled = False
                 tb.txgate.set_enabled(False)
                 tb.rxgate.set_enabled(True)
         
                 
-            if time.time() % 10 > 9 and tx_enabled==False:
+            if time.time() % 10 > 10 and tx_enabled==False:
                 #print "tx bandwidth1", tb.sig1.get_sampling_rate(), "tx bandwidth2", tb.sig2.get_sampeling_rate()
                 # Define feedback state here
                 if (n_rcvd > pre_rcvd ) and float(n_right - pre_right)/float(n_rcvd - pre_rcvd) > 0.8:
@@ -234,7 +236,7 @@ def main():
     options.occupied_tones = 300
     options.cp_length = 30
     options.modulation = "bpsk"
-    options.rx_gain = 38 
+    options.rx_gain = 5
     options.tx_gain = 31.5
     options.tx_amplitude = 1   
 
@@ -286,4 +288,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        pass
+        shutdown_event.set()
+    pass

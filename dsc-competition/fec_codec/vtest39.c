@@ -100,7 +100,6 @@ int main(int argc,char *argv[]){
     printf("create_viterbi39 failed\n");
     exit(1);
   }
-  ebn0 = - 10*log10((double)RATE) - 6;
   if(ebn0 != -100){
     esn0 = ebn0 + 10*log10((double)RATE); /* Es/No in dB */
     /* Compute noise voltage. The 0.5 factor accounts for BPSK seeing
@@ -121,12 +120,6 @@ int main(int argc,char *argv[]){
 	symbols[3*i+0] = addnoise(parity(sr & V39POLYA),gain,Gain,127.5,255);
 	symbols[3*i+1] = addnoise(parity(sr & V39POLYB),gain,Gain,127.5,255);
 	symbols[3*i+2] = addnoise(parity(sr & V39POLYC),gain,Gain,127.5,255);
-
-	// Hard Decoding
-	symbols[3*i+0]>0?1:-1;
-	symbols[3*i+1]>0?1:-1;
-	symbols[3*i+2]>0?1:-1;
-	
       }
       /* Decode it and make sure we get the right answer */
       /* Initialize Viterbi decoder */

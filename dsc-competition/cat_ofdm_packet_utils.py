@@ -29,14 +29,18 @@ from ctypes import *
 import gnuradio.digital.crc as crc
 # path for final submission
 #lib = "/root/libfec.so"
-lib = "./libfec.so"
+#lib = "./libfec.so"
+lib = "./cat_libfec.so"
 Decoder = cdll.LoadLibrary(lib)
 Encoder = cdll.LoadLibrary(lib)
 #path for final submission
 #cclib = "/root/_cat_cccodec3.so"
-cclib = "./_cat_cccodec3.so"
-ccDecoder = cdll.LoadLibrary(cclib)
-ccEncoder = cdll.LoadLibrary(cclib)
+# TC note: 
+# if we can compile all fec files into one so file then we 
+# will only need one linking
+#cclib = "./_cat_cccodec3.so"
+#ccDecoder = cdll.LoadLibrary(lib)
+#ccEncoder = cdll.LoadLibrary(lib)
 
 import os
 import binascii
@@ -157,22 +161,26 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
     
     # Xu Chen: Error control code here
     
-
+    # nb is the length of the informaiton payload.
     nb = len(payload_with_crc)
+
+    # cat_codelegnth returns the lenght of the RS codeword with 
+    # information payload of length nb
     cl = Encoder.cat_codelength(nb)
-    #print nb, cl
-    codedpayload = payload_with_crc + payload_with_crc[0:cl-nb]
+    
+    # append the payload array with (cl-nb) redundancy
+    codedpayload = payload_with_crc + ('0' * (cl-nb))
     Encoder.cat_encode(codedpayload,nb)
 
     ccnb = len(codedpayload);
 
     #print "Input to CC Enc has length ", ccnb 
-
-    cccl = ccEncoder.cc3_codelength(ccnb,RSLEN)
+    # encode inner covolutional code with the same process
+    cccl = Encoder.cc3_codelength(ccnb,RSLEN)
 
     #cccodedpayload = codedpayload + codedpayload[0: cccl-ccnb]
     cccodedpayload = codedpayload + ('x' * (cccl-ccnb))
-    ccEncoder.cc3_encode(cccodedpayload, ccnb, RSLEN)
+    Encoder.cc3_encode(cccodedpayload, ccnb, RSLEN)
 	
     #print 'after encoding', binascii.hexlify(codedpkt1)
     #Encoder.cat_encode(codedpayload,nb)
@@ -272,8 +280,8 @@ def unmake_packet(whitened_payload_with_crc, whitener_offset=0, dewhitening=1):
        
    
     cccl = len(rx_pkt)
-    ccnb = ccDecoder.cc3_nbytes(cccl, CCLEN)
-    ccDecoder.cc3_decode(rx_pkt,cccl, CCLEN)
+    ccnb = Decoder.cc3_nbytes(cccl, CCLEN)
+    Decoder.cc3_decode(rx_pkt,cccl, CCLEN)
 
     rsbitstr = rx_pkt[0:ccnb]
     cl = len(rsbitstr)
