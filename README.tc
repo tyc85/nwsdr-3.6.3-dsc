@@ -1,1 +1,28 @@
 working on a branch created by tychen
+Some notes on 2014/02/19
+line 284, gr-digital/python/generic_mod_demod.py is where the demod is called. 
+
+check process : ps -ef, kill -9 pid => force kill
+
+1. a backup copy of generic_mod_demod.py is made. 
+2. digital_constellation_receiver_cb.cc  is the made source file to modify. A backup copy is made.
+3. the header file is digital_constellation_receiver_cb.h, and a backup copy is made. 
+
+
+-- useful git commands:
+
+-- track remote branch 
+git checkout -b newlocalbranchname origin/branch-name
+
+
+-- pull (sync) local branch with remote branch. Do this before starting
+git pull origin 
+
+-- check out a branch 
+git checkout [branchname]
+
+-- commit change to local branch
+git commit 
+
+-- push (sync local "committed" change with remote) 
+git push origin
