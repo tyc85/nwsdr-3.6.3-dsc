@@ -46,8 +46,11 @@ digital_make_constellation_receiver_cb(digital_constellation_sptr constell,
 									   loop_bw,
 									   fmin, fmax));
 }
- 
-static int ios[] = {sizeof(char), sizeof(float), sizeof(float), sizeof(float), sizeof(gr_complex)};
+
+// Xu: Make the seond port output the raw complex samples
+//static int ios[] = {sizeof(char), sizeof(float), sizeof(float), sizeof(float), sizeof(gr_complex)};
+static int ios[] = {sizeof(char), sizeof(gr_complex), sizeof(float), sizeof(float), sizeof(float)};
+
 static std::vector<int> iosig(ios, ios+sizeof(ios)/sizeof(int));
 digital_constellation_receiver_cb::digital_constellation_receiver_cb (digital_constellation_sptr constellation, 
 								      float loop_bw, float fmin, float fmax)
@@ -85,6 +88,8 @@ digital_constellation_receiver_cb::general_work (int noutput_items,
 {
   const gr_complex *in = (const gr_complex *) input_items[0];
   unsigned char *out = (unsigned char *) output_items[0];
+  
+  
 
   int i=0;
 
@@ -95,11 +100,17 @@ digital_constellation_receiver_cb::general_work (int noutput_items,
   float *out_err = 0, *out_phase = 0, *out_freq = 0;
   gr_complex *out_symbol;
   if(output_items.size() == 5) {
+    printf("output item size from constellation_receiver is 5 \n");
+
     out_err = (float *) output_items[1];
     out_phase = (float *) output_items[2];
     out_freq = (float *) output_items[3];
     out_symbol = (gr_complex*)output_items[4];
   }
+
+  // Xu: Make the second port output the raw complex samples
+  if(output_items.size() == 2)
+  	out_symbol = (gr_complex*)output_items[1];
 
   while((i < noutput_items) && (i < ninput_items[0])) {
     sample = in[i];
@@ -110,6 +121,11 @@ digital_constellation_receiver_cb::general_work (int noutput_items,
     phase_error_tracking(phase_error);  // corrects phase and frequency offsets
 
     out[i] = sym_value;
+
+    //printf("real part is %f, imag part is %f \n", real(sample), imag(sample));
+    // Xu: output complex samples
+    if(output_items.size() == 2)
+    	out_symbol[i] = sample;
 
     if(output_items.size() == 5) {
       out_err[i] = phase_error;

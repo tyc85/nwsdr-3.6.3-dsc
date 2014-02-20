@@ -64,6 +64,12 @@ class DIGITAL_API digital_correlate_access_code_bb : public gr_sync_block
   unsigned long long d_mask;		// masks access_code bits (top N bits are set where
                                         //   N is the number of bits in the access code)
   unsigned int	     d_threshold;	// how many bits may be wrong in sync vector
+  
+  // Xu: soft info queue
+  float softinfo_reg[64];
+  int rptr; // read pointer
+  int wptr; // write pointer
+	
 
  protected:
   digital_correlate_access_code_bb(const std::string &access_code, int threshold);
