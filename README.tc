@@ -9,9 +9,14 @@ check process : ps -ef, kill -9 pid => force kill
 3. the header file is digital_constellation_receiver_cb.h, and a backup copy is made. 
 
 
--- useful git commands:
+---- useful git commands:
+-- check remote branchs
+git branch -r
 
--- track remote branch 
+-- fetch branches on remote
+git fetch origin
+
+-- track remote branch that is fetched (fetch using previous command)
 git checkout -b newlocalbranchname origin/branch-name
 
 
@@ -21,8 +26,8 @@ git pull origin
 -- check out a branch 
 git checkout [branchname]
 
--- commit change to local branch
-git commit 
+-- commit change to local branch: -a staged all the unstaged tracked files
+git commit -a
 
 -- push (sync local "committed" change with remote) 
 git push origin
