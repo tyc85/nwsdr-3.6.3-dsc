@@ -15,7 +15,11 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 //-----------------------
-
+//testing so loading in runtime 
+#include <dlfcn.h>
+#include "fec.h"
+#include "cat_codec.h"
+//-----------------------
 
 using std::endl;
 using std::cout;
@@ -293,7 +297,9 @@ int EncodeTrial(char *info, int MaxPacket)
 	cout << "encoder speed: " << trials*framebits/extime << " bits/s" << endl;
 	return 0;
 }
-
+/*sample function code in cat_codec
+int cat_codelength(int nbytes)
+*/
 
 int main(int argc, char *argv[])
 {
@@ -305,6 +311,26 @@ int main(int argc, char *argv[])
 									for a lot of characters so that we have some random bit stream that's\
 									correct";
 	
+	void* handle;
+	char *error;
+	int (*clen)(int);
+	handle = dlopen("libfec.so", RTLD_LAZY);
+	if(!handle)
+	{
+		cout << dlerror() << endl;
+		exit(1);
+	}
+	dlerror();
+
+	*(void **) (&clen) = dlsym(handle, "cat_codelength");
+
+	if((error = dlerror())!=NULL)
+	{
+		cout << error << endl;
+		exit(1);
+	}
+	cout << "output of clen(10) is: " << clen(10) << endl << ", testing done";
+	exit(1);
 	// just use this one as testing platform
 	if(1)
 	{

@@ -12,7 +12,7 @@ Revised by Dongning Guo on 20130305
 #include <time.h>
 #include <memory.h>
 #include "fec.h"
-
+#include "cat_codec.h"
 #define N 255
 #define K 223
 
