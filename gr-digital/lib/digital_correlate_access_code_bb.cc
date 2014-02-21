@@ -41,13 +41,17 @@ digital_make_correlate_access_code_bb (const std::string &access_code, int thres
 				    (access_code, threshold));
 }
 
+static int os[] = {sizeof(char), sizeof(float)};
+static std::vector<int> osig(os, os+sizeof(os)/sizeof(int));
 
 digital_correlate_access_code_bb::digital_correlate_access_code_bb (
   const std::string &access_code, int threshold)
   : gr_sync_block ("correlate_access_code_bb",
-		   gr_make_io_signature (1, 1, sizeof(char)),
-		   gr_make_io_signature (1, 1, sizeof(char))),
-    d_data_reg(0), d_flag_reg(0), d_flag_bit(0), d_mask(0),
+       gr_make_io_signaturev (1, 2, osig),
+		   gr_make_io_signaturev (1, 2, osig)),
+		   //gr_make_io_signature (1, 1, sizeof(char)),
+		   //gr_make_io_signature (1, 1, sizeof(char))),
+    d_data_reg(0), d_flag_reg(0), d_flag_bit(0), d_mask(0),rptr(0),wptr(0),
     d_threshold(threshold)
 
 {
@@ -92,6 +96,15 @@ digital_correlate_access_code_bb::work (int noutput_items,
   const unsigned char *in = (const unsigned char *) input_items[0];
   unsigned char *out = (unsigned char *) output_items[0];
 
+  // Xu
+  const float * in_symbol;
+  float * out_symbol;
+  if (input_items.size()==2)
+    in_symbol = (const float *) input_items[1];
+
+  if (output_items.size() ==2)
+    out_symbol = (float *) output_items[1];
+  
   for (int i = 0; i < noutput_items; i++){
 
     // compute output value
@@ -100,7 +113,13 @@ digital_correlate_access_code_bb::work (int noutput_items,
     t |= ((d_data_reg >> 63) & 0x1) << 0;
     t |= ((d_flag_reg >> 63) & 0x1) << 1;	// flag bit
     out[i] = t;
-    
+
+    // Xu
+    if(output_items.size() == 2){
+      out_symbol[i] = softinfo_reg[rptr];
+      rptr = (rptr+1) % 64;    
+    }
+
     // compute hamming distance between desired access code and current data
     unsigned long long wrong_bits = 0;
     unsigned int nwrong = d_threshold+1;
@@ -126,6 +145,11 @@ digital_correlate_access_code_bb::work (int noutput_items,
     d_flag_reg = (d_flag_reg << 1);
     if (new_flag) {
       d_flag_reg |= d_flag_bit;
+    }
+    // Xu
+    if(output_items.size() == 2){
+      softinfo_reg[wptr] = in[i];
+      wptr = (wptr+1)%64;
     }
   }
 

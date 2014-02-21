@@ -129,7 +129,8 @@ def main():
 
     while n < nbytes:
         if options.from_file is None:
-            data = (pkt_size - 2) * chr(pktno & 0xff) 
+            data = (pkt_size - 2) * chr(pktno & 0xff)
+            #data = (pkt_size - 2) * chr( 0xff) 
         else:
             data = source_file.read(pkt_size - 2)
             if data == '':

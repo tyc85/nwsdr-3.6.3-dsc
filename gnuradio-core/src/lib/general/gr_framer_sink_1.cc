@@ -29,6 +29,8 @@
 #include <cstdio>
 #include <stdexcept>
 #include <string.h>
+#include <iostream>
+#include <stdio.h>
 
 #define VERBOSE 0
 
@@ -64,6 +66,10 @@ gr_framer_sink_1::enter_have_header(int payload_len, int whitener_offset)
   d_packetlen_cnt = 0;
   d_packet_byte = 0;
   d_packet_byte_index = 0;
+
+  // Xu: Will hard code the d_packetlen in the real implementation
+  // d_packetlen = 5034; 
+  //printf("packetlen is %d", d_packetlen);
 }
 
 gr_framer_sink_1_sptr
@@ -72,10 +78,14 @@ gr_make_framer_sink_1(gr_msg_queue_sptr target_queue)
   return gnuradio::get_initial_sptr(new gr_framer_sink_1(target_queue));
 }
 
+// Xu: Make two input port, the second one passes the soft values
+static int is[] = {sizeof(unsigned char), sizeof(float)};
+static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 
 gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
   : gr_sync_block ("framer_sink_1",
-		   gr_make_io_signature (1, 1, sizeof(unsigned char)),
+       		   gr_make_io_signaturev (1, 2, isig),
+		   //gr_make_io_signature (1, 1, sizeof(unsigned char)), // Commented by Xu
 		   gr_make_io_signature (0, 0, 0)),
     d_target_queue(target_queue)
 {
@@ -93,6 +103,11 @@ gr_framer_sink_1::work (int noutput_items,
 {
   const unsigned char *in = (const unsigned char *) input_items[0];
   int count=0;
+
+  // Xu: Make the second input port pass the soft values
+  const float *in_symbol;
+  if(input_items.size() == 2)
+    in_symbol = (const float*) input_items[1];
 
   if (VERBOSE)
     fprintf(stderr,">>> Entering state machine\n");
@@ -126,6 +141,7 @@ gr_framer_sink_1::work (int noutput_items,
 	    fprintf(stderr, "got header: 0x%08x\n", d_header);
 
 	  // we have a full header, check to see if it has been received properly
+	  // Commented by Xu: Go ahead and decode the packet even though the header is in error
 	  if (header_ok()){
 	    int payload_len;
 	    int whitener_offset;
@@ -156,7 +172,10 @@ gr_framer_sink_1::work (int noutput_items,
 	fprintf(stderr,"Packet Build\n");
 
       while (count < noutput_items) {   // shift bits into bytes of packet one at a time
-	d_packet_byte = (d_packet_byte << 1) | (in[count++] & 0x1);
+        // Xu: Decode here!
+	// Hard decoding 
+	d_packet_byte = (d_packet_byte << 1) | ( (in_symbol[count++] >0?1:0) & 0x1);
+	//d_packet_byte = (d_packet_byte << 1) | (in[count++] & 0x1);
 	if (d_packet_byte_index++ == 7) {	  	// byte is full so move to next byte
 	  d_packet[d_packetlen_cnt++] = d_packet_byte;
 	  d_packet_byte_index = 0;
