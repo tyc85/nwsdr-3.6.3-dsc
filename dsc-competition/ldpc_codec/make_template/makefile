@@ -8,7 +8,7 @@ prefix = /usr/local
 exec_prefix=${prefix}
 
 CC=gcc
-LIBS= cpu_features.o cpu_mode_x86.o fec.o sim.o viterbi27.o viterbi27_port.o viterbi29.o viterbi29_port.o \
+LIBS= cat_cccodec3.o cat_codec.o fec.o sim.o viterbi27.o viterbi27_port.o viterbi29.o viterbi29_port.o \
 	viterbi39.o viterbi39_port.o \
 	viterbi615.o viterbi615_port.o encode_rs_char.o encode_rs_int.o encode_rs_8.o \
 	decode_rs_char.o decode_rs_int.o decode_rs_8.o \
@@ -16,9 +16,9 @@ LIBS= cpu_features.o cpu_mode_x86.o fec.o sim.o viterbi27.o viterbi27_port.o vit
 	encode_rs_ccsds.o decode_rs_ccsds.o ccsds_tal.o \
 	dotprod.o dotprod_port.o \
 	peakval.o peakval_port.o \
-	sumsq.o sumsq_port.o
+	sumsq.o sumsq_port.o cpu_mode_x86.o cpu_features.o
 
-CFLAGS=-g -O2 -fPIC -I. -Wall 
+CFLAGS=-g -O2 -fPIC  -I. -Wall 
 
 SHARED_LIB=libfec.so
 
@@ -89,6 +89,16 @@ vtest39.o: vtest39.c fec.h
 
 vtest615.o: vtest615.c fec.h
 	gcc -g -c $<
+
+# new additions : need to add LDPC .o files too
+
+cat_codec.o: cat_codec.c cat_codec_all.h fec.h
+	gcc $(CFLAGS) -c $<
+
+cat_cccodec3.o: cat_cccodec3.c cat_codec_all.h fec.h
+	gcc $(CFLAGS) -c $<
+	
+# new additions ends
 
 libfec.a: $(LIBS)
 	ar rv $@ $^
