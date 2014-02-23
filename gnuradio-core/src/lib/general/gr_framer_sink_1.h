@@ -59,8 +59,9 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
  private:
   enum state_t {STATE_SYNC_SEARCH, STATE_HAVE_SYNC, STATE_HAVE_HEADER};
 
-  static const int MAX_PKT_LEN    = 4096;
+  static const int MAX_PKT_LEN    = 10000; //4096; // Xu: make it larger
   static const int HEADERBITLEN   = 32;
+  
 
   gr_msg_queue_sptr  d_target_queue;		// where to send the packet when received
   state_t            d_state;
@@ -73,6 +74,16 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   int 		     d_packetlen;		// length of packet
   int                d_packet_whitener_offset;  // offset into whitener string to use
   int		     d_packetlen_cnt;		// how many so far
+
+  // For Soft decoding
+  void *handle;
+  unsigned char out_symbol[MAX_PKT_LEN]; // Xu: allocate memory to decoded symbols
+  unsigned char pkt_symbol[MAX_PKT_LEN*8];
+  int d_packetsym_cnt; // how many symbols are collected
+  static const int RSLEN = 1670;  
+  static const int MEMLEN = 8;
+  static const int RATEINV = 3;
+  static const int CCLEN = 5034;//(RSLEN + MEMLEN)*RATEINV; 
 
  protected:
   gr_framer_sink_1(gr_msg_queue_sptr target_queue);
