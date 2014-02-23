@@ -25,5 +25,5 @@ gcc -shared cat_cccodec3.o cat_cccodec3_wrap.o\
 	# sumsq_sse2.o sumsq_sse2_assist.o 	sumsq_mmx.o sumsq_mmx_assist.o \
 	# cpu_features.o 
 echo "Copying..."
-cp _cat_cccodec3.so ../
+cp cat_cccodec3.so ../
 echo "Done"
