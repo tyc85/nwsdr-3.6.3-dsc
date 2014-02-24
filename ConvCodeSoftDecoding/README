@@ -1,0 +1,11 @@
+# Xu: 2014-2-23
+_cat_cccoded3.so is used in python
+cat_cccodec.so is used in C
+Need to copy "cat_cccodec3.so" to /lib/
+
+At transmitter side: 
+./benchmark_tx.py --non-differential -s 1442 -m bpsk --to-file data.dat
+
+At receiver side:
+./benchmark_rx.py --non-differential -m bpsk -from-file data.dat
+

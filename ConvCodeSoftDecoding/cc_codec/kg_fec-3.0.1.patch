@@ -1,0 +1,74 @@
+diff -Naur fec-3.0.1/configure fec-3.0.1.patched/configure
+--- fec-3.0.1/configure	2006-10-13 02:10:53.000000000 +0100
++++ fec-3.0.1.patched/configure	2011-11-07 01:47:24.000000000 +0000
+@@ -3106,7 +3106,7 @@
+ 	dotprod_av.o sumsq_av.o peakval_av.o cpu_mode_ppc.o"
+ 	;;
+ *)
+-	MLIBS=
++	MLIBS=cpu_mode_port.o
+ esac
+ case $target_os in
+ darwin*)
+diff -Naur fec-3.0.1/cpu_mode_port.c fec-3.0.1.patched/cpu_mode_port.c
+--- fec-3.0.1/cpu_mode_port.c	1970-01-01 01:00:00.000000000 +0100
++++ fec-3.0.1.patched/cpu_mode_port.c	2011-11-07 01:47:24.000000000 +0000
+@@ -0,0 +1,23 @@
++/* Determine CPU support for SIMD
++ * Copyright 2004 Phil Karn, KA9Q
++ */
++#include <stdio.h>
++#include "fec.h"
++
++/* Various SIMD instruction set names */
++char *Cpu_modes[] = {"Unknown","Portable C","x86 Multi Media Extensions (MMX)",
++ "x86 Streaming SIMD Extensions (SSE)",
++ "x86 Streaming SIMD Extensions 2 (SSE2)",
++ "PowerPC G4/G5 Altivec/Velocity Engine"};
++
++enum cpu_mode Cpu_mode;
++
++void find_cpu_mode(void){
++
++ if(Cpu_mode != UNKNOWN)
++ return;
++
++ Cpu_mode = PORT;
++ fprintf(stderr,"SIMD CPU detect: %sn",Cpu_modes[Cpu_mode]);
++}
++
+diff -Naur fec-3.0.1/dotprod.c fec-3.0.1.patched/dotprod.c
+--- fec-3.0.1/dotprod.c	2006-10-13 02:10:53.000000000 +0100
++++ fec-3.0.1.patched/dotprod.c	2011-11-07 01:47:24.000000000 +0000
+@@ -54,6 +54,7 @@
+   switch(Cpu_mode){
+   case PORT:
+   default:
++  break;
+ #ifdef __i386__
+   case MMX:
+   case SSE:
+diff -Naur fec-3.0.1/fec.h fec-3.0.1.patched/fec.h
+--- fec-3.0.1/fec.h	2006-10-13 02:10:53.000000000 +0100
++++ fec-3.0.1.patched/fec.h	2011-11-07 01:47:24.000000000 +0000
+@@ -264,7 +264,7 @@
+ /* Determine parity of argument: 1 = odd, 0 = even */
+ #ifdef __i386__
+ static inline int parityb(unsigned char x){
+-  __asm__ __volatile__ ("test %1,%1;setpo %0" : "=g"(x) : "r" (x));
++  __asm__ __volatile__ ("test %1,%1;setpo %0" : "=q"(x) : "q" (x));
+   return x;
+ }
+ #else
+diff -Naur fec-3.0.1/makefile.in fec-3.0.1.patched/makefile.in
+--- fec-3.0.1/makefile.in	2006-10-13 02:10:53.000000000 +0100
++++ fec-3.0.1.patched/makefile.in	2011-11-07 01:47:36.000000000 +0000
+@@ -18,7 +18,7 @@
+ 	peakval.o peakval_port.o \
+ 	sumsq.o sumsq_port.o
+ 
+-CFLAGS=@CFLAGS@ -I. -Wall @ARCH_OPTION@
++CFLAGS=@CFLAGS@ -I. -fPIC -Wall @ARCH_OPTION@
+ 
+ SHARED_LIB=@SH_LIB@
+ 

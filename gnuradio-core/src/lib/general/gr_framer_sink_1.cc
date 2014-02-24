@@ -34,6 +34,9 @@
 
 #define VERBOSE 0
 
+// Xu: Include .so
+#include <dlfcn.h>
+
 inline void
 gr_framer_sink_1::enter_search()
 {
@@ -68,7 +71,8 @@ gr_framer_sink_1::enter_have_header(int payload_len, int whitener_offset)
   d_packet_byte_index = 0;
 
   // Xu: Will hard code the d_packetlen in the real implementation
-  // d_packetlen = 5034; 
+  d_packetsym_cnt = 0;
+  d_packetlen = 5034; 
   //printf("packetlen is %d", d_packetlen);
 }
 
@@ -84,16 +88,25 @@ static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 
 gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
   : gr_sync_block ("framer_sink_1",
-       		   gr_make_io_signaturev (1, 2, isig),
+       		   //gr_make_io_signaturev (1, 2, isig), // The second input port inputs float soft info
+		   gr_make_io_signature (1, 2, sizeof(unsigned char)), // fixed point info 
 		   //gr_make_io_signature (1, 1, sizeof(unsigned char)), // Commented by Xu
 		   gr_make_io_signature (0, 0, 0)),
     d_target_queue(target_queue)
 {
   enter_search();
+  // Xu: For soft decoding
+  handle = dlopen ("/lib/cat_cccodec3.so", RTLD_LAZY);
+  if (!handle) {
+    fputs (dlerror(), stderr);
+    exit(1);
+   }
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()
 {
+  // Xu
+  dlclose(handle);
 }
 
 int
@@ -105,10 +118,12 @@ gr_framer_sink_1::work (int noutput_items,
   int count=0;
 
   // Xu: Make the second input port pass the soft values
-  const float *in_symbol;
-  if(input_items.size() == 2)
-    in_symbol = (const float*) input_items[1];
-
+  //const float *in_symbol; // float point
+  const unsigned char *in_symbol; // fixed point
+  if(input_items.size() == 2){
+    //in_symbol = (const float*) input_items[1]; // float point
+    in_symbol = (const unsigned char*) input_items[1]; // fixed point
+  }
   if (VERBOSE)
     fprintf(stderr,">>> Entering state machine\n");
 
@@ -171,33 +186,106 @@ gr_framer_sink_1::work (int noutput_items,
       if (VERBOSE)
 	fprintf(stderr,"Packet Build\n");
 
-      while (count < noutput_items) {   // shift bits into bytes of packet one at a time
-        // Xu: Decode here!
-	// Hard decoding 
-	d_packet_byte = (d_packet_byte << 1) | ( (in_symbol[count++] >0?1:0) & 0x1);
-	//d_packet_byte = (d_packet_byte << 1) | (in[count++] & 0x1);
-	if (d_packet_byte_index++ == 7) {	  	// byte is full so move to next byte
-	  d_packet[d_packetlen_cnt++] = d_packet_byte;
-	  d_packet_byte_index = 0;
+      // Xu: Include .so file 
+      
+      //void *handle;
+      void (* softdecode)(const unsigned char *, unsigned char *, int , int);
+      char *error;
+      int info_packetlen;
+ 	  unsigned char tempchar;
+	  int i,offset;
 
-	  if (d_packetlen_cnt == d_packetlen){		// packet is filled
+	  /*
+      handle = dlopen ("/lib/cat_cccodec3.so", RTLD_LAZY);
+      if (!handle) {
+        fputs (dlerror(), stderr);
+        exit(1);
+       }
+	  */
+      *(void **)(&softdecode)= dlsym(handle, "cc3_softdecode");
+  
+	  info_packetlen = RSLEN* d_packetlen / CCLEN;
+      while (count < noutput_items){
 
-	    // build a message
-	    // NOTE: passing header field as arg1 is not scalable
-	    gr_message_sptr msg =
-	      gr_make_message(0, d_packet_whitener_offset, 0, d_packetlen_cnt);
-	    memcpy(msg->msg(), d_packet, d_packetlen_cnt);
+      
+        pkt_symbol[d_packetsym_cnt++] = in_symbol[count++]; 
+        //printf("pkt_symbol is %u \n", pkt_symbol[d_packetsym_cnt-1]);
 
-	    d_target_queue->insert_tail(msg);		// send it
-	    msg.reset();  				// free it up
+		if (d_packetsym_cnt%8 ==0 ){
+			offset = d_packetsym_cnt  -8;
+   			/*
+			printf("offset is %d, original pkt symbol is \n", offset);
+			for (i=0;i<8, i++)
+				printf("%u ",pkt_symbol[offset+i]);
+			printf("\n");
+			*/
+			// reverse the symbols
+			for (i=0; i<4; i++){
+				tempchar = pkt_symbol[offset+i];
+				pkt_symbol[offset + i] = pkt_symbol[offset+7-i];
+				pkt_symbol[offset+7-i] = tempchar;
+			}
 
-	    enter_search();
-	    break;
-	  }
-	}
+			
+			
+		}
+		
+
+	   
+		if (d_packetsym_cnt== d_packetlen*8){ // Collect all symbols
+
+			// Decode here!
+      		(*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);
+
+			if ((error = dlerror()) != NULL)  {
+				fputs(error, stderr);
+				exit(1);
+		    }
+
+			gr_message_sptr msg = gr_make_message(0, d_packet_whitener_offset, 0, info_packetlen);
+			memcpy(msg->msg(), out_symbol, info_packetlen);
+
+			d_target_queue->insert_tail(msg);		// send it
+			msg.reset();  				// free it up
+
+			enter_search();
+			break;
+		}
       }
+      //dlclose(handle);
       break;
+      ////
+      /*
+      while (count < noutput_items) {   // shift bits into bytes of packet one at a time
+        
+	
+		// Xu: Hard decoding 
+		//d_packet_byte = (d_packet_byte << 1) | ( (in_symbol[count++] >127.5?1:0) & 0x1); // Xu: Test the fixed point symbols
+		//d_packet_byte = (d_packet_byte << 1) | ( (in_symbol[count++] >0?1:0) & 0x1); // Xu: Test the float point symbols
+		d_packet_byte = (d_packet_byte << 1) | (in[count++] & 0x1); // Commented by Xu
+		if (d_packet_byte_index++ == 7) {	  	// byte is full so move to next byte
+			d_packet[d_packetlen_cnt++] = d_packet_byte;
+			d_packet_byte_index = 0;
 
+			if (d_packetlen_cnt == d_packetlen){		// packet is filled
+
+				// build a message
+				// NOTE: passing header field as arg1 is not scalable
+				gr_message_sptr msg =
+				gr_make_message(0, d_packet_whitener_offset, 0, d_packetlen_cnt);
+				memcpy(msg->msg(), d_packet, d_packetlen_cnt);
+
+				d_target_queue->insert_tail(msg);		// send it
+				msg.reset();  				// free it up
+
+				enter_search();
+				break;
+				}
+		}
+       
+     }
+      break;
+*/
     default:
       assert(0);
 
