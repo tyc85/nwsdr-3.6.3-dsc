@@ -29,7 +29,6 @@
 #include <cstdio>
 #include <stdexcept>
 #include <string.h>
-#include <iostream>
 
 #define VERBOSE 0
 
@@ -65,10 +64,6 @@ gr_framer_sink_1::enter_have_header(int payload_len, int whitener_offset)
   d_packetlen_cnt = 0;
   d_packet_byte = 0;
   d_packet_byte_index = 0;
-
-  // Xu: Hard code d_packetlen
-  //d_packetlen = 1670; //5034;
-  //printf ("d_packetlen is %d \n", d_packetlen);
 }
 
 gr_framer_sink_1_sptr
@@ -131,7 +126,7 @@ gr_framer_sink_1::work (int noutput_items,
 	    fprintf(stderr, "got header: 0x%08x\n", d_header);
 
 	  // we have a full header, check to see if it has been received properly
-	  //if (header_ok()){
+	  if (header_ok()){
 	    int payload_len;
 	    int whitener_offset;
 	    header_payload(&payload_len, &whitener_offset);
@@ -148,9 +143,9 @@ gr_framer_sink_1::work (int noutput_items,
 
 	      enter_search();
 	    }
-	  //}
-	  //else
-	    //enter_search();				// bad header
+	  }
+	  else
+	    enter_search();				// bad header
 	  break;					// we're in a new state
 	}
       }

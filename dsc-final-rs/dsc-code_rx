@@ -168,7 +168,7 @@ def main():
     options.bitrate = 2500000
     options.samples_per_symbol = 2
     options.modulation = "gmsk_cats"
-    options.rx_gain = 38
+    options.rx_gain = 15
     options.excess_bw = 0.35
     #######################################
 

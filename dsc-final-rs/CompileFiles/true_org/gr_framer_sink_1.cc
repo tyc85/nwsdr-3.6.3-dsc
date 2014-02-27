@@ -67,7 +67,7 @@ gr_framer_sink_1::enter_have_header(int payload_len, int whitener_offset)
   d_packet_byte_index = 0;
 
   // Xu: Hard code d_packetlen
-  //d_packetlen = 1670; //5034;
+  d_packetlen = 1670; //5034;
   //printf ("d_packetlen is %d \n", d_packetlen);
 }
 

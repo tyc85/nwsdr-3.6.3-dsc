@@ -59,7 +59,7 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
  private:
   enum state_t {STATE_SYNC_SEARCH, STATE_HAVE_SYNC, STATE_HAVE_HEADER};
 
-  static const int MAX_PKT_LEN    = 30000; // Xu: comment 4096;
+  static const int MAX_PKT_LEN    = 4096;
   static const int HEADERBITLEN   = 32;
 
   gr_msg_queue_sptr  d_target_queue;		// where to send the packet when received
