@@ -24,7 +24,6 @@ from gnuradio import gr, gru
 from gnuradio import eng_notation
 from gnuradio.eng_option import eng_option
 from optparse import OptionParser
-import time
 
 # From gr-digital
 from gnuradio import digital
@@ -34,10 +33,7 @@ from receive_path import receive_path
 from uhd_interface import uhd_receiver
 
 import struct
-import sys, socket
-
-from gnuradio import analog
-from gnuradio.gr import firdes
+import sys
 
 #import os
 #print os.getpid()
@@ -55,8 +51,8 @@ class my_top_block(gr.top_block):
             self.source = uhd_receiver(options.args, symbol_rate,
                                        options.samples_per_symbol,
                                        options.rx_freq, options.rx_gain,
-                                       options.spec, options.antenna,1)
-                                       #options.verbose)
+                                       options.spec, options.antenna,
+                                       options.verbose)
             options.samples_per_symbol = self.source._sps
 
         elif(options.from_file is not None):
@@ -69,29 +65,10 @@ class my_top_block(gr.top_block):
         # Set up receive path
         # do this after for any adjustments to the options that may
         # occur in the sinks (specifically the UHD sink)
-        #self.rxpath = receive_path(demodulator, rx_callback, options) 
-
-        #self.connect(self.source, self.rxpath)
-
-        #self.rxpath2 = receive_path(demodulator, rx_callback, options) 
         self.rxpath = receive_path(demodulator, rx_callback, options) 
 
         self.connect(self.source, self.rxpath)
 
-
-       
-
-class dsc_pkt_sink(object):    
-      def __init__(self, server, port=5125):       
-          self.pkt_sink_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-          self.pkt_sink_socket.connect((server,port))
-
-      def send(self, payload):
-          try:
-             self.pkt_sink_socket.recv(4)
-             self.pkt_sink_socket.send(payload)
-          except socket.error:
-             print "Connection to packet sink closed"
 
 # /////////////////////////////////////////////////////////////////////////////
 #                                   main
@@ -101,40 +78,18 @@ global n_rcvd, n_right
 
 def main():
     global n_rcvd, n_right
-    #global n_rcvd, n_right, start_time, stop_rcv
-    
-    #TIMEOUT = 600 # 600 sec for hurdle 3
+
     n_rcvd = 0
     n_right = 0
-    #start_time = 0
-    #mstr_cnt = 0
-    #stop_rcv = 0
-    
-
-
-    #TCP_IP='idb2'
-    #TCP_PORT=5102
-    #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #try: 
-    #   s.connect((TCP_IP, TCP_PORT))
-    #except socket.error as e:
-    #   print "Error connecting to the packet sink: %s" %e.strerror
-    #   return
     
     def rx_callback(ok, payload):
-        #global n_rcvd, n_right, start_time, stop_rcv
         global n_rcvd, n_right
         (pktno,) = struct.unpack('!H', payload[0:2])
         n_rcvd += 1
         if ok:
             n_right += 1
-            print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(ok, pktno, n_rcvd, n_right)
-            serve.send(payload[2:])
-              
 
-            
-        if options.verbose:
-           print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
+        print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" % (
             ok, pktno, n_rcvd, n_right)
 
     demods = digital.modulation_utils.type_1_demods()
@@ -149,10 +104,6 @@ def main():
                             % (', '.join(demods.keys()),))
     parser.add_option("","--from-file", default=None,
                       help="input file of samples to demod")
-    parser.add_option("-s", "--server", default="idb2",
-                      help="server host name [default=%default]")
-    parser.add_option("","--mode", default="COMP",
-                      help="set match style [default=%default]")
 
     receive_path.add_options(parser, expert_grp)
     uhd_receiver.add_options(parser)
@@ -162,16 +113,6 @@ def main():
 
     (options, args) = parser.parse_args ()
 
-    #########################################
-    # Xu Chen: Hard Code Parameters 
-    
-    options.bitrate = 2500000
-    options.samples_per_symbol = 2
-    options.modulation = "gmsk_cats"
-    options.rx_gain = 15
-    options.excess_bw = 0.35
-    #######################################
-
     if len(args) != 0:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -182,21 +123,6 @@ def main():
             parser.print_help(sys.stderr)
             sys.exit(1)
 
-
-
-    if len(args) != 0:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-
-    if options.from_file is None:
-        if options.rx_freq is None:
-            sys.stderr.write("You must specify -f FREQ or --freq FREQ\n")
-            parser.print_help(sys.stderr)
-            sys.exit(1)
-
-
-    # packet_sink
-    serve = dsc_pkt_sink(options.server)
 
     # build the graph
     tb = my_top_block(demods[options.modulation], rx_callback, options)
@@ -205,16 +131,11 @@ def main():
     if r != gr.RT_OK:
         print "Warning: Failed to enable realtime scheduling."
 
-    
-
     tb.start()        # start flow graph
-    print 'tb started'
     tb.wait()         # wait for it to finish
-    
- 
+
 if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
         pass
-
