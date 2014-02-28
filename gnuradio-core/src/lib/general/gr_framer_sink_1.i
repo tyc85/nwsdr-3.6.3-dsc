@@ -23,13 +23,14 @@
 GR_SWIG_BLOCK_MAGIC(gr,framer_sink_1);
 
 gr_framer_sink_1_sptr
-gr_make_framer_sink_1(gr_msg_queue_sptr target_queue);
+gr_make_framer_sink_1(gr_msg_queue_sptr target_queue); 
 
 class gr_framer_sink_1 : public gr_sync_block
 {
  protected:
-  gr_framer_sink_1(gr_msg_queue_sptr target_queue);
+  gr_framer_sink_1(gr_msg_queue_sptr target_queue); 
 
  public:
+ void setlen(int len); // Xu: set d_len
   ~gr_framer_sink_1();
 };
