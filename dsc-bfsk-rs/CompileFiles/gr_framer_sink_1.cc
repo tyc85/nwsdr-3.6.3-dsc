@@ -33,6 +33,13 @@
 
 #define VERBOSE 0
 
+// Xu: Added a function to set d_len
+
+void gr_framer_sink_1::setlen(int len)
+{
+  d_len = len;
+}
+
 inline void
 gr_framer_sink_1::enter_search()
 {
@@ -67,29 +74,33 @@ gr_framer_sink_1::enter_have_header(int payload_len, int whitener_offset)
   d_packet_byte_index = 0;
 
   // Xu: Hard code d_packetlen
-  d_packetlen = 1670; //5034;
+  if (d_len >0)
+     d_packetlen = d_len; //5034;
   //printf ("d_packetlen is %d \n", d_packetlen);
 }
 
 gr_framer_sink_1_sptr
-gr_make_framer_sink_1(gr_msg_queue_sptr target_queue)
+gr_make_framer_sink_1(gr_msg_queue_sptr target_queue) 
 {
-  return gnuradio::get_initial_sptr(new gr_framer_sink_1(target_queue));
+  return gnuradio::get_initial_sptr(new gr_framer_sink_1(target_queue)); 
 }
 
 
-gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
+gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue) 
   : gr_sync_block ("framer_sink_1",
 		   gr_make_io_signature (1, 1, sizeof(unsigned char)),
 		   gr_make_io_signature (0, 0, 0)),
     d_target_queue(target_queue)
 {
+  d_len = 0; // Xu: initilize d_len = 0
   enter_search();
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()
 {
 }
+
+
 
 int
 gr_framer_sink_1::work (int noutput_items,
@@ -131,7 +142,7 @@ gr_framer_sink_1::work (int noutput_items,
 	    fprintf(stderr, "got header: 0x%08x\n", d_header);
 
 	  // we have a full header, check to see if it has been received properly
-	  //if (header_ok()){
+	  //if (header_ok()){ // Xu
 	    int payload_len;
 	    int whitener_offset;
 	    header_payload(&payload_len, &whitener_offset);

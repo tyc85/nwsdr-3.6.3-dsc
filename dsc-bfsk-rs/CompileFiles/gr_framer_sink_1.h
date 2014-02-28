@@ -54,12 +54,12 @@ gr_make_framer_sink_1 (gr_msg_queue_sptr target_queue);
 class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
 {
   friend GR_CORE_API gr_framer_sink_1_sptr
-  gr_make_framer_sink_1 (gr_msg_queue_sptr target_queue);
+  gr_make_framer_sink_1 (gr_msg_queue_sptr target_queue); // Xu 
 
  private:
   enum state_t {STATE_SYNC_SEARCH, STATE_HAVE_SYNC, STATE_HAVE_HEADER};
 
-  static const int MAX_PKT_LEN    = 30000; // Xu: comment 4096;
+  static const int MAX_PKT_LEN    = 10000; // Xu: comment 4096;
   static const int HEADERBITLEN   = 32;
 
   gr_msg_queue_sptr  d_target_queue;		// where to send the packet when received
@@ -74,8 +74,10 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   int                d_packet_whitener_offset;  // offset into whitener string to use
   int		     d_packetlen_cnt;		// how many so far
 
+  int d_len; // Xu
+
  protected:
-  gr_framer_sink_1(gr_msg_queue_sptr target_queue);
+  gr_framer_sink_1(gr_msg_queue_sptr target_queue);  
 
   void enter_search();
   void enter_have_sync();
@@ -98,7 +100,8 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
 
  public:
   ~gr_framer_sink_1();
-
+  
+  void setlen(int len); // Xu: set d_len
   int work(int noutput_items,
 	   gr_vector_const_void_star &input_items,
 	   gr_vector_void_star &output_items);
