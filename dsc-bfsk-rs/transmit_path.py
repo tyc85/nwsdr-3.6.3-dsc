@@ -103,7 +103,7 @@ class transmit_path(gr.hier_block2):
                               default=25e5,
                               help="specify bitrate [default=%default].")
         normal.add_option("", "--tx-amplitude", type="eng_float",
-                          default=0.250, metavar="AMPL",
+                          default=1, metavar="AMPL",
                           help="set transmitter digital amplitude: 0 <= AMPL < 1 [default=%default]")
         normal.add_option("-v", "--verbose", action="store_true",
                           default=False)

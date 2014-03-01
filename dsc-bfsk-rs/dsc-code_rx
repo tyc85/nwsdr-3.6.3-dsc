@@ -123,6 +123,7 @@ def main():
         n_rcvd += 1
         if ok:
             n_right += 1
+            serve.send(payload[2:])
         print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
             ok, pktno, n_rcvd, n_right)
           

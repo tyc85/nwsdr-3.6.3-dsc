@@ -152,7 +152,7 @@ class uhd_transmitter(uhd_interface, gr.hier_block2):
         parser.add_option("", "--tx-freq", type="eng_float", default=None,
                           help="set transmit frequency to FREQ [default=%default]",
                           metavar="FREQ")
-        parser.add_option("", "--tx-gain", type="eng_float", default=None,
+        parser.add_option("", "--tx-gain", type="eng_float", default=31.5,    #set to max gain by BZ
                           help="set transmit gain in dB (default is midpoint)")
         parser.add_option("-v", "--verbose", action="store_true", default=False)
 
