@@ -207,7 +207,7 @@ class my_top_block(gr.top_block):
         sense_symbol_rate=2500000
         sense_samples_per_symbol=2
         sense_rx_freq=2500000000
-        sense_rx_gain=20
+        sense_rx_gain=5
         options.chbw_factor=1
 
 

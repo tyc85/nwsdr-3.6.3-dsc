@@ -22,7 +22,9 @@
 
 from gnuradio import gr, gru
 from gnuradio import eng_notation
-from gnuradio import digital
+#from gnuradio import digital # Commented by Xu 2014-2-9
+import gmsk_cats
+from cat_pkt import cat_demod_pkts 
 
 import copy
 import sys
@@ -70,7 +72,7 @@ class receive_path(gr.hier_block2):
         
         # receiver
         self.packet_receiver = \
-            digital.demod_pkts(self.demodulator,
+            cat_demod_pkts(self.demodulator,
                                access_code=None,
                                callback=self._rx_callback,
                                threshold=-1)
@@ -84,8 +86,8 @@ class receive_path(gr.hier_block2):
         if self._verbose:
             self._print_verbage()
 
-	# connect block input to channel filter
-	self.connect(self, self.channel_filter)
+        # connect block input to channel filter
+        self.connect(self, self.channel_filter)
 
         # connect the channel input filter to the carrier power detector
         self.connect(self.channel_filter, self.probe)
@@ -130,7 +132,7 @@ class receive_path(gr.hier_block2):
         Adds receiver-specific options to the Options Parser
         """
         if not normal.has_option("--bitrate"):
-            normal.add_option("-r", "--bitrate", type="eng_float", default=100e3,
+            normal.add_option("-r", "--bitrate", type="eng_float", default=25e5,
                               help="specify bitrate [default=%default].")
         normal.add_option("-v", "--verbose", action="store_true", default=False)
         expert.add_option("-S", "--samples-per-symbol", type="float", default=2,

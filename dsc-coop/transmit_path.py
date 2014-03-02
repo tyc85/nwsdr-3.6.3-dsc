@@ -21,7 +21,9 @@
 
 from gnuradio import gr
 from gnuradio import eng_notation
-from gnuradio import digital
+#from gnuradio import digital
+import gmsk_cats
+from cat_pkt import cat_mod_pkts 
 
 import copy
 import sys
@@ -43,6 +45,7 @@ class transmit_path(gr.hier_block2):
 
         self._verbose      = options.verbose
         self._tx_amplitude = options.tx_amplitude   # digital amplitude sent to USRP
+        #self._bitrate       = 1500000    #BZ
         self._bitrate      = options.bitrate        # desired bit rate
         self._modulator_class = modulator_class     # the modulator_class we are using
 
@@ -53,7 +56,7 @@ class transmit_path(gr.hier_block2):
 	self.modulator = self._modulator_class(**mod_kwargs)
         
         self.packet_transmitter = \
-            digital.mod_pkts(self.modulator,
+            cat_mod_pkts(self.modulator,
                              access_code=None,
                              msgq_limit=4,
                              pad_for_usrp=True)
@@ -97,10 +100,10 @@ class transmit_path(gr.hier_block2):
         """
         if not normal.has_option('--bitrate'):
             normal.add_option("-r", "--bitrate", type="eng_float",
-                              default=100e3,
+                              default=25e5,
                               help="specify bitrate [default=%default].")
         normal.add_option("", "--tx-amplitude", type="eng_float",
-                          default=0.250, metavar="AMPL",
+                          default=1, metavar="AMPL",
                           help="set transmitter digital amplitude: 0 <= AMPL < 1 [default=%default]")
         normal.add_option("-v", "--verbose", action="store_true",
                           default=False)
