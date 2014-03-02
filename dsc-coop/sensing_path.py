@@ -31,7 +31,7 @@ import numpy, struct
 
 
 # linklab, define constants
-FFT_SIZE      = 128       # fft size for sensing  
+FFT_SIZE      = 32       # fft size for sensing  
 LOW_THRES     = -45        # low power threshold in dB to identify free freq blocks
 HIGH_THRES    = -25        # high power threshold in dB to identify busy freq blocks
 SMOOTH_LENGTH = 10       # smooth length
