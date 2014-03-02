@@ -26,6 +26,24 @@ from gnuradio import gru
 
 import gnuradio.digital.crc as crc
 
+
+from ctypes import *
+#lib = "/root/libfec.so" # when submitted to grid
+lib = "./libfec.so"
+Decoder = cdll.LoadLibrary(lib)
+Encoder = cdll.LoadLibrary(lib)
+
+#cclib = "./_cat_cccodec3.so"
+#ccDecoder = cdll.LoadLibrary(cclib)
+#ccEncoder = cdll.LoadLibrary(cclib)
+
+
+#MEMLEN = 8
+#RATEINV = 3
+#RSLEN = 1670
+#CCLEN = (RSLEN + MEMLEN)*RATEINV
+
+
 def conv_packed_binary_string_to_1_0_string(s):
     """
     '\xAF' --> '10101111'
@@ -132,17 +150,52 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
     payload_with_crc = crc.gen_and_append_crc32(payload)
     #print "outbound crc =", string_to_hex_list(payload_with_crc[-4:])
 
-    L = len(payload_with_crc)
-    MAXLEN = len(random_mask_tuple)
-    if L > MAXLEN:
-        raise ValueError, "len(payload) must be in [0, %d]" % (MAXLEN,)
+    ########################
+    # Error control code here
+    nb = len(payload_with_crc)
+    cl = Encoder.cat_codelength(nb)
+    #print nb, cl
+    codedpayload = payload_with_crc + payload_with_crc[0:cl-nb]
+    Encoder.cat_encode(codedpayload,nb)
 
+    #ccnb = len(codedpayload);
+
+    #print "Input to CC Enc has length ", ccnb 
+
+    #cccl = ccEncoder.cc3_codelength(ccnb,RSLEN)
+
+    #cccodedpayload = codedpayload + codedpayload[0: cccl-ccnb]
+    #cccodedpayload = codedpayload + ('x' * (cccl-ccnb))
+    #ccEncoder.cc3_encode(cccodedpayload, ccnb, RSLEN)
+
+    ######################
+
+    # uncoded
+    #L = len(payload_with_crc)
+    # coded with RS only
+    L = len(codedpayload)
+
+    # Xu: When coded with RS + CC
+    #L = len(cccodedpayload)
+
+    MAXLEN = len(random_mask_tuple)
+
+    # Commented by Xu, 2014-2-9
+    #if L > MAXLEN:
+    #    raise ValueError, "len(payload) must be in [0, %d]" % (MAXLEN,)
+
+    # Xu: Never whitening
+    '''
     if whitening:
         pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
                        whiten(payload_with_crc, whitener_offset), '\x55'))
     else:
         pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
                        (payload_with_crc), '\x55'))
+    '''
+    # coded
+    pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
+                       (codedpayload), '\x55'))
 
     if pad_for_usrp:
         pkt = pkt + (_npadding_bytes(len(pkt), int(samples_per_symbol), bits_per_symbol) * '\x55')
@@ -180,13 +233,41 @@ def unmake_packet(whitened_payload_with_crc, whitener_offset=0, dewhitening=True
 
     @param whitened_payload_with_crc: string
     """
-
+    # Xu: Never dewhitening
+    ''' 
     if dewhitening:
         payload_with_crc = dewhiten(whitened_payload_with_crc, whitener_offset)
     else:
         payload_with_crc = (whitened_payload_with_crc)
+    '''
+    payload_with_crc = (whitened_payload_with_crc)
 
-    ok, payload = crc.check_crc32(payload_with_crc)
+
+    ###############################
+    # Decoding here
+   
+    
+    #rx_pkt = payload_with_crc
+       
+   
+    #cccl = len(rx_pkt)
+    #ccnb = ccDecoder.cc3_nbytes(cccl, CCLEN)
+    #ccDecoder.cc3_decode(rx_pkt,cccl, CCLEN)
+
+    #rsbitstr = rx_pkt[0:ccnb]
+    rsbitstr = payload_with_crc
+    cl = len(rsbitstr)
+    nb = Decoder.cat_nbytes( cl )
+
+    Decoder.cat_decode(rsbitstr, cl)
+
+
+    ok, payload = crc.check_crc32(rsbitstr[0:nb])
+
+    ##########################################################
+
+    # uncoded
+    #ok, payload = crc.check_crc32(payload_with_crc)
 
     if 0:
         print "payload_with_crc =", string_to_hex_list(payload_with_crc)
