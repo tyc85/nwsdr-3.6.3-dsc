@@ -206,8 +206,8 @@ class my_top_block(gr.top_block):
         self.tx_enabled = True
         sense_symbol_rate=2500000
         sense_samples_per_symbol=2
-        sense_rx_freq=600000000
-        sense_rx_gain=5
+        sense_rx_freq=2500000000
+        sense_rx_gain=20
         options.chbw_factor=1
 
 
