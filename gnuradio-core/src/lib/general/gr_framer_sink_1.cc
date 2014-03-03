@@ -72,7 +72,8 @@ gr_framer_sink_1::enter_have_header(int payload_len, int whitener_offset)
 
   // Xu: Will hard code the d_packetlen in the real implementation
   d_packetsym_cnt = 0;
-  d_packetlen = 5034; 
+  //d_packetlen = 5034; 
+  d_packetlen = 2209;
   //printf("packetlen is %d", d_packetlen);
 }
 
@@ -96,11 +97,12 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
 {
   enter_search();
   // Xu: For soft decoding
-  handle = dlopen ("/lib/cat_cccodec3.so", RTLD_LAZY);
-  if (!handle) {
+  handle_ldpc = dlopen ("/lib/_ldpc.so", RTLD_LAZY);
+  if (!handle) 
+  {
     fputs (dlerror(), stderr);
     exit(1);
-   }
+  }
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()

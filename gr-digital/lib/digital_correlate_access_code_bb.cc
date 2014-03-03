@@ -166,7 +166,7 @@ digital_correlate_access_code_bb::work (int noutput_items,
     }
     // Xu
     if(output_items.size() == 2){
-      softinfo_reg[wptr] = in[i];
+      softinfo_reg[wptr] = in_symbol[i];
       wptr = (wptr+1)%64;
     }
   }
