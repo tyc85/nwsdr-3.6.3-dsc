@@ -31,7 +31,7 @@
 #include <string.h>
 #include <iostream>
 #include <stdio.h>
-
+#include <math.h>
 #define VERBOSE 0
 
 // Xu: Include .so
@@ -88,8 +88,8 @@ static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 
 gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
   : gr_sync_block ("framer_sink_1",
-       		   //gr_make_io_signaturev (1, 2, isig), // The second input port inputs float soft info
-		   gr_make_io_signature (1, 2, sizeof(unsigned char)), // fixed point info 
+       		   gr_make_io_signaturev (1, 2, isig), // The second input port inputs float soft info
+		   //gr_make_io_signature (1, 2, sizeof(unsigned char)), // fixed point info 
 		   //gr_make_io_signature (1, 1, sizeof(unsigned char)), // Commented by Xu
 		   gr_make_io_signature (0, 0, 0)),
     d_target_queue(target_queue)
@@ -116,17 +116,22 @@ gr_framer_sink_1::work (int noutput_items,
 {
   const unsigned char *in = (const unsigned char *) input_items[0];
   int count=0;
-
+  // snr estimator
+  float ac_code[64]={1,0,1,0,1,1,0,0,1,1,0,1,1,1,0,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,1,0,1,1,1,1,0,0,1,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,0};
+  float h=0 ,s=0,noise=0,snr=0;
+  float *iin;
+  int i; 
   // Xu: Make the second input port pass the soft values
   //const float *in_symbol; // float point
   const unsigned char *in_symbol; // fixed point
   if(input_items.size() == 2){
-    //in_symbol = (const float*) input_items[1]; // float point
+    iin = (float *) input_items[1]; // float point
     in_symbol = (const unsigned char*) input_items[1]; // fixed point
   }
   if (VERBOSE)
     fprintf(stderr,">>> Entering state machine\n");
-
+  
+  
   while (count < noutput_items){
     switch(d_state) {
 
@@ -136,6 +141,24 @@ gr_framer_sink_1::work (int noutput_items,
 
       while (count < noutput_items) {
 	if (in[count] & 0x2){  // Found it, set up for header decode
+	  // in[count] is the last bit of 64-bit access code
+          for(i=64;i>0;i--){
+            //printf("%f\n", iin[count-i]);
+            if(ac_code[64-i]>0)
+               s=s+iin[count-i];
+            else 
+               s=s-iin[count-i];
+            }
+          h = s/64;
+          for(i=64;i>0;i--){
+            if(ac_code[64-i]>0)
+              noise+=(h-iin[count-i])*(h-iin[count-i]);
+            else
+              noise+=(h+iin[count-i])*(h+iin[count-i]);
+          }
+          //printf("noise=%f\n",noise);
+          snr=64*h*h/noise;
+          printf("snr=%f\n",10*log10(snr));
 	  enter_have_sync();
 	  break;
 	}

@@ -255,7 +255,7 @@ def unmake_packet(whitened_payload_with_crc, whitener_offset=0, dewhitening=True
   
     rsbitstr = rx_pkt[0:ccnb]
     '''
-
+    
     rsbitstr = payload_with_crc # Comment this if using Conv. Code hard decoding
     cl = len(rsbitstr)
     #print "cl is ", cl
@@ -267,6 +267,18 @@ def unmake_packet(whitened_payload_with_crc, whitener_offset=0, dewhitening=True
     ok, payload = crc.check_crc32(rsbitstr[0:nb])
 
     ##########################################################
+    
+
+
+
+    ############################################################
+    
+
+
+
+
+
+
 
     # uncoded
     #ok, payload = crc.check_crc32(payload_with_crc)

@@ -53,7 +53,7 @@ digital_correlate_access_code_bb::digital_correlate_access_code_bb (
   const std::string &access_code, int threshold)
   : gr_sync_block ("correlate_access_code_bb",
        gr_make_io_signaturev (1, 2, isig),
-		   gr_make_io_signaturev (1, 2, osig)), 
+		   gr_make_io_signaturev (1, 2, isig)), 
 		   //gr_make_io_signature (1, 1, sizeof(char)),
 		   //gr_make_io_signature (1, 1, sizeof(char))),
     d_data_reg(0), d_flag_reg(0), d_flag_bit(0), d_mask(0),rptr(0),wptr(0),
@@ -103,18 +103,18 @@ digital_correlate_access_code_bb::work (int noutput_items,
 
   // Xu
   const float * in_symbol;
-  //float * out_symbol; // The second output port outputs float soft info
-  unsigned char* out_symbol; // The second output port outputs fixed point soft info
+  float * out_symbol; // The second output port outputs float soft info
+  //unsigned char* out_symbol; // The second output port outputs fixed point soft info
   
   if (input_items.size()==2)
     in_symbol = (const float *) input_items[1];
 
 
   if (output_items.size() ==2){
-    //out_symbol = (float *) output_items[1];  // float point
-    out_symbol = (unsigned char *) output_items[1]; // fixed point
+    out_symbol = (float *) output_items[1];  // float point
+    //out_symbol = (const unsigned char *) output_items[1]; // fixed point
   }
-  
+           
   for (int i = 0; i < noutput_items; i++){
 
     // compute output value
@@ -123,21 +123,23 @@ digital_correlate_access_code_bb::work (int noutput_items,
     t |= ((d_data_reg >> 63) & 0x1) << 0;
     t |= ((d_flag_reg >> 63) & 0x1) << 1;	// flag bit
     out[i] = t;
-
     // Xu
     if(output_items.size() == 2){
-      //out_symbol[i] = softinfo_reg[rptr]; // float point
+      out_symbol[i] = softinfo_reg[rptr]; // float point
       
-      // Fixed point
+    //printf("out symbol is %f\n",out_symbol[i]);
+ /*     // Fixed point
+
       out_symbol[i] = 127.5 + 32*softinfo_reg[rptr];
       if(out_symbol[i] <0)
 	out_symbol[i] = 0;
       else if(out_symbol[i] >255)
 	out_symbol[i]  = 255;
-
+*/
       rptr = (rptr+1) % 64;    
     }
-
+ 	//for (i=0;i<11;i++){
+        //  printf("%f\n",out_symbol[i]);}
     // compute hamming distance between desired access code and current data
     unsigned long long wrong_bits = 0;
     unsigned int nwrong = d_threshold+1;
@@ -166,8 +168,12 @@ digital_correlate_access_code_bb::work (int noutput_items,
     }
     // Xu
     if(output_items.size() == 2){
-      softinfo_reg[wptr] = in[i];
+      softinfo_reg[wptr] = in_symbol[i];
+
+	
       wptr = (wptr+1)%64;
+
+     
     }
   }
 
