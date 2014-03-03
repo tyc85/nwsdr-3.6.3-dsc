@@ -1,0 +1,1 @@
+for bpsk non-differential, the 6th cwd_cnt last bit will be in error even in noiseles setting.....don't know why
