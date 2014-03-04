@@ -163,9 +163,9 @@ def main():
                       help="server host name [default=%default]")
     parser.add_option("","--mode", default="COMP",
                       help="set match style [default=%default]")
-    parser.add_option("","--sub-bitrate", default=100000, help="feedback bitrate [default=%default]")
-    parser.add_option("","--main-bitrate", default=2500000, help="main bitrate [default=%default]")
-    parser.add_option("","--carrier-sep", default = 2500000, help="carrier frequency separation [default=%default]")
+    parser.add_option("","--sub-bitrate", type="eng_float", default=100K, help="feedback bitrate [default=%default]")
+    parser.add_option("","--main-bitrate", type="eng_float", default=2.5M, help="main bitrate [default=%default]")
+    parser.add_option("","--carrier-sep", type="eng_float", default = 2.5M, help="carrier frequency separation [default=%default]")
 
     transmit_path.add_options(parser, expert_grp)
     uhd_transmitter.add_options(parser)
@@ -179,8 +179,8 @@ def main():
         mod.add_options(expert_grp)
 
     (options, args) = parser.parse_args ()
-    options.tx_freq = options.freq + options.carrier_sep/2
-    options.rx_freq = options.freq - options.carrier_sep/2
+    #options.tx_freq = options.freq + options.carrier_sep/2
+    #options.rx_freq = options.freq - options.carrier_sep/2
 
     #########################################
     # Xu Chen: Hard Code Parameters 
