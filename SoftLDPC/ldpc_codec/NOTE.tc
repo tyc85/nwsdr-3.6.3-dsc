@@ -1,0 +1,62 @@
+--------
+02/23/2014
+need to resolve what does the following two lines mean
+d_packetlen = CCLEN; 
+info_packetlen = RSLEN* d_packetlen / CCLEN;
+
+---------
+!!!! add --non-differenial option in transmit, otherwise it won't work
+    
+    files changed in order ( path: gnuradio-core):
+    digital_constellation_receiver_cb.cc
+    digital_map_bb.cc
+    digital_unpack_kbits_bb.cc
+    digita_correlate_access_code_bb.cc and ~.h
+    gr_framer_sink_1.cc => put FEC here, extract information bits, 
+    pack and send
+    
+    python files: (path: gr-digital/python)
+    generic_mod_demod.py (connect first 3 blocks)
+    pkt.py (connect generic_mod_demod with last 2 blocks)
+
+TODO:
+1. add decoder so that it compiles
+2. add encoder 
+
+--- dynamic object loading sample
+#include <stdio.h>
+#include <stdlib.h>
+#include <dlfcn.h>
+int main(int argc, char **argv) {
+    void *handle;
+    double (*cosine)(double);
+    char *error;
+    handle = dlopen ("libm.so", RTLD_LAZY);
+    if (!handle) {
+        fprintf (stderr, "%s\n", dlerror());
+        exit(1);
+    }
+    dlerror();    /* Clear any existing error */
+    cosine = dlsym(handle, "cos");
+    if ((error = dlerror()) != NULL)  {
+        fprintf (stderr, "%s\n", error);
+        exit(1);
+    }
+    printf ("%f\n", (*cosine)(2.0));
+    dlclose(handle);
+    return 0;
+}
+
+
+--- some notes on makefile:
+
+
+
+ $@ The file name of the target of the rule. If the target is an archive
+  member, then ‘$@’ is the name of the archive file. In a pattern rule 
+  that has multiple targets (see Introduction to Pattern Rules), ‘$@’ 
+  is the name of whichever target caused the rule's recipe to be run.
+
+ $< The name of the first prerequisite. If the target got its recipe 
+ from an implicit rule, this will be the first prerequisite added by the
+  implicit rule (see Implicit Rules).

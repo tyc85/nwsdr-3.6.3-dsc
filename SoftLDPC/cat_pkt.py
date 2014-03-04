@@ -25,7 +25,13 @@ import gnuradio.gr.gr_threading as _threading
 #import packet_utils
 #import digital_swig
 
+############ Cat exclusive #########
+# LDPC module 
+import ldpc
 import cat_packet_utils
+####################################
+
+# what is this for???
 import gnuradio.digital.digital_swig as digital_swig
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -72,6 +78,11 @@ class cat_mod_pkts(gr.hier_block2):
         if not cat_packet_utils.is_1_0_string(access_code):
             raise ValueError, "Invalid access_code %r. Must be string of 1's and 0's" % (access_code,)
         self._access_code = access_code
+        
+        #####################################
+        # TC: initialize the ldpc encoder  (do later, first check uncoded case)
+        self._enc_ptr = ldpc.create_enc_obj()
+        #####################################
 
         # accepts messages from the outside world
         self._pkt_input = gr.message_source(gr.sizeof_char, msgq_limit)
@@ -89,6 +100,7 @@ class cat_mod_pkts(gr.hier_block2):
         else:
             # print "original_payload =", string_to_hex_list(payload)
             pkt = cat_packet_utils.make_packet(payload,
+                                           self._enc_ptr,    
                                            self._modulator.samples_per_symbol(),
                                            self._modulator.bits_per_symbol(),
                                            self._access_code,

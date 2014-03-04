@@ -26,8 +26,11 @@ from gnuradio import gru
 
 import gnuradio.digital.crc as crc
 
-
+######################## TC: ldpc module by SWIG
+import ldpc
+########################
 from ctypes import *
+'''
 lib = "./libfec.so"
 Decoder = cdll.LoadLibrary(lib)
 Encoder = cdll.LoadLibrary(lib)
@@ -42,7 +45,7 @@ MEMLEN = 8
 RATEINV = 3
 RSLEN = 1670
 CCLEN = (RSLEN + MEMLEN)*RATEINV
-
+'''
 
 def conv_packed_binary_string_to_1_0_string(s):
     """
@@ -121,7 +124,7 @@ def make_header(payload_len, whitener_offset=0):
     #print "offset =", whitener_offset, " len =", payload_len, " val=", val
     return struct.pack('!HH', val, val)
 
-def make_packet(payload, samples_per_symbol, bits_per_symbol,
+def make_packet(payload, enc_ptr, samples_per_symbol, bits_per_symbol,
                 access_code=default_access_code, pad_for_usrp=True,
                 whitener_offset=0, whitening=True):
     """
@@ -152,29 +155,36 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
 
     ########################
     # Error control code here
-    nb = len(payload_with_crc)
-    cl = Encoder.cat_codelength(nb)
+    #nb = len(payload_with_crc)
+    #cl = Encoder.cat_codelength(nb)
     #print nb, cl
-    codedpayload = payload_with_crc + payload_with_crc[0:cl-nb]
-    Encoder.cat_encode(codedpayload,nb)
+    #codedpayload = payload_with_crc + payload_with_crc[0:cl-nb]
+    #Encoder.cat_encode(codedpayload,nb)
 
-    ccnb = len(codedpayload);
+    #ccnb = len(codedpayload);
 
     #print "Input to CC Enc has length ", ccnb 
 
-    cccl = ccEncoder.cc3_codelength(ccnb,RSLEN)
+    #cccl = ccEncoder.cc3_codelength(ccnb,RSLEN)
 
     #cccodedpayload = codedpayload + codedpayload[0: cccl-ccnb]
-    cccodedpayload = codedpayload + ('x' * (cccl-ccnb))
-    ccEncoder.cc3_encode(cccodedpayload, ccnb, RSLEN)
+    #cccodedpayload = codedpayload + ('x' * (cccl-ccnb))
+    #ccEncoder.cc3_encode(cccodedpayload, ccnb, RSLEN)
 
     ######################
+    ldpcnb = 1978
+    ldpccl = 2209 
 
+    # just add dummy bits to the payload_with_crc
+    coded_payload = payload_with_crc + ('x' * (ldpccl-ldpcnb))
+    #coded_payload = payload_with_crc
     # uncoded
     #L = len(payload_with_crc)
     
-    # Xu: When coded with RS + CC
-    L = len(cccodedpayload)
+    #ldpccodedpayload =  payload_with_crc + (ldpccl-ldpcnb)*chr(255)
+    
+    
+    L = len(coded_payload)
 
     MAXLEN = len(random_mask_tuple)
 
@@ -191,10 +201,20 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
         pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
                        (payload_with_crc), '\x55'))
     '''
-    # coded
+    '''
+    whitening = True
+    # coded + whitening
+    if whitening:
+        pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
+                       whiten(coded_payload, 0), '\x55'))
+    else:
+        pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
+                       coded_payload, '\x55'))
+    '''
+    
+    ldpc.encode_ldpc(enc_ptr, whiten(payload_with_crc, 0), coded_payload, ldpcnb)
     pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
-                       (cccodedpayload), '\x55'))
-
+                       coded_payload, '\x55'))
     if pad_for_usrp:
         pkt = pkt + (_npadding_bytes(len(pkt), int(samples_per_symbol), bits_per_symbol) * '\x55')
 
@@ -232,13 +252,15 @@ def unmake_packet(whitened_payload_with_crc, whitener_offset=0, dewhitening=True
     @param whitened_payload_with_crc: string
     """
     # Xu: Never dewhitening
-    ''' 
+    dewhitening = True
     if dewhitening:
-        payload_with_crc = dewhiten(whitened_payload_with_crc, whitener_offset)
+        #payload_with_crc = dewhiten(whitened_payload_with_crc, whitener_offset)
+        #print "dewhiten true"
+        payload_with_crc = dewhiten(whitened_payload_with_crc, 0)
     else:
         payload_with_crc = (whitened_payload_with_crc)
-    '''
-    payload_with_crc = (whitened_payload_with_crc)
+    
+    #payload_with_crc = (whitened_payload_with_crc)
 
 
     ###############################
@@ -256,15 +278,15 @@ def unmake_packet(whitened_payload_with_crc, whitener_offset=0, dewhitening=True
     rsbitstr = rx_pkt[0:ccnb]
     '''
 
-    rsbitstr = payload_with_crc # Comment this if using Conv. Code hard decoding
-    cl = len(rsbitstr)
+    #rsbitstr = payload_with_crc # Comment this if using Conv. Code hard decoding
+    #cl = len(rsbitstr)
     #print "cl is ", cl
-    nb = Decoder.cat_nbytes( cl )
+    #nb = Decoder.cat_nbytes( cl )
 
-    Decoder.cat_decode(rsbitstr, cl)
+    #Decoder.cat_decode(rsbitstr, cl)
 
 
-    ok, payload = crc.check_crc32(rsbitstr[0:nb])
+    ok, payload = crc.check_crc32(payload_with_crc)
 
     ##########################################################
 

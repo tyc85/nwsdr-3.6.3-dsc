@@ -37,6 +37,9 @@
 // Xu: Include .so
 #include <dlfcn.h>
 
+// TC: for decoder class, local dir
+#include "ArrayLDPCMacro.h"
+
 inline void
 gr_framer_sink_1::enter_search()
 {
@@ -73,8 +76,8 @@ gr_framer_sink_1::enter_have_header(int payload_len, int whitener_offset)
   // Xu: Will hard code the d_packetlen in the real implementation
   d_packetsym_cnt = 0;
   //d_packetlen = 5034; 
-  d_packetlen = 2209;
-  //printf("packetlen is %d", d_packetlen);
+  //d_packetlen = 2209;
+  //printf("packetlen is %d\n", d_packetlen);
 }
 
 gr_framer_sink_1_sptr
@@ -84,6 +87,7 @@ gr_make_framer_sink_1(gr_msg_queue_sptr target_queue)
 }
 
 // Xu: Make two input port, the second one passes the soft values
+// TC:what is this part doing???
 static int is[] = {sizeof(unsigned char), sizeof(float)};
 static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 
@@ -97,18 +101,48 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
 {
   enter_search();
   // Xu: For soft decoding
+  dlerror();  // clear error
   handle_ldpc = dlopen ("/lib/_ldpc.so", RTLD_LAZY);
-  if (!handle) 
+  if (!handle_ldpc) 
   {
     fputs (dlerror(), stderr);
     exit(1);
   }
+  // TC: load the function from ldpc.so
+	//class fp_decoder
+	*(void **)(&decode_ldpc)= dlsym(handle_ldpc, "decode_ldpc");
+	char *error;
+	if ((error = dlerror()) != NULL)  
+	{
+    fputs(error, stderr);
+    exit(1);
+	}
+	dlerror();  // clear error
+	// don't really understand this implementation yet
+	get_obj = (FP_Decoder* (*)()) dlsym(handle_ldpc, "create_dec_obj");
+	if ((error = dlerror()) != NULL)  
+	{
+    fputs(error, stderr);
+    exit(1);
+  }
+	dlerror();  // clear error
+	del_obj = (void (*)(FP_Decoder*)) dlsym(handle_ldpc, "destroy_dec_obj");
+	if ((error = dlerror()) != NULL)  
+  {
+     fputs(error, stderr);
+     exit(1);
+  }
+  dlerror();
+	
+  p_decoder_ldpc = get_obj();
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()
 {
   // Xu
-  dlclose(handle);
+  //dlclose(handle);
+  del_obj(p_decoder_ldpc);
+  dlclose(handle_ldpc);
 }
 
 int
@@ -134,125 +168,125 @@ gr_framer_sink_1::work (int noutput_items,
 
     case STATE_SYNC_SEARCH:    // Look for flag indicating beginning of pkt
       if (VERBOSE)
-	fprintf(stderr,"SYNC Search, noutput=%d\n", noutput_items);
+        fprintf(stderr,"SYNC Search, noutput=%d\n", noutput_items);
 
       while (count < noutput_items) {
-	if (in[count] & 0x2){  // Found it, set up for header decode
-	  enter_have_sync();
-	  break;
-	}
-	count++;
+        if (in[count] & 0x2){  // Found it, set up for header decode
+          enter_have_sync();
+          break;
+        }
+        count++;
       }
       break;
 
     case STATE_HAVE_SYNC:
       if (VERBOSE)
-	fprintf(stderr,"Header Search bitcnt=%d, header=0x%08x\n",
-		d_headerbitlen_cnt, d_header);
+        fprintf(stderr,"Header Search bitcnt=%d, header=0x%08x\n",
+          d_headerbitlen_cnt, d_header);
 
       while (count < noutput_items) {	// Shift bits one at a time into header
-	d_header = (d_header << 1) | (in[count++] & 0x1);
-	if (++d_headerbitlen_cnt == HEADERBITLEN) {
-
-	  if (VERBOSE)
-	    fprintf(stderr, "got header: 0x%08x\n", d_header);
-
-	  // we have a full header, check to see if it has been received properly
-	  // Commented by Xu: Go ahead and decode the packet even though the header is in error
-	  if (header_ok()){
-	    int payload_len;
-	    int whitener_offset;
-	    header_payload(&payload_len, &whitener_offset);
-	    enter_have_header(payload_len, whitener_offset);
-
-	    if (d_packetlen == 0){	    // check for zero-length payload
-	      // build a zero-length message
-	      // NOTE: passing header field as arg1 is not scalable
-	      gr_message_sptr msg =
-		gr_make_message(0, d_packet_whitener_offset, 0, 0);
-
-	      d_target_queue->insert_tail(msg);		// send it
-	      msg.reset();  				// free it up
-
-	      enter_search();
-	    }
-	  }
-	  else
-	    enter_search();				// bad header
-	  break;					// we're in a new state
-	}
+        d_header = (d_header << 1) | (in[count++] & 0x1);
+        if (++d_headerbitlen_cnt == HEADERBITLEN) {
+      
+          if (VERBOSE)
+            fprintf(stderr, "got header: 0x%08x\n", d_header);
+      
+          // we have a full header, check to see if it has been received properly
+          // Commented by Xu: Go ahead and decode the packet even 
+          // though the header is in error => do this later
+          //if (header_ok()){
+          if(1)
+          {
+            int payload_len;
+            int whitener_offset;
+            header_payload(&payload_len, &whitener_offset);
+            enter_have_header(payload_len, whitener_offset);
+      
+            if (d_packetlen == 0){	    // check for zero-length payload
+              // build a zero-length message
+              // NOTE: passing header field as arg1 is not scalable
+              gr_message_sptr msg =
+              gr_make_message(0, d_packet_whitener_offset, 0, 0);
+      
+              d_target_queue->insert_tail(msg);		// send it
+              msg.reset();  				// free it up
+      
+              enter_search();
+            }
+          }
+          else
+            enter_search();				// bad header
+          break;					// we're in a new state
+        }
       }
       break;
 
     case STATE_HAVE_HEADER:
       if (VERBOSE)
-	fprintf(stderr,"Packet Build\n");
+        fprintf(stderr,"Packet Build\n");
 
       // Xu: Include .so file 
-      
-      //void *handle;
-      void (* softdecode)(const unsigned char *, unsigned char *, int , int);
-      char *error;
       int info_packetlen;
- 	  unsigned char tempchar;
-	  int i,offset;
-
-	  /*
-      handle = dlopen ("/lib/cat_cccodec3.so", RTLD_LAZY);
-      if (!handle) {
-        fputs (dlerror(), stderr);
-        exit(1);
-       }
-	  */
-      *(void **)(&softdecode)= dlsym(handle, "cc3_softdecode");
+      unsigned char tempchar;
+      int i, j,offset;
   
-	  info_packetlen = RSLEN* d_packetlen / CCLEN;
-      while (count < noutput_items){
-
-      
+        
+    
+      info_packetlen = 1978;
+      while (count < noutput_items)
+      {
         pkt_symbol[d_packetsym_cnt++] = in_symbol[count++]; 
         //printf("pkt_symbol is %u \n", pkt_symbol[d_packetsym_cnt-1]);
-
-		if (d_packetsym_cnt%8 ==0 ){
-			offset = d_packetsym_cnt  -8;
-   			/*
-			printf("offset is %d, original pkt symbol is \n", offset);
-			for (i=0;i<8, i++)
-				printf("%u ",pkt_symbol[offset+i]);
-			printf("\n");
-			*/
-			// reverse the symbols
-			for (i=0; i<4; i++){
-				tempchar = pkt_symbol[offset+i];
-				pkt_symbol[offset + i] = pkt_symbol[offset+7-i];
-				pkt_symbol[offset+7-i] = tempchar;
-			}
-
-			
-			
-		}
+        /*
+        if (d_packetsym_cnt%8 ==0 )
+        {
+          offset = d_packetsym_cnt -8;
+            
+          //printf("offset is %d, original pkt symbol is \n", offset);
+          //for (i=0;i<8; i++)
+          //  printf("%u ",pkt_symbol[offset+i]);
+          //printf("\n");
+          
+          // reverse the symbols
+          for (i=0; i<4; i++){
+            tempchar = pkt_symbol[offset+i];
+            pkt_symbol[offset + i] = pkt_symbol[offset+7-i];
+            pkt_symbol[offset+7-i] = tempchar;
+          }
+        }
+        */
+        
 		
 
 	   
-		if (d_packetsym_cnt== d_packetlen*8){ // Collect all symbols
-
-			// Decode here!
-      		(*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);
-
-			if ((error = dlerror()) != NULL)  {
-				fputs(error, stderr);
-				exit(1);
-		    }
-
-			gr_message_sptr msg = gr_make_message(0, d_packet_whitener_offset, 0, info_packetlen);
-			memcpy(msg->msg(), out_symbol, info_packetlen);
-
-			d_target_queue->insert_tail(msg);		// send it
-			msg.reset();  				// free it up
-
-			enter_search();
-			break;
-		}
+        if (d_packetsym_cnt== d_packetlen*8)
+        { // Collect all symbols
+    
+          // Decode here!// (*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);
+          // test uncoded case first
+          (*decode_ldpc)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
+          
+          // uncoded case: simply remove dummy bits
+          /*for(i = 0; i < 1978; i++)
+          {
+            d_packet_byte = 0;
+            for(j = 0; j < 8; j++)
+            {
+              d_packet_byte = (d_packet_byte << 1) | ((pkt_symbol[i*8 + j] - 128) > 0? 1:0);
+            }
+            out_symbol[i] = d_packet_byte;
+          }
+          */
+          
+          gr_message_sptr msg = gr_make_message(0, d_packet_whitener_offset, 0, info_packetlen);
+          memcpy(msg->msg(), out_symbol, info_packetlen);
+    
+          d_target_queue->insert_tail(msg);		// send it
+          msg.reset();  				// free it up
+    
+          enter_search();
+          break;
+        }
       }
       //dlclose(handle);
       break;

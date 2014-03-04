@@ -27,6 +27,9 @@
 #include <gr_sync_block.h>
 #include <gr_msg_queue.h>
 
+// TC: for decoder class
+#include "ArrayLDPCMacro.h"
+
 class gr_framer_sink_1;
 typedef boost::shared_ptr<gr_framer_sink_1> gr_framer_sink_1_sptr;
 
@@ -75,15 +78,28 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   int                d_packet_whitener_offset;  // offset into whitener string to use
   int		     d_packetlen_cnt;		// how many so far
 
-  // For Soft decoding
-  void *handle;
+  //--------- new part start
+  int info_packetlen;
+  //Xu: For Soft CC decoding
+  //void *handle;
   unsigned char out_symbol[MAX_PKT_LEN]; // Xu: allocate memory to decoded symbols
   unsigned char pkt_symbol[MAX_PKT_LEN*8];
   int d_packetsym_cnt; // how many symbols are collected
-  static const int RSLEN = 1670;  
+  /*
+  static const int RSLEN = 1670;  // in byte
   static const int MEMLEN = 8;
   static const int RATEINV = 3;
-  static const int CCLEN = 5034;//(RSLEN + MEMLEN)*RATEINV; 
+  static const int CCLEN = 5034;//(RSLEN + MEMLEN)*RATEINV; in bits?
+  */
+  //TC: For soft LDPC decoding
+  void *handle_ldpc;
+  FP_Decoder *p_decoder_ldpc;
+  FP_Decoder *(*get_obj)(void);
+  void (*del_obj)(FP_Decoder*);
+  void (* decode_ldpc)(FP_Decoder *, unsigned char *, unsigned char *, int);
+  static const int LDPCCLEN = 2209;// pad 1670 bits with zeros and encode
+  static const int LDPCINFOLEN = 1978;
+  //--------- new part end 
 
  protected:
   gr_framer_sink_1(gr_msg_queue_sptr target_queue);

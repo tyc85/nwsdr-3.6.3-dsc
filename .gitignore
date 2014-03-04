@@ -1,6 +1,7 @@
 *~
 *.pyc
 *.pyo
+*.data
 
 # ignore build folder
 build/
