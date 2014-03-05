@@ -162,6 +162,7 @@ def main():
     parser.add_option("","--sub-bitrate", type="eng_float", default=100e3, help="feedback bitrate [default=%default]")
     parser.add_option("","--main-bitrate", type="eng_float", default=2.5e6, help="main bitrate [default=%default]")
     parser.add_option("","--carrier-sep", type="eng_float", default=2.5e6, help="carrier frequency separation [default=%default]")
+    parser.add_option("","--feedback", default="OFF", help="feedback is on or off [default=%default]")
 
     transmit_path.add_options(parser, expert_grp)
     uhd_transmitter.add_options(parser)
@@ -220,15 +221,12 @@ def main():
     pkt_size = 1440
 
     while True:
-        data = '%01440d' % n_right
-        payload = struct.pack('!H', pktno & 0xffff) + data
-        send_pkt(payload)
-        sys.stderr.write('.')
-        pktno += 1
-        totaldata.append(data)
-                
-                
-
+	if feedback is not 'OFF'
+            data = '%01440d' % n_right
+            payload = struct.pack('!H', pktno & 0xffff) + data
+            send_pkt(payload)
+            sys.stderr.write('.')
+            pktno += 1
         
     send_pkt(eof=True)
 

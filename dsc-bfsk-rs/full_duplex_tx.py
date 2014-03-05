@@ -132,13 +132,13 @@ def main():
         return tb.txpath.send_pkt(payload, eof)
 
     def rx_callback(ok, payload):
-        #global n_rcvd, n_right, start_time, stop_rcv
         global n_rcvd, n_right
         (pktno,) = struct.unpack('!H', payload[0:2])
         n_rcvd += 1
         if ok:
             n_right += 1
-        print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d message = %4d" %(
+	if feedback is not "OFF":
+            print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d message = %4d" %(
             ok, pktno, n_rcvd, n_right, int(payload[:2]))
 
     mods = digital.modulation_utils.type_1_mods()     # Modulator
@@ -166,6 +166,7 @@ def main():
     parser.add_option("","--sub-bitrate", type="eng_float", default=100e3, help="feedback bitrate [default=%default]")
     parser.add_option("","--main-bitrate", type="eng_float", default=2.5e6, help="main bitrate [default=%default]")
     parser.add_option("","--carrier-sep", type="eng_float", default = 2.5e6, help="carrier frequency separation [default=%default]")
+    parser.add_option("","--feedback", default="OFF", help="feedback switch [default=%default]")
 
     transmit_path.add_options(parser, expert_grp)
     uhd_transmitter.add_options(parser)
@@ -225,9 +226,7 @@ def main():
 
     while True:
         if first_run:
-
             data = source_serve.read()
-            #data = (pkt_size ) * chr(pktno & 0xff) 
             if len(data) != 1440: # End of file or Cannot fetch data
                 # print "No More"
 
