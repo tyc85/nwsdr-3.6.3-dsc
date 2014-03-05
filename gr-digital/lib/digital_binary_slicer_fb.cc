@@ -19,7 +19,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
-
+ 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -28,7 +28,10 @@
 #include <gr_io_signature.h>
 #include <gr_math.h>
 #include <stdexcept>
+#include <iostream>
+#include <gr_sync_interpolator.h>
 
+#define BITS_PER_SAMPLE (1)
 digital_binary_slicer_fb_sptr
 digital_make_binary_slicer_fb ()
 {
@@ -36,11 +39,12 @@ digital_make_binary_slicer_fb ()
 }
 
 digital_binary_slicer_fb::digital_binary_slicer_fb ()
-  : gr_sync_block ("binary_slicer_fb",
+  : gr_sync_interpolator ("binary_slicer_fb",
 		   gr_make_io_signature (1, 1, sizeof (float)),
-		   gr_make_io_signature (1, 1, sizeof (unsigned char)))
+		   gr_make_io_signature (1, 1, sizeof (unsigned char)),
+                   BITS_PER_SAMPLE )
 {
-  th1=1.57079;   // pi over 2
+  th1=2; //1.57079;   // pi over 2
   th2=-th1;
   pam4=0;
 }
@@ -49,6 +53,8 @@ digital_binary_slicer_fb::digital_binary_slicer_fb ()
 void digital_binary_slicer_fb::setpam4 ()
 {
   pam4=1;
+  set_interpolation(2);
+  std::cout << "pam4=1; interp=2\n";
 }
 
 void digital_binary_slicer_fb::set_th1 (float th)
@@ -66,7 +72,7 @@ digital_binary_slicer_fb::work (int noutput_items,
   unsigned char *out = (unsigned char *) output_items[0];
   float inval;  
 
-if pam4==0
+if (pam4==0)
 {
   for (int i = 0; i < noutput_items; i++){
     out[i] = gr_binary_slicer(in[i]);
@@ -74,17 +80,17 @@ if pam4==0
 }  // pam4==0
 else
 {
-  for (int i = 0; i < noutput_items; i++){
+  assert (noutput_items % 2 == 0);
+  for (int i = 0; i < noutput_items; i+=2){
     inval =in[i];
-    if (in[i]>th1) 
-     out[i]=2;
-    else if (in[i]>=0)
-     out[i]=3;
-    else if (in[i]>=th2)
+    if ((inval>th2) && (inval < th1))
+     out[i+1]=1;
+    else
+     out[i+1]=0;
+    if (inval >=0.0)
      out[i]=1;
     else
-     out[i]=0;
-  
+     out[i]=0; 
   } // i loop
 } // pam4 != 0
   

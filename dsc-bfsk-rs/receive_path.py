@@ -23,7 +23,8 @@
 from gnuradio import gr, gru
 from gnuradio import eng_notation
 #from gnuradio import digital # Commented by Xu 2014-2-9
-import gmsk_cats
+#import gmsk_cats
+import cat_fsk4
 from cat_pkt import cat_demod_pkts 
 
 import copy

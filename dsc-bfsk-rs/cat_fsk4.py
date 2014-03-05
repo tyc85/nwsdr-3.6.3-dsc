@@ -48,6 +48,7 @@ _def_mu = 0.5
 _def_freq_error = 0.0
 _def_omega_relative_limit = 0.005
 
+_def_pam4 = 1
 
 # FIXME: Figure out how to make GMSK work with pfb_arb_resampler_fff for both
 # transmit and receive so we don't require integer samples per symbol.
@@ -94,12 +95,13 @@ class gmsk_cats_mod(gr.hier_block2):
             raise TypeError, ("samples_per_symbol must be an integer >= 2, is %r" % (samples_per_symbol,))
 
 	ntaps = 4 * samples_per_symbol			# up to 3 bits in filter at once
-	sensitivity = (pi/2) / samples_per_symbol	# phase change per bit = pi / 2
+	sensitivity = (pi/4) / samples_per_symbol	# phase change per bit = pi / 2
 
 	# Turn it into NRZ data.
 	self.nrz = gr.bytes_to_syms()
-        #self.nrz.setpam4()
-	print "hello"
+	if _def_pam4:
+        	self.nrz.setpam4()
+		print "pam4 transmitter"
 
 	# Form Gaussian filter
         # Generate Gaussian response (Needs to be convolved with window below).
@@ -112,7 +114,7 @@ class gmsk_cats_mod(gr.hier_block2):
 
 	self.sqwave = (1,) * samples_per_symbol       # rectangular window
 	self.taps = numpy.convolve(numpy.array(self.gaussian_taps),numpy.array(self.sqwave))
-    #    self.taps = [1,1]
+        self.taps = [1,1]
 	self.gaussian_filter = gr.interp_fir_filter_fff(samples_per_symbol, self.taps)
 
 	# FM modulation
@@ -233,7 +235,7 @@ class gmsk_cats_demod(gr.hier_block2):
 	self._gain_omega = .25 * self._gain_mu * self._gain_mu        # critically damped
 
 	# Demodulate FM
-	sensitivity = (pi/2) / samples_per_symbol
+	sensitivity = (pi/4) / samples_per_symbol
 	self.fmdemod = gr.quadrature_demod_cf(1.0 / sensitivity)
 
 	# the clock recovery block tracks the symbol clock and resamples as needed.
@@ -244,6 +246,9 @@ class gmsk_cats_demod(gr.hier_block2):
 
         # slice the floats at 0, outputting 1 bit (the LSB of the output byte) per sample
         self.slicer = digital.binary_slicer_fb()
+	if _def_pam4:
+		self.slicer.setpam4()
+		print "pam4 receiver"
 
         if verbose:
             self._print_verbage()

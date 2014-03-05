@@ -28,6 +28,7 @@
 #include <digital_clock_recovery_mm_ff.h>
 #include <gri_mmse_fir_interpolator.h>
 #include <stdexcept>
+#include <iostream>
 
 #define DEBUG_CR_MM_FF	0		// must be defined as 0 or 1
 
@@ -55,6 +56,7 @@ digital_clock_recovery_mm_ff::digital_clock_recovery_mm_ff (float omega, float g
     d_last_sample(0), d_interp(new gri_mmse_fir_interpolator()),
     d_logfile(0), d_omega_relative_limit(omega_relative_limit)
 {
+  pam4 = 0;
   if (omega <  1)
     throw std::out_of_range ("clock rate must be > 0");
   if (gain_mu <  0  || gain_omega < 0)
@@ -92,6 +94,21 @@ slice(float x)
   return x < 0 ? -1.0F : 1.0F;
 }
 
+static inline float
+slice_pam4(float x)
+{
+  static float th1=2.0F;
+  static float th2=-2.0F;
+  if (x>th1) 
+     return 3.0F;
+  else if (x>0)
+	return 1.0F;
+    else if (x>th2)
+	return -1.0F;
+    else
+	return -3.0F;
+}
+
 /*
  * This implements the Mueller and Müller (M&M) discrete-time error-tracking synchronizer.
  *
@@ -117,7 +134,10 @@ digital_clock_recovery_mm_ff::general_work (int noutput_items,
 
     // produce output sample
     out[oo] = d_interp->interpolate (&in[ii], d_mu);
+	if (pam4==0)
     mm_val = slice(d_last_sample) * out[oo] - slice(out[oo]) * d_last_sample;
+else
+    mm_val = (slice_pam4(d_last_sample) * out[oo] - slice_pam4(out[oo]) * d_last_sample)/5.0;
     d_last_sample = out[oo];
 
     d_omega = d_omega + d_gain_omega * mm_val;

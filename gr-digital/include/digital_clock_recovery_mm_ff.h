@@ -54,6 +54,9 @@ class DIGITAL_API digital_clock_recovery_mm_ff : public gr_block
 {
  public:
   ~digital_clock_recovery_mm_ff ();
+void set_pam4(){
+pam4 = 1;
+}
   void forecast(int noutput_items, gr_vector_int &ninput_items_required);
   int general_work (int noutput_items,
 		    gr_vector_int &ninput_items,
@@ -79,6 +82,7 @@ protected:
 			   float omega_relative_limit);
 
  private:
+  int		pam4; // DG
   float 			d_mu;		// fractional sample position [0.0, 1.0]
   float 			d_omega;	// nominal frequency
   float				d_min_omega;	// minimum allowed omega 

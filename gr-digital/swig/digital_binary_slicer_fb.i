@@ -20,14 +20,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+%{
+#include <gr_sync_interpolator.h>
+%}
+
 GR_SWIG_BLOCK_MAGIC(digital,binary_slicer_fb);
 
 digital_binary_slicer_fb_sptr digital_make_binary_slicer_fb ();
 
-class digital_binary_slicer_fb : public gr_sync_block
+class digital_binary_slicer_fb : public gr_sync_interpolator
 {
  private:
   digital_binary_slicer_fb ();
 
  public:
+  void setpam4();
 };
