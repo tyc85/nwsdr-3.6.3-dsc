@@ -57,9 +57,12 @@ class DIGITAL_API digital_correlate_access_code_bb : public gr_sync_block
   digital_make_correlate_access_code_bb (const std::string &access_code, int threshold);
  private:
   unsigned long long d_access_code;	// access code to locate start of packet
+  unsigned long long d_access_code1;
                                         //   access code is left justified in the word
   unsigned long long d_data_reg;	// used to look for access_code
+  unsigned long long d_data_reg1;
   unsigned long long d_flag_reg;	// keep track of decisions
+  unsigned long long d_flag_reg1;
   unsigned long long d_flag_bit;	// mask containing 1 bit which is location of new flag
   unsigned long long d_mask;		// masks access_code bits (top N bits are set where
                                         //   N is the number of bits in the access code)
