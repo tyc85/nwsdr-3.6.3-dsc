@@ -313,11 +313,6 @@ def main():
     #                        % (', '.join(demods.keys()),))
     parser.add_option("-s", "--size", type="eng_float", default=1500,
                       help="set packet size [default=%default]")
-
-
-    parser.add_option("-t", "--thr-sense", type="eng_float", default=-120,
-                      help="Threshold for sensing [default=%default]")
-
     parser.add_option("-M", "--megabytes", type="eng_float", default=1.0,
                       help="set megabytes to transmit [default=%default]")
     parser.add_option("","--discontinuous", action="store_true", default=False,
@@ -330,8 +325,6 @@ def main():
     transmit_path.add_options(parser, expert_grp)
     uhd_transmitter.add_options(parser)
 
-
-    
 
     for mod in mods.values():
         mod.add_options(expert_grp)
@@ -347,9 +340,6 @@ def main():
 
     # build the graph
     tb = my_top_block(mods[options.modulation], demods[options.modulation], rx_callback, options)
-
-    #print options.thr_sense
-
 
     r = gr.enable_realtime_scheduling()
     if r != gr.RT_OK:

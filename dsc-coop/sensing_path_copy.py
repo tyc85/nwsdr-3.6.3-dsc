@@ -37,7 +37,7 @@ HIGH_THRES    = -25        # high power threshold in dB to identify busy freq bl
 SMOOTH_LENGTH = 10       # smooth length
 EDGE_THRES    = 5          # edge detection threshold in dB
 
-SENSE_THR=-135
+SENSE_THR=-125
 
 
 # /////////////////////////////////////////////////////////////////////////////
