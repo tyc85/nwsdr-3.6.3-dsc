@@ -98,7 +98,8 @@ class gmsk_cats_mod(gr.hier_block2):
 
 	# Turn it into NRZ data.
 	self.nrz = gr.bytes_to_syms()
-    #    self.nrz.setpam4()
+        #self.nrz.setpam4()
+	print "hello"
 
 	# Form Gaussian filter
         # Generate Gaussian response (Needs to be convolved with window below).

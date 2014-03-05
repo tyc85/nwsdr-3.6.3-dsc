@@ -51,6 +51,7 @@ digital_bytes_to_syms::digital_bytes_to_syms ()
 			  BITS_PER_BYTE)
 {
   pam4 = 0;
+  assert (pam4 == 1);
 }
 
 int

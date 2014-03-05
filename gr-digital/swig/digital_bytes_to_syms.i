@@ -26,4 +26,9 @@ digital_bytes_to_syms_sptr digital_make_bytes_to_syms();
 
 class digital_bytes_to_syms : public gr_sync_interpolator
 {
+protected:
+  digital_bytes_to_syms();
+
+ public:
+ void setpam4(); // DG
 };

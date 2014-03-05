@@ -51,6 +51,7 @@ class DIGITAL_API digital_bytes_to_syms : public gr_sync_interpolator
   friend DIGITAL_API digital_bytes_to_syms_sptr
     digital_make_bytes_to_syms();
 
+protected:
   digital_bytes_to_syms();
 
  private:
