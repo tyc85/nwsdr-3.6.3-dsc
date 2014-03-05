@@ -101,6 +101,10 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
     fputs (dlerror(), stderr);
     exit(1);
    }
+  for(int i= 0; i<10; i++){
+  cat_snr[i] = 0; 
+  }
+  cat_num = 0;
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()
@@ -118,9 +122,9 @@ gr_framer_sink_1::work (int noutput_items,
   int count=0;
   // snr estimator
   float ac_code[64]={1,0,1,0,1,1,0,0,1,1,0,1,1,1,0,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,1,0,1,1,1,1,0,0,1,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,0};
-  float h=0 ,s=0,noise=0,snr=0;
+  float h=0 ,s=0,noise=0,snr=0,snr_sum=0;
   float *iin;
-  int i; 
+  int i,j; 
   // Xu: Make the second input port pass the soft values
   //const float *in_symbol; // float point
   const unsigned char *in_symbol; // fixed point
@@ -158,7 +162,19 @@ gr_framer_sink_1::work (int noutput_items,
           }
           //printf("noise=%f\n",noise);
           snr=64*h*h/noise;
-          printf("snr=%f\n",10*log10(snr));
+          cat_snr[cat_num%10]=snr;
+          if(cat_num<10){
+            for(j=0;j<cat_num;j++){
+              snr_sum += cat_snr[j];
+            }
+            snr_sum /=cat_num+1;}
+          else{
+            for(j=0;j<10;j++){
+              snr_sum += cat_snr[j];
+            }
+            snr_sum /=10;}
+          cat_num++;
+          printf("snr=%f\n",10*log10(snr_sum));
 	  enter_have_sync();
 	  break;
 	}

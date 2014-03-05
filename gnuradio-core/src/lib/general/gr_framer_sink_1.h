@@ -84,6 +84,8 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   static const int MEMLEN = 8;
   static const int RATEINV = 3;
   static const int CCLEN = 5034;//(RSLEN + MEMLEN)*RATEINV; 
+  float cat_snr[10];
+  int cat_num;
 
  protected:
   gr_framer_sink_1(gr_msg_queue_sptr target_queue);

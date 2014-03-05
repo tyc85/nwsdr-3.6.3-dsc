@@ -204,6 +204,7 @@ class gmsk_demod(gr.hier_block2):
 	gr.hier_block2.__init__(self, "gmsk_demod",
 				gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
 				gr.io_signature(1, 1, gr.sizeof_char))       # Output signature
+                # Xu: need to make two output ports of different formats
 
         self._samples_per_symbol = samples_per_symbol
         self._gain_mu = gain_mu
