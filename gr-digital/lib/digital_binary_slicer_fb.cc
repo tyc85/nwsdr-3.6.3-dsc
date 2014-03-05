@@ -40,6 +40,21 @@ digital_binary_slicer_fb::digital_binary_slicer_fb ()
 		   gr_make_io_signature (1, 1, sizeof (float)),
 		   gr_make_io_signature (1, 1, sizeof (unsigned char)))
 {
+  th1=1.57079;   // pi over 2
+  th2=-th1;
+  pam4=0;
+}
+
+
+void digital_binary_slicer_fb::setpam4 ()
+{
+  pam4=1;
+}
+
+void digital_binary_slicer_fb::set_th1 (float th)
+{
+  th1=th;
+  th2=-th1;
 }
 
 int
@@ -49,11 +64,29 @@ digital_binary_slicer_fb::work (int noutput_items,
 {
   const float *in = (const float *) input_items[0];
   unsigned char *out = (unsigned char *) output_items[0];
+  float inval;  
 
-
+if pam4==0
+{
   for (int i = 0; i < noutput_items; i++){
     out[i] = gr_binary_slicer(in[i]);
   }
+}  // pam4==0
+else
+{
+  for (int i = 0; i < noutput_items; i++){
+    inval =in[i];
+    if (in[i]>th1) 
+     out[i]=2;
+    else if (in[i]>=0)
+     out[i]=3;
+    else if (in[i]>=th2)
+     out[i]=1;
+    else
+     out[i]=0;
+  
+  } // i loop
+} // pam4 != 0
   
   return noutput_items;
 }
