@@ -47,7 +47,7 @@ digital_correlate_access_code_bb::digital_correlate_access_code_bb (
   : gr_sync_block ("correlate_access_code_bb",
 		   gr_make_io_signature (1, 1, sizeof(char)),
 		   gr_make_io_signature (1, 1, sizeof(char))),
-    d_data_reg(0), d_flag_reg(0), d_flag_bit(0), d_mask(0),
+    d_data_reg(0), d_data_reg1(0), d_flag_reg(0), d_flag_reg1(0), d_flag_bit(0), d_mask(0),
     d_threshold(threshold)
 
 {
@@ -65,7 +65,7 @@ bool
 digital_correlate_access_code_bb::set_access_code(
   const std::string &access_code)
 {
-  unsigned len = access_code.length();	// # of bytes in string
+  unsigned len = access_code.length()/2;	// # of bytes in string
   if (len > 64)
     return false;
 
@@ -75,12 +75,19 @@ digital_correlate_access_code_bb::set_access_code(
   d_flag_bit = 1LL << (64 - len);	// Where we or-in new flag values.
                                         // new data always goes in 0x0000000000000001
   d_access_code = 0;
+  d_access_code1 = 0;
   for (unsigned i=0; i < 64; i++){
     d_access_code <<= 1;
-    if (i < len)
-      d_access_code |= access_code[i] & 1;	// look at LSB only
+    d_access_code1 <<= 1;
+    if (i < len){
+      d_access_code1 |= access_code[i] & 1;	// look at LSB only
+      //printf("%c\n",access_code[i]);
+      d_access_code |= access_code[i+64] & 1;
+      //printf("%c\n",access_code[i+64]);
+    }
   }
-
+  //printf("%llx\n",d_access_code1);
+  //printf("%llx\n",d_access_code);
   return true;
 }
 
@@ -91,14 +98,15 @@ digital_correlate_access_code_bb::work (int noutput_items,
 {
   const unsigned char *in = (const unsigned char *) input_items[0];
   unsigned char *out = (unsigned char *) output_items[0];
+  unsigned long long temp_data, temp_flag;
 
   for (int i = 0; i < noutput_items; i++){
 
     // compute output value
     unsigned int t = 0;
 
-    t |= ((d_data_reg >> 63) & 0x1) << 0;
-    t |= ((d_flag_reg >> 63) & 0x1) << 1;	// flag bit
+    t |= ((d_data_reg1 >> 63) & 0x1) << 0;
+    t |= ((d_flag_reg1 >> 63) & 0x1) << 1;	// flag bit
     out[i] = t;
     
     // compute hamming distance between desired access code and current data
@@ -107,6 +115,7 @@ digital_correlate_access_code_bb::work (int noutput_items,
     int new_flag = 0;
 
     wrong_bits  = (d_data_reg ^ d_access_code) & d_mask;
+    wrong_bits += (d_data_reg1 ^ d_access_code1) & d_mask;
     nwrong = gr_count_bits64(wrong_bits);
 
     // test for access code with up to threshold errors
@@ -122,8 +131,12 @@ digital_correlate_access_code_bb::work (int noutput_items,
 #endif
 
     // shift in new data and new flag
+    temp_data = d_data_reg;
     d_data_reg = (d_data_reg << 1) | (in[i] & 0x1);
+    d_data_reg1 = (d_data_reg1 << 1) | ((temp_data >> 63) & 0x1);
+    temp_flag = d_flag_reg;
     d_flag_reg = (d_flag_reg << 1);
+    d_flag_reg1 = (d_flag_reg1 << 1) | ((temp_flag >> 63) & 0x1);
     if (new_flag) {
       d_flag_reg |= d_flag_bit;
     }

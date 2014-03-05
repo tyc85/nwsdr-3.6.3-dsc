@@ -89,8 +89,10 @@ def conv_1_0_string_to_packed_binary_string(s):
     return (''.join(r), padded)
         
 
-default_access_code = \
-  conv_packed_binary_string_to_1_0_string('\xAC\xDD\xA4\xE2\xF2\x8C\x20\xFC')
+#default_access_code = \
+#  conv_packed_binary_string_to_1_0_string('\xAC\xDD\xA4\xE2\xF2\x8C\x20\xFC')
+#default_access_code='1010110011011101101001001110001011110010100011000010000011111100'
+default_access_code='10101001100111011101001011000110111101101011011001001000111000010111110010101110011010001001111000101000011000001000000111111100'
 preamble = \
   conv_packed_binary_string_to_1_0_string('\xA4\xF2')
 

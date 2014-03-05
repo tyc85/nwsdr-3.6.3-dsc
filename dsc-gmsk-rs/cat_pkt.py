@@ -135,6 +135,9 @@ class cat_demod_pkts(gr.hier_block2):
         self._demodulator = demodulator
         if access_code is None:
             access_code = cat_packet_utils.default_access_code
+            print access_code
+            print len(access_code)
+            print type(access_code)          
         if not cat_packet_utils.is_1_0_string(access_code):
             raise ValueError, "Invalid access_code %r. Must be string of 1's and 0's" % (access_code,)
         self._access_code = access_code
