@@ -182,7 +182,7 @@ def make_packet(payload, enc_ptr, samples_per_symbol, bits_per_symbol,
     #L = len(payload_with_crc)
     
     #ldpccodedpayload =  payload_with_crc + (ldpccl-ldpcnb)*chr(255)
-    
+    #print "in cat pkt utils"
     
     L = len(coded_payload)
 

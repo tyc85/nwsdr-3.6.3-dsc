@@ -328,9 +328,6 @@ void FP_Decoder::loadInfoBit_intr(unsigned char* out, int bit_pos)
 		//---
 		//VarAddr = i*8 + bit_pos;
 		out[i] = out[i] & (0xff - (1 << (7-bit_pos))); 
-		//cout << i << " th info index is " << InfoIndex[i] << ", "
-		//		<<DecodedCodeword[InfoIndex[i]] << endl;
-		//cout << DecodedCodeword[InfoIndex[i]] << " ";
 		out[i] = out[i] + (DecodedCodeword[InfoIndex[i]] << (7-bit_pos));	
 		//cout << out[i] << endl;
 		//cout << std::bitset<8>(out[i]);

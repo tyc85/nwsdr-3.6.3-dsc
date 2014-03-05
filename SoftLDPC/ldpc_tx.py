@@ -33,10 +33,31 @@ from transmit_path import transmit_path
 from uhd_interface import uhd_transmitter
 
 import time, struct, sys
-
+import socket
 #import os 
 #print os.getpid()
 #raw_input('Attach and press enter')
+
+##################
+# Server class
+############3#####
+class dsc_pkt_src(object):
+    def __init__(self, server, port=5123 ):
+        self.pkt_size = 1972 # 1440 bytes of data  
+        self.pkt_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.pkt_server_socket.connect((server,port))
+        self.MESSAGE = struct.pack('!l', self.pkt_size)
+        self.pkt_server_socket.send(self.MESSAGE)
+
+    def read(self):
+        try:
+            data = self.pkt_server_socket.recv(self.pkt_size)
+        except socket.error:
+            print "Connection to packet server closed"
+            return ''
+        self.pkt_server_socket.send(self.MESSAGE)
+        return data
+
 
 class my_top_block(gr.top_block):
     def __init__(self, modulator, options):
@@ -126,17 +147,19 @@ def main():
     n = 0
     pktno = 0
     pkt_size = int(options.size)
-
+    #serve = dsc_pkt_src("127.0.0.1")
     while n < nbytes:
         if options.from_file is None:
-            data = (pkt_size - 2) * chr(pktno & 0xff)
+            data = (pkt_size - 2) * chr(0)
+            #data = (pkt_size - 2) * chr(pktno & 0xff)
             #data = (pkt_size - 2) * chr( 0xff) 
+            #data = serve.read()
         else:
             data = source_file.read(pkt_size - 2)
             if data == '':
                 break;
 
-        payload = struct.pack('!H', pktno & 0xffff) + data
+        payload = struct.pack('!H',pktno & 0xffff) + data
         send_pkt(payload)
         n += len(payload)
         sys.stderr.write('.')

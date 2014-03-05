@@ -214,7 +214,7 @@ extern "C" int decode_ldpc(FP_Decoder* p_decoder, unsigned char* uchar_in,
 			// chl_val = 10
 			
 			temp_in = (float(uchar_in[VarAddr]) - 128)/32;
-			temp_in = -temp_in*8; // chage sign and mul channel value est
+			temp_in = -temp_in*4; // chage sign and mul channel value est
 			int_in[counter] = int(temp_in *(1 << FRAC_WIDTH)); //make to fixed point
 			
 			//int_in[counter] = -(float(uchar_in[VarAddr]) - 128);

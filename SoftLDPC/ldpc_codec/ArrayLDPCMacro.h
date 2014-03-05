@@ -20,7 +20,7 @@ using namespace std;
 
 
 
-enum Simulation {MAX_ITER = 5, NUM_PEEK = 1000000, SEED = 100};
+enum Simulation {MAX_ITER = 6, NUM_PEEK = 1000000, SEED = 100};
 //enum CodeWifi {
 //		NUM_VAR = 1944, NUM_CHK = 972, NUM_CGRP = 12, VAR_DEG = 24,
 //		P = 81, CIR_SIZE = 81, INFO_LENGTH = 1978, CWD_LENGTH = 1944};
@@ -38,8 +38,8 @@ enum Precision {
 		FRAC_WIDTH = 3, 
 		INT_WIDTH_NOISE = 4, 
 		FRAC_WIDTH_NOISE = 12*/
-		INT_WIDTH = 8, 
-		FRAC_WIDTH = 8, 
+		INT_WIDTH = 4, 
+		FRAC_WIDTH = 4, 
 		INT_WIDTH_NOISE = 4, 
 		FRAC_WIDTH_NOISE = 6
 };

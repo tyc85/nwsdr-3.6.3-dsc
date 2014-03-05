@@ -230,7 +230,8 @@ gr_framer_sink_1::work (int noutput_items,
       unsigned char tempchar;
       int i, j,offset;
   
-        
+      //--- hard set the packet length here. change later
+      cat_setlength(2209);
     
       info_packetlen = 1978;
       while (count < noutput_items)

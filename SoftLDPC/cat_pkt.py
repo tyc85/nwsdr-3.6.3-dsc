@@ -152,11 +152,14 @@ class cat_demod_pkts(gr.hier_block2):
         self._access_code = access_code
 
         if threshold == -1:
+            # testing new threshold
             threshold = 12              # FIXME raise exception
-
+            threshold = 16 ## relax the sync
+            #print threshold
+        threshold = 16
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
         self.correlator = digital_swig.correlate_access_code_bb(access_code, threshold)
-
+        
         self.framer_sink = gr.framer_sink_1(self._rcvd_pktq)
 
         # Modified by Xu

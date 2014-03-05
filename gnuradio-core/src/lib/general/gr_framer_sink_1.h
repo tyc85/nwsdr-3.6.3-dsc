@@ -58,6 +58,8 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
 {
   friend GR_CORE_API gr_framer_sink_1_sptr
   gr_make_framer_sink_1 (gr_msg_queue_sptr target_queue);
+  //------ TC: similar setlength method
+  void cat_setlength(int in) {d_packetlen = in;};
 
  private:
   enum state_t {STATE_SYNC_SEARCH, STATE_HAVE_SYNC, STATE_HAVE_HEADER};
