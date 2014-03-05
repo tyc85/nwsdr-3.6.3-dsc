@@ -73,6 +73,8 @@ class cat_mod_pkts(gr.hier_block2):
             raise ValueError, "Invalid access_code %r. Must be string of 1's and 0's" % (access_code,)
         self._access_code = access_code
 
+	print access_code
+
         # accepts messages from the outside world
         self._pkt_input = gr.message_source(gr.sizeof_char, msgq_limit)
         self.connect(self._pkt_input, self._modulator, self)

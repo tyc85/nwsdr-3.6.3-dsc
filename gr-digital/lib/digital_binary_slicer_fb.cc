@@ -81,16 +81,16 @@ if (pam4==0)
 else
 {
   assert (noutput_items % 2 == 0);
-  for (int i = 0; i < noutput_items; i+=2){
+  for (int i = 0; i < noutput_items/2; i++){
     inval =in[i];
-    if ((inval>th2) && (inval < th1))
-     out[i+1]=1;
-    else
-     out[i+1]=0;
     if (inval >=0.0)
-     out[i]=1;
+     *out++=1;
     else
-     out[i]=0; 
+     *out++=0; 
+    if ((inval>th2) && (inval < th1))
+     *out++=1;
+    else
+     *out++=0;
   } // i loop
 } // pam4 != 0
   

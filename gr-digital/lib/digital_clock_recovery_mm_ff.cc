@@ -144,6 +144,7 @@ else
     d_omega = d_omega_mid + gr_branchless_clip(d_omega-d_omega_mid, d_omega_relative_limit);   // make sure we don't walk away
     d_mu = d_mu + d_omega + d_gain_mu * mm_val;
 
+//d_mu = 2.0; // DG, NEED TO REMOVE THIS LATER
     ii += (int) floor(d_mu);
     d_mu = d_mu - floor(d_mu);
     oo++;

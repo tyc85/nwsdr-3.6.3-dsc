@@ -48,7 +48,7 @@ _def_mu = 0.5
 _def_freq_error = 0.0
 _def_omega_relative_limit = 0.005
 
-_def_pam4 = 1
+_def_pam4 = 1   # 2fsk if 0, 4fsk if 1
 
 # FIXME: Figure out how to make GMSK work with pfb_arb_resampler_fff for both
 # transmit and receive so we don't require integer samples per symbol.
@@ -144,6 +144,8 @@ class gmsk_cats_mod(gr.hier_block2):
 
     def _setup_logging(self):
         print "Modulation logging turned on."
+        self.connect(self,
+                     gr.file_sink(gr.sizeof_char, "char.dat"))
         self.connect(self.nrz,
                      gr.file_sink(gr.sizeof_float, "nrz.dat"))
         self.connect(self.gaussian_filter,

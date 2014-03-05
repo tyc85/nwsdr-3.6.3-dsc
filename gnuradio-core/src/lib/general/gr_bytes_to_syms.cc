@@ -32,6 +32,7 @@
 static const int BITS_PER_BYTE = 8;
 static const int PAM4_PER_BYTE = 4; // DG
 static const float constellation[4] = {-3, -1, 3, 1}; // DG
+//static const float constellation[4] = {-1, -1, 1, 1}; // DG
 
 // DG
 void gr_bytes_to_syms::setpam4 ()
