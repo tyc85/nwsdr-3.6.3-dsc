@@ -163,9 +163,9 @@ def main():
                       help="server host name [default=%default]")
     parser.add_option("","--mode", default="COMP",
                       help="set match style [default=%default]")
-    parser.add_option("","--sub-bitrate", type="eng_float", default=100K, help="feedback bitrate [default=%default]")
-    parser.add_option("","--main-bitrate", type="eng_float", default=2.5M, help="main bitrate [default=%default]")
-    parser.add_option("","--carrier-sep", type="eng_float", default = 2.5M, help="carrier frequency separation [default=%default]")
+    parser.add_option("","--sub-bitrate", type="eng_float", default=100e3, help="feedback bitrate [default=%default]")
+    parser.add_option("","--main-bitrate", type="eng_float", default=2.5e6, help="main bitrate [default=%default]")
+    parser.add_option("","--carrier-sep", type="eng_float", default = 2.5e6, help="carrier frequency separation [default=%default]")
 
     transmit_path.add_options(parser, expert_grp)
     uhd_transmitter.add_options(parser)
