@@ -19,16 +19,16 @@
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
-#ifndef INCLUDED_GR_BYTES_TO_SYMS_H
-#define INCLUDED_GR_BYTES_TO_SYMS_H
+#ifndef INCLUDED_GR_BYTES_TO_PAM4_H
+#define INCLUDED_GR_BYTES_TO_PAM4_H
 
 #include <digital_api.h>
 #include <gr_sync_interpolator.h>
 
-class digital_bytes_to_syms;
-typedef boost::shared_ptr<digital_bytes_to_syms> digital_bytes_to_syms_sptr;
+class digital_bytes_to_pam4;
+typedef boost::shared_ptr<digital_bytes_to_pam4> digital_bytes_to_pam4_sptr;
 
-DIGITAL_API digital_bytes_to_syms_sptr digital_make_bytes_to_syms();
+DIGITAL_API digital_bytes_to_pam4_sptr digital_make_bytes_to_pam4();
 
 /*!
  * \brief Convert stream of bytes to stream of +/- 1 symbols
@@ -46,21 +46,17 @@ DIGITAL_API digital_bytes_to_syms_sptr digital_make_bytes_to_syms();
  * \sa gr_packed_to_unpacked_bb, gr_unpacked_to_packed_bb,
  * \sa gr_chunks_to_symbols_bf, gr_chunks_to_symbols_bc.
  */
-class DIGITAL_API digital_bytes_to_syms : public gr_sync_interpolator
+class DIGITAL_API digital_bytes_to_pam4 : public gr_sync_interpolator
 {
-  friend DIGITAL_API digital_bytes_to_syms_sptr
-    digital_make_bytes_to_syms();
+  friend DIGITAL_API digital_bytes_to_pam4_sptr
+    digital_make_bytes_to_pam4();
 
-  digital_bytes_to_syms();
-
- private:
-  int pam4; // DG
+  digital_bytes_to_pam4();
 
  public:
   int work (int noutput_items,
 	    gr_vector_const_void_star &input_items,
 	    gr_vector_void_star &output_items);
-  void setpam4(); // DG
 };
 
-#endif /* INCLUDED_GR_BYTES_TO_SYMS_H */
+#endif /* INCLUDED_GR_BYTES_TO_PAM4_H */
