@@ -349,6 +349,9 @@ def main():
     tb = my_top_block(mods[options.modulation], demods[options.modulation], rx_callback, options)
 
     #print options.thr_sense
+    #print tb.txpath0._tx_amplitude
+    #tb.txpath0.set_tx_amplitude(0.5)
+    #print tb.txpath0._tx_amplitude
 
 
     r = gr.enable_realtime_scheduling()
