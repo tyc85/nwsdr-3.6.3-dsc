@@ -137,9 +137,8 @@ def main():
         n_rcvd += 1
         if ok:
             n_right += 1
-	if feedback is not "OFF":
-            print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d message = %4d" %(
-            ok, pktno, n_rcvd, n_right, int(payload[:2]))
+	if options.feedback:
+            print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d message = %4d" %(ok, pktno, n_rcvd, n_right, int(payload[:2]))
 
     mods = digital.modulation_utils.type_1_mods()     # Modulator
     demods = digital.modulation_utils.type_1_demods() # Demodulator
@@ -166,7 +165,7 @@ def main():
     parser.add_option("","--sub-bitrate", type="eng_float", default=100e3, help="feedback bitrate [default=%default]")
     parser.add_option("","--main-bitrate", type="eng_float", default=2.5e6, help="main bitrate [default=%default]")
     parser.add_option("","--carrier-sep", type="eng_float", default = 2.5e6, help="carrier frequency separation [default=%default]")
-    parser.add_option("","--feedback", default="OFF", help="feedback switch [default=%default]")
+    parser.add_option("","--feedback", default=False, help="feedback is on [default=%default]")
 
     transmit_path.add_options(parser, expert_grp)
     uhd_transmitter.add_options(parser)

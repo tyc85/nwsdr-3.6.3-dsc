@@ -162,7 +162,7 @@ def main():
     parser.add_option("","--sub-bitrate", type="eng_float", default=100e3, help="feedback bitrate [default=%default]")
     parser.add_option("","--main-bitrate", type="eng_float", default=2.5e6, help="main bitrate [default=%default]")
     parser.add_option("","--carrier-sep", type="eng_float", default=2.5e6, help="carrier frequency separation [default=%default]")
-    parser.add_option("","--feedback", default="OFF", help="feedback is on or off [default=%default]")
+    parser.add_option("","--feedback", default=False, help="feedback is on or off [default=%default]")
 
     transmit_path.add_options(parser, expert_grp)
     uhd_transmitter.add_options(parser)
@@ -176,8 +176,8 @@ def main():
         mod.add_options(expert_grp)
 
     (options, args) = parser.parse_args ()   
-    #options.tx_freq = options.freq + options.carrier_sep/2
-    #options.rx_freq = options.freq - options.carrier_sep/2
+    options.tx_freq = options.tx_freq + options.carrier_sep/2
+    options.rx_freq = options.rx_freq - options.carrier_sep/2
 
     #########################################
     # Xu Chen: Hard Code Parameters 
@@ -220,8 +220,9 @@ def main():
     pktno = 0
     pkt_size = 1440
 
+    print options.feedback, options.tx_freq, options.rx_freq
     while True:
-	if feedback is not 'OFF'
+	if options.feedback:
             data = '%01440d' % n_right
             payload = struct.pack('!H', pktno & 0xffff) + data
             send_pkt(payload)
