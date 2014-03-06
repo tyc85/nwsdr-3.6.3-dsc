@@ -1,16 +1,12 @@
 #ifndef PERFTEST_H
 #define PERFTEST_H
 #include <iostream>
-//int ArrayLDPC_Debug(double EbN0_dB);
-/*
-class t_enc
-{
-public:
-	t_enc(){std::cout<<"contruct\n";};
-	~t_enc(){std::cout<<"destruct\n";};
-	void test() { std::cout<<"test\n"; };
-};
-*/
+
+//-----------------------
+#include "wifi_encoder.h"
+#include "wifi_decoder.h"
+
+
 FP_Encoder* create_enc_obj();
 void destroy_enc_obj( FP_Encoder* object );
 

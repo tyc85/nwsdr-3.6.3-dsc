@@ -9,6 +9,9 @@
 //#include "Memory.h"
 //#include "ArrayLDPC.h"
 #include "ArrayLDPCMacro.h"
+//---------------------------
+#include "wifi_decoder.h"
+
 using namespace std;
 //--------- notes -----------
 // 1. don't really need the posterior stored. just the hard decision would be enough

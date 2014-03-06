@@ -5,7 +5,8 @@
 #include <iostream>
 #include <fstream>
 #include "ArrayLDPCMacro.h"
-#include "ArrayLDPC.h"
+//#include "ArrayLDPC.h"
+
 #include "rngs.h"
 #include "rvgs.h"
 #include "PerfTest.h"
@@ -16,6 +17,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+//-----------------------
+#include "wifi_encoder.h"
 
 using std::endl;
 using std::cout;
