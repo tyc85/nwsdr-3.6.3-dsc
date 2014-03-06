@@ -23,8 +23,8 @@ private:
 class FP_Encoder
 {
 public:
-	FP_Encoder();
-	//FP_Encoder(const char *m, int);
+	//FP_Encoder();
+	FP_Encoder(const char *m, int);
 	
 	~FP_Encoder();
 	int encode(unsigned char *, unsigned char *, int);
@@ -41,5 +41,18 @@ int encode_ldpc(FP_Encoder* p_encoder, char* uchar_in,
 
 int decode_ldpc(FP_Decoder* p_decoder, unsigned char* uchar_in, 
 						unsigned char* uchar_out, int in_len_bit);
+
+// general code
+
+FP_Encoder* create_enc_obj_general(const char *in, int vflag);
+FP_Decoder* create_dec_obj_general(const char *in_h, const char *in_idx, int vflag);
+
+int encode_ldpc_general(FP_Encoder* p_encoder, char* uchar_in, 
+						char* uchar_out, int in_len_byte);
+						
+FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char* uchar_in, 
+						unsigned char* uchar_out, int in_len_bit);
+
+
 
 

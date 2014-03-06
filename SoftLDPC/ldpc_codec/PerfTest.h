@@ -2,7 +2,7 @@
 #define PERFTEST_H
 #include <iostream>
 //int ArrayLDPC_Debug(double EbN0_dB);
-
+/*
 class t_enc
 {
 public:
@@ -10,7 +10,7 @@ public:
 	~t_enc(){std::cout<<"destruct\n";};
 	void test() { std::cout<<"test\n"; };
 };
-
+*/
 FP_Encoder* create_enc_obj();
 void destroy_enc_obj( FP_Encoder* object );
 
@@ -22,5 +22,18 @@ int encode_ldpc(FP_Encoder* p_encoder, char* uchar_in,
 						
 extern "C" int decode_ldpc(FP_Decoder* p_decoder, unsigned char* uchar_in, 
 						unsigned char* uchar_out, int in_len_bit);
+
+// general code:
+FP_Encoder* create_enc_obj_general(const char *in, int vflag);
+
+extern "C" FP_Decoder* create_dec_obj_general(const char *in_h, const char *in_idx, int vflag);
+
+extern "C" FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char* uchar_in, 
+						unsigned char* uchar_out, int in_len_bit);
+
+int encode_ldpc_general(FP_Encoder* p_encoder, char* uchar_in, 
+						char* uchar_out, int in_len_byte);
+						
+
 
 #endif

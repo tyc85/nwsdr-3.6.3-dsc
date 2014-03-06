@@ -81,7 +81,9 @@ class cat_mod_pkts(gr.hier_block2):
         
         #####################################
         # TC: initialize the ldpc encoder  (do later, first check uncoded case)
-        self._enc_ptr = ldpc.create_enc_obj()
+        #self._enc_ptr = ldpc.create_enc_obj()
+        # general ldpc code
+        self._enc_ptr = ldpc.create_enc_obj_general("H_802.11_IndZerog.txt", 1);
         #####################################
 
         # accepts messages from the outside world
@@ -154,9 +156,9 @@ class cat_demod_pkts(gr.hier_block2):
         if threshold == -1:
             # testing new threshold
             threshold = 12              # FIXME raise exception
-            threshold = 16 ## relax the sync
+            #threshold = 14 ## relax the sync
             #print threshold
-        threshold = 16
+        threshold = 12
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
         self.correlator = digital_swig.correlate_access_code_bb(access_code, threshold)
         

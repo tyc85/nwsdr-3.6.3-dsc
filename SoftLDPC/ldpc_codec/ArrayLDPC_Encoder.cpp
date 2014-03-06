@@ -18,9 +18,11 @@ using namespace std;
 // 3. use perfermance test's functions to pass in the pointer
 //---------------------------
 
-FP_Encoder::FP_Encoder()
+FP_Encoder::FP_Encoder(const char *in, int vflag)
 {
-	;//cout << "constructor of FP_Encoder \n";
+	if(vflag)
+		cout << "in enc constructor, loading encoder file\n"; 
+	loadfile(in, vflag);//cout << "constructor of FP_Encoder \n";
 }
 
 
@@ -54,7 +56,6 @@ void FP_Encoder::loadfile(const char* Filename, int flag)
 			
 			FileStr >> cnum;
 			Gdim_col = cnum;
-			
 			Gdim_row = vnum - cnum;
 			FileStr >> vdeg_max;
 			FileStr >> cdeg_max;
@@ -77,6 +78,7 @@ void FP_Encoder::loadfile(const char* Filename, int flag)
 			{
 				 FileStr >> ChkDeg[i];
 			}
+			//----- if var deg information is include need dummy input
 			//for(i = 0; i < vnum; i++)
 			//{
 			//	for(j = 0; j < VarDeg[i]; j++)
@@ -87,31 +89,6 @@ void FP_Encoder::loadfile(const char* Filename, int flag)
 				for(j = 0; j < ChkDeg[i]; j++)
 					FileStr >> G_mlist[i][j];
 			}
-			//FileStr.close();
-			//ofstream OutStr("G_array_zindx.txt");
-			//OutStr << vnum << " ";
-			//OutStr << cnum << " " << endl;
-			//OutStr << vdeg_max << " ";
-			//OutStr << cdeg_max << " " << endl;
-			//for(i = 0; i < vnum;i++)
-			//{
-			//	 OutStr << ColumnFlag[i] << " ";
-			//}
-			//OutStr << endl;
-			//for(i = 0; i < cnum;i++)
-			//{
-			//	 OutStr << ChkDeg[i] << " ";
-			//}
-			//OutStr << endl;
-			//for(i = 0; i < cnum; i++)
-			//{
-			//	for(j = 0; j < ChkDeg[i]; j++)
-			//	{
-			//		OutStr << G_mlist[i][j]-1 << " ";
-			//	}
-			//	OutStr << endl;
-			//}
-			//OutStr.close();
 		}
 		else // binary file format (the generator matrix in binary)
 		{
@@ -121,18 +98,6 @@ void FP_Encoder::loadfile(const char* Filename, int flag)
 			//cout << Gdim_row << endl;
 			//info_num; //
 			FileStr >> Gdim_col;
-			//cout << Gdim_col << endl;
-			//Gdim_row = info_num;
-			//Gdim_col = par_num;
-		
-			//InfoIndex = new unsigned int[Gdim_row];
-			//ParityIndex = new unsigned int[Gdim_col];
-			//GeneratorMat = new unsigned int*[Gdim_col];
-			//InfoBuffer = new unsigned int [InfoLen];
-			//for(i = 0; i < Gdim_col; i++)
-			//{
-			//	GeneratorMat[i] = new unsigned int [Gdim_row];
-			//}
 			for(i = 0; i < Gdim_row; i++)
 				FileStr >> InfoIndex[i];
 			for(i = 0; i < Gdim_col; i++)
@@ -164,7 +129,7 @@ void FP_Encoder::loadfile(const char* Filename, int flag)
 		cout << "encoder initialized" << endl;
 }
 
-// out has length CWD_LENGTH => 2209 bytes
+
 // NOTE!!! MUST INITIALIZE OUT TO BE ALL ZERO!!!!
 void FP_Encoder::loadCodeword_intr(unsigned char* out, int bit_pos)
 {
@@ -181,10 +146,9 @@ void FP_Encoder::loadCodeword_intr(unsigned char* out, int bit_pos)
 	//cout << endl;
 }
 //--- easy version
-int FP_Encoder::encode(unsigned int *in, int in_len) //in_len in byte
+int FP_Encoder::encode(unsigned int *in, int in_len) //in_len in bit=>encoding 8*info_length bits
 {
 	int i, j, k, counter = 0;
-	int out_len = 2209;  // hard coded for now
 	int num_blks;
 	int char_size = sizeof(char)*8;
 	unsigned int temp;
@@ -218,8 +182,62 @@ int FP_Encoder::encode(unsigned int *in, int in_len) //in_len in byte
 		//cout << Codeword[ParityIndex[i]];
 	}
 	//cout << endl;
+	return 0;
+}
+
+int FP_Encoder::encode(char *in, int in_len)
+{
+	int i, j, k, counter = 0;
+	int out_len = 2209;  // hard coded for now
+	int num_blks;
+	int char_size = sizeof(char)*8;
+	unsigned int temp;
+
+
+	num_blks = in_len*char_size/INFO_LENGTH + (in_len*char_size % INFO_LENGTH > 0? 1:0);
+	
+
+	//for(i = 0; i<num_blks; i++)
+	//{
+		// unload the information bits from the char array till the 
+		// second last element
+	for(i = 0; i < in_len-1; i++)
+	{
+		for(j = 0; j < char_size; j++)// per byte
+		{	
+			InfoBuffer[counter] = (in[i] >> j) & 1;
+			counter ++;
+		}
+	}
+	// unload the remaining bits from the last element 
+	for(j = 0; j < Gdim_row % char_size; j++)
+	{
+		InfoBuffer[counter] = (in[in_len-1] >> j) & 1;
+		counter ++;
+	}
+
+	// NOTE for improvement: can ignore InfoBuffer and just use systematic codewords
+	for(i = 0; i < Gdim_row; i++)
+	{
+		Codeword[InfoIndex[i]] = InfoBuffer[i];
+	}
+
+	for(i = 0; i < Gdim_col; i++)
+	{
+		temp = 0;
+		for(j = 0; j < ChkDeg[i]; j++)
+		{
+			if(ColumnFlag[G_mlist[i][j]] == 0)
+			{
+				temp ^= Codeword[G_mlist[i][j]];
+				//cout << G_mlist[i][j] << " ";
+			}
+		}
+		Codeword[ParityIndex[i]] = temp;
+	}
 	return out_len;
 }
+
 
 // an overloaded function that outputs simple integer array: working!
 int FP_Encoder::encode(unsigned char *in, int in_len) //in_len in byte
@@ -244,11 +262,11 @@ int FP_Encoder::encode(unsigned char *in, int in_len) //in_len in byte
 		// unload the information bits from the char array till the 
 		// second last element
 	
-	if(in_len != Gdim_row)
+	/*if(in_len != Gdim_row)
 	{
 		cout << "in_len in encode does not match the G_dim_row\n";
 		cout << "in_len is " << in_len << " and Gdim_row is " << Gdim_row << endl;
-	}
+	}*/
 	for(i = 0; i < in_len-1; i++)
 	{
 		for(j = 0; j < char_size; j++)// per byte
@@ -292,6 +310,9 @@ int FP_Encoder::encode(unsigned char *in, int in_len) //in_len in byte
 		}
 		Codeword[ParityIndex[i]] = temp;
 	}
+	//for(i = 0; i < CWD_LENGTH; i++)
+	//	cout << Codeword[i];
+	//cin >> out_len;
 	return out_len;
 }
 

@@ -1,0 +1,373 @@
+linux; GNU C++ version 4.6.3; Boost_104800; UHD_003.006.002-1-g9fd308b3
+
+reading index set from file wifi_infoindx.txt
+info index set from file wifi_infoindx.txt
+reading H file for genearl ldpc code from H_802.11_IndZero.txt
+finished reading H file for genearl ldpc code
+constructed decoder with pointer 0x7fa816113010
+Warning: Failed to enable realtime scheduling.
+Using Volk machine: sse4_1_64_orc
+avg iter: 3
+ok =  True  pktno =    0  n_rcvd =    1  n_right =    1
+avg iter: 3
+ok =  True  pktno =    1  n_rcvd =    2  n_right =    2
+avg iter: 2
+ok =  True  pktno =    2  n_rcvd =    3  n_right =    3
+avg iter: 2
+ok =  True  pktno =    3  n_rcvd =    4  n_right =    4
+ok = False  pktno =  997  n_rcvd =    5  n_right =    4
+avg iter: 4
+ok =  True  pktno =    5  n_rcvd =    6  n_right =    5
+avg iter: 5
+ok =  True  pktno =    6  n_rcvd =    7  n_right =    6
+avg iter: 4
+ok =  True  pktno =    7  n_rcvd =    8  n_right =    7
+avg iter: 4
+ok =  True  pktno =    8  n_rcvd =    9  n_right =    8
+ok = False  pktno = 52282  n_rcvd =   10  n_right =    8
+avg iter: 3
+ok =  True  pktno =   10  n_rcvd =   11  n_right =    9
+avg iter: 3
+ok =  True  pktno =   11  n_rcvd =   12  n_right =   10
+avg iter: 5
+ok =  True  pktno =   12  n_rcvd =   13  n_right =   11
+avg iter: 8
+ok =  True  pktno =   13  n_rcvd =   14  n_right =   12
+avg iter: 3
+ok =  True  pktno =   14  n_rcvd =   15  n_right =   13
+ok = False  pktno =   95  n_rcvd =   16  n_right =   13
+avg iter: 2
+ok =  True  pktno =   16  n_rcvd =   17  n_right =   14
+avg iter: 3
+ok =  True  pktno =   17  n_rcvd =   18  n_right =   15
+avg iter: 5
+ok =  True  pktno =   18  n_rcvd =   19  n_right =   16
+avg iter: 3
+ok =  True  pktno =   19  n_rcvd =   20  n_right =   17
+ok =  True  pktno =   20  n_rcvd =   21  n_right =   18
+ok =  True  pktno =   21  n_rcvd =   22  n_right =   19
+ok =  True  pktno =   22  n_rcvd =   23  n_right =   20
+avg iter: 2
+ok =  True  pktno =   23  n_rcvd =   24  n_right =   21
+avg iter: 6
+ok =  True  pktno =   24  n_rcvd =   25  n_right =   22
+ok =  True  pktno =   25  n_rcvd =   26  n_right =   23
+avg iter: 4
+ok =  True  pktno =   26  n_rcvd =   27  n_right =   24
+avg iter: 4
+ok =  True  pktno =   27  n_rcvd =   28  n_right =   25
+avg iter: 5
+ok =  True  pktno =   28  n_rcvd =   29  n_right =   26
+avg iter: 5
+ok =  True  pktno =   29  n_rcvd =   30  n_right =   27
+ok = False  pktno =  154  n_rcvd =   31  n_right =   27
+avg iter: 6
+ok =  True  pktno =   95  n_rcvd =   32  n_right =   28
+ok = False  pktno = 33984  n_rcvd =   33  n_right =   28
+ok = False  pktno =  117  n_rcvd =   34  n_right =   28
+avg iter: 2
+ok =  True  pktno =  171  n_rcvd =   35  n_right =   29
+ok = False  pktno = 2216  n_rcvd =   36  n_right =   29
+ok =  True  pktno =  173  n_rcvd =   37  n_right =   30
+avg iter: 4
+ok =  True  pktno =  174  n_rcvd =   38  n_right =   31
+avg iter: 6
+ok =  True  pktno =  175  n_rcvd =   39  n_right =   32
+ok = False  pktno = 5631  n_rcvd =   40  n_right =   32
+avg iter: 3
+ok =  True  pktno =  177  n_rcvd =   41  n_right =   33
+avg iter: 2
+ok =  True  pktno =  178  n_rcvd =   42  n_right =   34
+ok =  True  pktno =  179  n_rcvd =   43  n_right =   35
+ok = False  pktno =  244  n_rcvd =   44  n_right =   35
+ok = False  pktno = 65337  n_rcvd =   45  n_right =   35
+avg iter: 6
+ok =  True  pktno =  260  n_rcvd =   46  n_right =   36
+ok = False  pktno =  587  n_rcvd =   47  n_right =   36
+avg iter: 7
+ok =  True  pktno =  262  n_rcvd =   48  n_right =   37
+avg iter: 2
+ok =  True  pktno =  263  n_rcvd =   49  n_right =   38
+ok = False  pktno = 16977  n_rcvd =   50  n_right =   38
+ok =  True  pktno =  265  n_rcvd =   51  n_right =   39
+ok = False  pktno =  266  n_rcvd =   52  n_right =   39
+avg iter: 3
+ok =  True  pktno =  267  n_rcvd =   53  n_right =   40
+avg iter: 4
+ok =  True  pktno =  268  n_rcvd =   54  n_right =   41
+avg iter: 4
+ok =  True  pktno =  269  n_rcvd =   55  n_right =   42
+avg iter: 4
+ok =  True  pktno =  270  n_rcvd =   56  n_right =   43
+avg iter: 4
+ok =  True  pktno =  271  n_rcvd =   57  n_right =   44
+avg iter: 2
+ok =  True  pktno =  272  n_rcvd =   58  n_right =   45
+avg iter: 4
+ok =  True  pktno =  273  n_rcvd =   59  n_right =   46
+avg iter: 2
+ok =  True  pktno =  274  n_rcvd =   60  n_right =   47
+avg iter: 3
+ok =  True  pktno =  275  n_rcvd =   61  n_right =   48
+avg iter: 3
+ok =  True  pktno =  276  n_rcvd =   62  n_right =   49
+ok =  True  pktno =  277  n_rcvd =   63  n_right =   50
+ok = False  pktno = 10648  n_rcvd =   64  n_right =   50
+avg iter: 3
+ok =  True  pktno =  282  n_rcvd =   65  n_right =   51
+avg iter: 3
+ok =  True  pktno =  283  n_rcvd =   66  n_right =   52
+avg iter: 2
+ok =  True  pktno =  284  n_rcvd =   67  n_right =   53
+ok =  True  pktno =  285  n_rcvd =   68  n_right =   54
+ok = False  pktno = 65490  n_rcvd =   69  n_right =   54
+ok = False  pktno = 32511  n_rcvd =   70  n_right =   54
+avg iter: 6
+ok =  True  pktno =  345  n_rcvd =   71  n_right =   55
+ok =  True  pktno =  346  n_rcvd =   72  n_right =   56
+avg iter: 3
+ok =  True  pktno =  347  n_rcvd =   73  n_right =   57
+avg iter: 5
+ok =  True  pktno =  348  n_rcvd =   74  n_right =   58
+avg iter: 3
+ok =  True  pktno =  349  n_rcvd =   75  n_right =   59
+avg iter: 2
+ok =  True  pktno =  350  n_rcvd =   76  n_right =   60
+ok = False  pktno = 32911  n_rcvd =   77  n_right =   60
+ok =  True  pktno =  352  n_rcvd =   78  n_right =   61
+ok = False  pktno =  643  n_rcvd =   79  n_right =   61
+avg iter: 5
+ok =  True  pktno =  354  n_rcvd =   80  n_right =   62
+avg iter: 2
+ok =  True  pktno =  355  n_rcvd =   81  n_right =   63
+avg iter: 3
+ok =  True  pktno =  356  n_rcvd =   82  n_right =   64
+ok = False  pktno = 1879  n_rcvd =   83  n_right =   64
+avg iter: 4
+ok =  True  pktno =  358  n_rcvd =   84  n_right =   65
+avg iter: 4
+ok =  True  pktno =  359  n_rcvd =   85  n_right =   66
+avg iter: 7
+ok =  True  pktno =  360  n_rcvd =   86  n_right =   67
+avg iter: 6
+ok =  True  pktno =  361  n_rcvd =   87  n_right =   68
+ok = False  pktno = 23103  n_rcvd =   88  n_right =   68
+ok =  True  pktno =  363  n_rcvd =   89  n_right =   69
+avg iter: 2
+ok =  True  pktno =  364  n_rcvd =   90  n_right =   70
+ok = False  pktno =  365  n_rcvd =   91  n_right =   70
+ok = False  pktno = 65343  n_rcvd =   92  n_right =   70
+avg iter: 4
+ok =  True  pktno =  375  n_rcvd =   93  n_right =   71
+avg iter: 5
+ok =  True  pktno =  376  n_rcvd =   94  n_right =   72
+avg iter: 6
+ok =  True  pktno =  377  n_rcvd =   95  n_right =   73
+avg iter: 9
+ok =  True  pktno =  378  n_rcvd =   96  n_right =   74
+ok =  True  pktno =  379  n_rcvd =   97  n_right =   75
+avg iter: 2
+ok =  True  pktno =  380  n_rcvd =   98  n_right =   76
+avg iter: 7
+ok =  True  pktno =  381  n_rcvd =   99  n_right =   77
+ok = False  pktno = 1475  n_rcvd =  100  n_right =   77
+ok = False  pktno = 2679  n_rcvd =  101  n_right =   77
+ok =  True  pktno =  439  n_rcvd =  102  n_right =   78
+avg iter: 2
+ok =  True  pktno =  440  n_rcvd =  103  n_right =   79
+ok =  True  pktno =  441  n_rcvd =  104  n_right =   80
+avg iter: 3
+ok =  True  pktno =  442  n_rcvd =  105  n_right =   81
+avg iter: 2
+ok =  True  pktno =  443  n_rcvd =  106  n_right =   82
+avg iter: 3
+ok =  True  pktno =  444  n_rcvd =  107  n_right =   83
+avg iter: 4
+ok =  True  pktno =  445  n_rcvd =  108  n_right =   84
+avg iter: 2
+ok =  True  pktno =  446  n_rcvd =  109  n_right =   85
+ok =  True  pktno =  447  n_rcvd =  110  n_right =   86
+ok =  True  pktno =  448  n_rcvd =  111  n_right =   87
+avg iter: 4
+ok =  True  pktno =  449  n_rcvd =  112  n_right =   88
+avg iter: 3
+ok =  True  pktno =  450  n_rcvd =  113  n_right =   89
+avg iter: 3
+ok =  True  pktno =  451  n_rcvd =  114  n_right =   90
+avg iter: 2
+ok =  True  pktno =  452  n_rcvd =  115  n_right =   91
+avg iter: 2
+ok =  True  pktno =  453  n_rcvd =  116  n_right =   92
+ok = False  pktno =  966  n_rcvd =  117  n_right =   92
+avg iter: 5
+ok =  True  pktno =  465  n_rcvd =  118  n_right =   93
+avg iter: 4
+ok =  True  pktno =  466  n_rcvd =  119  n_right =   94
+avg iter: 3
+ok =  True  pktno =  467  n_rcvd =  120  n_right =   95
+avg iter: 3
+ok =  True  pktno =  468  n_rcvd =  121  n_right =   96
+ok =  True  pktno =  469  n_rcvd =  122  n_right =   97
+ok = False  pktno = 1691  n_rcvd =  123  n_right =   97
+ok = False  pktno = 25023  n_rcvd =  124  n_right =   97
+avg iter: 8
+ok =  True  pktno =  472  n_rcvd =  125  n_right =   98
+avg iter: 5
+ok =  True  pktno =  473  n_rcvd =  126  n_right =   99
+avg iter: 2
+ok =  True  pktno =  474  n_rcvd =  127  n_right =  100
+avg iter: 2
+ok =  True  pktno =  475  n_rcvd =  128  n_right =  101
+avg iter: 6
+ok =  True  pktno =  476  n_rcvd =  129  n_right =  102
+avg iter: 3
+ok =  True  pktno =  477  n_rcvd =  130  n_right =  103
+avg iter: 3
+ok =  True  pktno =  478  n_rcvd =  131  n_right =  104
+avg iter: 7
+ok =  True  pktno =  479  n_rcvd =  132  n_right =  105
+ok =  True  pktno =  480  n_rcvd =  133  n_right =  106
+avg iter: 6
+ok =  True  pktno =  481  n_rcvd =  134  n_right =  107
+avg iter: 4
+ok =  True  pktno =  482  n_rcvd =  135  n_right =  108
+ok =  True  pktno =  483  n_rcvd =  136  n_right =  109
+ok = False  pktno = 33124  n_rcvd =  137  n_right =  109
+avg iter: 4
+ok =  True  pktno =  485  n_rcvd =  138  n_right =  110
+avg iter: 4
+ok =  True  pktno =  486  n_rcvd =  139  n_right =  111
+avg iter: 2
+ok =  True  pktno =  487  n_rcvd =  140  n_right =  112
+avg iter: 8
+ok =  True  pktno =  488  n_rcvd =  141  n_right =  113
+ok = False  pktno = 1895  n_rcvd =  142  n_right =  113
+ok =  True  pktno =  490  n_rcvd =  143  n_right =  114
+avg iter: 5
+ok =  True  pktno =  491  n_rcvd =  144  n_right =  115
+avg iter: 5
+ok =  True  pktno =  492  n_rcvd =  145  n_right =  116
+avg iter: 3
+ok =  True  pktno =  493  n_rcvd =  146  n_right =  117
+avg iter: 3
+ok =  True  pktno =  494  n_rcvd =  147  n_right =  118
+ok = False  pktno =  495  n_rcvd =  148  n_right =  118
+avg iter: 4
+ok =  True  pktno =  496  n_rcvd =  149  n_right =  119
+ok = False  pktno = 32984  n_rcvd =  150  n_right =  119
+ok = False  pktno =  677  n_rcvd =  151  n_right =  119
+avg iter: 5
+ok =  True  pktno =  499  n_rcvd =  152  n_right =  120
+avg iter: 3
+ok =  True  pktno =  500  n_rcvd =  153  n_right =  121
+avg iter: 3
+ok =  True  pktno =  501  n_rcvd =  154  n_right =  122
+avg iter: 6
+ok =  True  pktno =  502  n_rcvd =  155  n_right =  123
+avg iter: 3
+ok =  True  pktno =  503  n_rcvd =  156  n_right =  124
+ok = False  pktno =  504  n_rcvd =  157  n_right =  124
+avg iter: 4
+ok =  True  pktno =  505  n_rcvd =  158  n_right =  125
+avg iter: 3
+ok =  True  pktno =  506  n_rcvd =  159  n_right =  126
+ok = False  pktno = 1071  n_rcvd =  160  n_right =  126
+ok =  True  pktno =  508  n_rcvd =  161  n_right =  127
+ok = False  pktno =  222  n_rcvd =  162  n_right =  127
+avg iter: 2
+ok =  True  pktno =  510  n_rcvd =  163  n_right =  128
+ok = False  pktno = 6463  n_rcvd =  164  n_right =  128
+ok =  True  pktno =  512  n_rcvd =  165  n_right =  129
+ok = False  pktno = 9219  n_rcvd =  166  n_right =  129
+avg iter: 6
+ok =  True  pktno =  514  n_rcvd =  167  n_right =  130
+avg iter: 3
+ok =  True  pktno =  515  n_rcvd =  168  n_right =  131
+ok = False  pktno = 28892  n_rcvd =  169  n_right =  131
+ok =  True  pktno =  517  n_rcvd =  170  n_right =  132
+ok =  True  pktno =  518  n_rcvd =  171  n_right =  133
+avg iter: 2
+ok =  True  pktno =  519  n_rcvd =  172  n_right =  134
+avg iter: 2
+ok =  True  pktno =  520  n_rcvd =  173  n_right =  135
+ok =  True  pktno =  521  n_rcvd =  174  n_right =  136
+ok =  True  pktno =  522  n_rcvd =  175  n_right =  137
+ok =  True  pktno =  523  n_rcvd =  176  n_right =  138
+ok = False  pktno =  524  n_rcvd =  177  n_right =  138
+avg iter: 3
+ok =  True  pktno =  525  n_rcvd =  178  n_right =  139
+ok = False  pktno = 2299  n_rcvd =  179  n_right =  139
+ok =  True  pktno =  527  n_rcvd =  180  n_right =  140
+avg iter: 3
+ok =  True  pktno =  528  n_rcvd =  181  n_right =  141
+avg iter: 2
+ok =  True  pktno =  529  n_rcvd =  182  n_right =  142
+avg iter: 3
+ok =  True  pktno =  530  n_rcvd =  183  n_right =  143
+avg iter: 3
+ok =  True  pktno =  531  n_rcvd =  184  n_right =  144
+avg iter: 5
+ok =  True  pktno =  532  n_rcvd =  185  n_right =  145
+avg iter: 8
+ok =  True  pktno =  533  n_rcvd =  186  n_right =  146
+avg iter: 2
+ok =  True  pktno =  534  n_rcvd =  187  n_right =  147
+avg iter: 3
+ok =  True  pktno =  535  n_rcvd =  188  n_right =  148
+avg iter: 3
+ok =  True  pktno =  536  n_rcvd =  189  n_right =  149
+avg iter: 7
+ok =  True  pktno =  537  n_rcvd =  190  n_right =  150
+avg iter: 2
+ok =  True  pktno =  538  n_rcvd =  191  n_right =  151
+avg iter: 3
+ok =  True  pktno =  539  n_rcvd =  192  n_right =  152
+avg iter: 2
+ok =  True  pktno =  540  n_rcvd =  193  n_right =  153
+avg iter: 3
+ok =  True  pktno =  541  n_rcvd =  194  n_right =  154
+avg iter: 2
+ok =  True  pktno =  542  n_rcvd =  195  n_right =  155
+ok = False  pktno =  543  n_rcvd =  196  n_right =  155
+ok =  True  pktno =  544  n_rcvd =  197  n_right =  156
+avg iter: 3
+ok =  True  pktno =  545  n_rcvd =  198  n_right =  157
+avg iter: 5
+ok =  True  pktno =  546  n_rcvd =  199  n_right =  158
+ok =  True  pktno =  547  n_rcvd =  200  n_right =  159
+avg iter: 3
+ok =  True  pktno =  548  n_rcvd =  201  n_right =  160
+avg iter: 2
+ok =  True  pktno =  549  n_rcvd =  202  n_right =  161
+ok = False  pktno = 33075  n_rcvd =  203  n_right =  161
+avg iter: 2
+ok =  True  pktno =  551  n_rcvd =  204  n_right =  162
+avg iter: 4
+ok =  True  pktno =  552  n_rcvd =  205  n_right =  163
+avg iter: 4
+ok =  True  pktno =  553  n_rcvd =  206  n_right =  164
+ok = False  pktno =  744  n_rcvd =  207  n_right =  164
+ok =  True  pktno =  572  n_rcvd =  208  n_right =  165
+ok =  True  pktno =  573  n_rcvd =  209  n_right =  166
+ok = False  pktno = 64194  n_rcvd =  210  n_right =  166
+ok = False  pktno = 2891  n_rcvd =  211  n_right =  166
+avg iter: 8
+ok =  True  pktno =  611  n_rcvd =  212  n_right =  167
+avg iter: 3
+ok =  True  pktno =  612  n_rcvd =  213  n_right =  168
+avg iter: 4
+ok =  True  pktno =  613  n_rcvd =  214  n_right =  169
+ok = False  pktno = 37947  n_rcvd =  215  n_right =  169
+avg iter: 3
+ok =  True  pktno =  615  n_rcvd =  216  n_right =  170
+ok =  True  pktno =  616  n_rcvd =  217  n_right =  171
+avg iter: 7
+ok =  True  pktno =  617  n_rcvd =  218  n_right =  172
+avg iter: 3
+ok =  True  pktno =  618  n_rcvd =  219  n_right =  173
+avg iter: 2
+ok =  True  pktno =  619  n_rcvd =  220  n_right =  174
+avg iter: 2
+ok =  True  pktno =  620  n_rcvd =  221  n_right =  175
+avg iter: 4
+ok =  True  pktno =  621  n_rcvd =  222  n_right =  176

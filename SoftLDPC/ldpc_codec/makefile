@@ -15,6 +15,7 @@ OBJECTS = ldpc.o
 LIBS = ArrayLDPC_Encoder.o ArrayLDPC_Decoder.o rngs.o rvgs.o PerfTest.o 
 
 SOURCE = ArrayLDPC_Encoder.cpp ArrayLDPC_Decoder.cpp rngs.cpp rvgs.cpp PerfTest.cpp 
+TESTSOURCE = ArrayLDPC_Encoder.cpp ArrayLDPC_Decoder.cpp rngs.cpp rvgs.cpp PerfTest.cpp Wrapper.cpp
 
 TEST= test.cpp
   
@@ -25,7 +26,7 @@ all:
 	$(CC) $(CFLAGS)  $(SOURCE) -lm
 
 test:
-	$(CC) -O2 -Wall test.cpp -o test $(LIBLINK)
+	$(CC) -O2  $(TESTSOURCE) -o test $(LIBLINK)
 	
 link:$(SHARED_LIB)
 	

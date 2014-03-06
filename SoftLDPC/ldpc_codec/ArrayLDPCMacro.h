@@ -20,15 +20,15 @@ using namespace std;
 
 
 
-enum Simulation {MAX_ITER = 6, NUM_PEEK = 1000000, SEED = 100};
-//enum CodeWifi {
-//		NUM_VAR = 1944, NUM_CHK = 972, NUM_CGRP = 12, VAR_DEG = 24,
-//		P = 81, CIR_SIZE = 81, INFO_LENGTH = 1978, CWD_LENGTH = 1944};
-
-enum Code {
-		NUM_VAR = 2209, NUM_CHK = 235, NUM_CGRP = 5, VAR_DEG = 5, NUM_VGRP = 47, 
-		CHK_DEG = 47, P = 47, CIR_SIZE = 47, INFO_LENGTH = 1978, CWD_LENGTH = 2209,
-		INFO_LENGTH_BYTE = 248, CWD_LENGTH_BYTE = 277};
+enum Simulation {MAX_ITER = 10, NUM_PEEK = 1000000, SEED = 100};
+enum CodeWifi {
+		NUM_VAR = 1944, NUM_CHK = 972, NUM_CGRP = 12, NUM_VGRP = 24, CHK_DEG = 8, VAR_DEG = 11,
+		P = 81, CIR_SIZE = 81, INFO_LENGTH = 972, CWD_LENGTH = 1944, 
+		INFO_LENGTH_BYTE = 122, CWD_LENGTH_BYTE = 244};
+//enum Code {
+		//NUM_VAR = 2209, NUM_CHK = 235, NUM_CGRP = 5, VAR_DEG = 5, NUM_VGRP = 47, 
+		//CHK_DEG = 47, P = 47, CIR_SIZE = 47, INFO_LENGTH = 1978, CWD_LENGTH = 2209,
+		//INFO_LENGTH_BYTE = 248, CWD_LENGTH_BYTE = 277};
 enum RAM_Const {
 		RAM_WIDTH = 32, RAM_SLICE = 8, RAM_DEPTH = NUM_CGRP*CIR_SIZE};
 enum Precision {
@@ -44,7 +44,6 @@ enum Precision {
 		FRAC_WIDTH_NOISE = 6
 };
 enum StateFSM {IDLE, PCV, V2C, SXOR, C2V, SIMEND};
-
 
 
 
@@ -103,12 +102,12 @@ public:
 	int rdData(){	return BRAM_fp[Address]; };
 	double getData(){	return BRAM[Address]; };
 	void wrtData(int in){ BRAM_fp[Address] = in; };
-	void wrtData(double in){ BRAM[Address] = in; };
+	void wrtData(double in){ cout << "using float ram\n"; BRAM[Address] = in; };
 	void setAddress(int Addr){ Address = Addr; };
 private:
 	int Address;
 	int BRAM_fp[RAM_DEPTH];
-	double BRAM[RAM_DEPTH];
+	double BRAM[RAM_DEPTH]; //save memory see if it's faster
 	int DataBus;
 	int WrE;
 	int RdE;
@@ -127,16 +126,19 @@ private:
 };
 
 
+
 //--------------------- Encoder class
 class FP_Encoder
 {
 public:
-	FP_Encoder();
+	//FP_Encoder();
+	FP_Encoder(const char*, int);
 	~FP_Encoder();
-	//FP_Encoder(const char *m, int);
+	
 	//--- should change to unsigned char
 	int encode(unsigned char *, unsigned char *, int);
 	int encode(unsigned char *, int);
+	int encode(char *, int);
 	int encode(unsigned int *, int);
 	//void check_codeword();
 	void loadfile(const char *m, int);
@@ -146,15 +148,23 @@ public:
 	void loadCodeword_intr(unsigned char*, int);
 private:
 	int Codeword[NUM_VAR];
+	
+	//------------- for array ldpc code
+	/*
 	//231 is the row dimension (reduced from 235). improvement: allocate dynamically
 	int ChkDeg[231]; 
 	int VarDeg[NUM_VAR];
 	//1078 is the max check deg. improvement: allocate dynamically
 	int G_mlist[231][1078];
+	*/
+	//------------- for general ldpc code
+	int ChkDeg[972]; 
+	//540 is the max check deg. improvement: allocate dynamically
+	int G_mlist[972][540];
+	//------------- end
 	int Gdim_row;
 	int Gdim_col;
-	//int InfoLen;
-	//int Codelen;
+	
 	int check_fp(int*); // check whether the input vector pass the parity check matrix
 	class ROM CodeROM;
 	// hard code test
@@ -162,7 +172,9 @@ private:
 	unsigned int InfoBuffer[INFO_LENGTH];
 	unsigned int ParityIndex[NUM_VAR - INFO_LENGTH];
 	unsigned int InfoIndex[INFO_LENGTH];
-	//unsigned int GeneratorMat[1978][231];
+	
+	
+
 	//---- need some verification
 	//unsigned int *InfoBuffer;
 	//unsigned int *ParityIndex;
@@ -173,7 +185,13 @@ private:
 class FP_Decoder
 {
 public:
-	
+	FP_Decoder(const char*, int);
+	//FP_Decoder();
+	//new public functions after general fixed point decoding
+	void ReadH(const char*, int);
+	int checkPost_fp_general();
+	int decode_general_fp(const int*);
+	//-----
 	int decode_fixpoint(const int *LLR);
 	int decode(const double *LLR);
 	int decode(const int *LLR, char* out);
@@ -200,17 +218,18 @@ public:
 	int getInfoIndex(int in){ return InfoIndex[in];}
 	//----
 	int hardDecision(const int *);  // perform hardecision o input and verfiy check sum
+	int hardDecision_general(const int *in);
 	int calculateBER();
 	void resetBER(){ BitError = 0;};
 
 	double fmin(double, double);
-	double getPost(int Addr){ return Posteriori[Addr]; };
+	double getPost(int Addr){ cout << "using float getpost\n"; return Posteriori[Addr]; };
 	double getRate(){ return CodeROM.getRate(); };
 	double sxor(double, double);
 	void wrtPost(int Addr, int in){ Posteriori_fp[Addr] = in;};
-	void wrtPost(int Addr, double in){ Posteriori[Addr] = in;};
+	void wrtPost(int Addr, double in){ cout << "using float post\n"; Posteriori[Addr] = in;};
 
-	//const int* getPostBlk() {return Posteriori;};
+	
 private:
 	class ROM CodeROM;
 	class ControlFSM FSM;
@@ -224,6 +243,11 @@ private:
 	int BitError;
 	// shifting a fixed point fractional numbers to a binary representation
 	static const int Constant = int((5.0/8.0)*(1 << FRAC_WIDTH));
+	
+	//---- for general code
+	int vnum, cnum, vdeg_max, cdeg_max;
+	int vdeg[CWD_LENGTH], cdeg[INFO_LENGTH], vlist[CWD_LENGTH][VAR_DEG], 
+		 clist[INFO_LENGTH][CHK_DEG];
 };
 
 

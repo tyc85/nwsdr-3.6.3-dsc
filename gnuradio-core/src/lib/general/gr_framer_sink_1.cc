@@ -100,7 +100,8 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
     d_target_queue(target_queue)
 {
   enter_search();
-  // Xu: For soft decoding
+  // define a flag for array code or general ldpc code
+  static const int ldpcflag = 0;
   dlerror();  // clear error
   handle_ldpc = dlopen ("/lib/_ldpc.so", RTLD_LAZY);
   if (!handle_ldpc) 
@@ -108,40 +109,77 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
     fputs (dlerror(), stderr);
     exit(1);
   }
-  // TC: load the function from ldpc.so
-	//class fp_decoder
-	*(void **)(&decode_ldpc)= dlsym(handle_ldpc, "decode_ldpc");
-	char *error;
-	if ((error = dlerror()) != NULL)  
-	{
-    fputs(error, stderr);
-    exit(1);
-	}
-	dlerror();  // clear error
-	// don't really understand this implementation yet
-	get_obj = (FP_Decoder* (*)()) dlsym(handle_ldpc, "create_dec_obj");
-	if ((error = dlerror()) != NULL)  
-	{
-    fputs(error, stderr);
-    exit(1);
+  if(ldpcflag)
+  { 
+    // TC: load the array code function from ldpc.so
+    
+    *(void **)(&decode_ldpc)= dlsym(handle_ldpc, "decode_ldpc");
+    char *error;
+    if ((error = dlerror()) != NULL)  
+    {
+      fputs(error, stderr);
+      exit(1);
+    }
+    dlerror();  // clear error
+    // don't really understand this implementation yet
+    get_obj = (FP_Decoder* (*)()) dlsym(handle_ldpc, "create_dec_obj");
+    if ((error = dlerror()) != NULL)  
+    {
+      fputs(error, stderr);
+      exit(1);
+    }
+    dlerror();  // clear error
+    del_obj = (void (*)(FP_Decoder*)) dlsym(handle_ldpc, "destroy_dec_obj");
+    if ((error = dlerror()) != NULL)  
+    {
+       fputs(error, stderr);
+       exit(1);
+    }
+    dlerror();
+    p_decoder_ldpc = get_obj();
   }
-	dlerror();  // clear error
-	del_obj = (void (*)(FP_Decoder*)) dlsym(handle_ldpc, "destroy_dec_obj");
-	if ((error = dlerror()) != NULL)  
+  else
   {
-     fputs(error, stderr);
-     exit(1);
+    //TC: load the general ldpc code
+    //*(void **)(&decode_ldpc)= dlsym(handle_ldpc, "decode_ldpc_general");
+    decode_ldpc_general 
+    = (FP_Decoder* (*)(FP_Decoder *, unsigned char *, unsigned char *, int))
+    dlsym(handle_ldpc, "decode_ldpc_general");
+    char *error;
+    if ((error = dlerror()) != NULL)  
+    {
+      fputs(error, stderr);
+      exit(1);
+    }
+    dlerror();  // clear error
+    // don't really understand this implementation yet
+    get_obj_general = (FP_Decoder* (*)(const char*,const char*, int)) dlsym(handle_ldpc, "create_dec_obj_general");
+    if ((error = dlerror()) != NULL)  
+    {
+      fputs(error, stderr);
+      exit(1);
+    }
+    dlerror();  // clear error
+    del_obj = (void (*)(FP_Decoder*)) dlsym(handle_ldpc, "destroy_dec_obj");
+    if ((error = dlerror()) != NULL)  
+    {
+       fputs(error, stderr);
+       exit(1);
+    }
+    dlerror();
+    //Decoder.ReadH("H_802.11_IndZero.txt");
+    p_decoder_ldpc = get_obj_general("H_802.11_IndZero.txt", "wifi_infoindx.txt", 1);
   }
-  dlerror();
-	
-  p_decoder_ldpc = get_obj();
+    
+  cout << "constructed decoder with pointer " << p_decoder_ldpc << endl;
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()
 {
   // Xu
   //dlclose(handle);
-  del_obj(p_decoder_ldpc);
+  //del_obj(p_decoder_ldpc);
+  //cout << "deleted decoder with pointer \n";
   dlclose(handle_ldpc);
 }
 
@@ -231,12 +269,26 @@ gr_framer_sink_1::work (int noutput_items,
       int i, j,offset;
   
       //--- hard set the packet length here. change later
-      cat_setlength(2209);
-    
-      info_packetlen = 1978;
+      //--------------------
+      // array code: 
+      //cat_setlength(2209);
+      //info_packetlen = 1978;
+      //--------------------
+      
+      //--------------------
+      //wifi ldpc code:
+      //cout << "in framer sink p_dec= " << p_decoder_ldpc << endl;
+      info_packetlen = 972;
+      cat_setlength(1944);
+      //--------------------
+      //try
+      //{
       while (count < noutput_items)
       {
-        pkt_symbol[d_packetsym_cnt++] = in_symbol[count++]; 
+        
+             pkt_symbol[d_packetsym_cnt++] = in_symbol[count++]; 
+        
+       
         //printf("pkt_symbol is %u \n", pkt_symbol[d_packetsym_cnt-1]);
         /*
         if (d_packetsym_cnt%8 ==0 )
@@ -264,11 +316,22 @@ gr_framer_sink_1::work (int noutput_items,
         { // Collect all symbols
     
           // Decode here!// (*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);
-          // test uncoded case first
-          (*decode_ldpc)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
+          //--------------------
+          // array ldpc code
+          //(*decode_ldpc)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
+          
+          //---- general and array ldpc both use the same pointer, 
+          // a flag is used to set which decoder to load in constructor
+          //cout << "collected enough symbosl, start decoding\n";
+          //cout << "before callindg decoder in frame sink p_dec= " << p_decoder_ldpc << endl;
+          //--!!! p_decoder_ldpc will dissapear!!!! => don't know why!!!
+          //p_decoder_ldpc = (*decode_ldpc_general)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
+        
+          (*decode_ldpc_general)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
+          
           
           // uncoded case: simply remove dummy bits
-          /*for(i = 0; i < 1978; i++)
+          /*for(i = 0; i < INFO_LENGTH; i++)
           {
             d_packet_byte = 0;
             for(j = 0; j < 8; j++)
@@ -278,18 +341,26 @@ gr_framer_sink_1::work (int noutput_items,
             out_symbol[i] = d_packet_byte;
           }
           */
-          
+
           gr_message_sptr msg = gr_make_message(0, d_packet_whitener_offset, 0, info_packetlen);
+
           memcpy(msg->msg(), out_symbol, info_packetlen);
-    
+
           d_target_queue->insert_tail(msg);		// send it
           msg.reset();  				// free it up
-    
           enter_search();
           break;
         }
       }
-      //dlclose(handle);
+      
+      //}
+      //catch (std::exception& e)
+      //{
+      //    std::cerr << "Exception catched : " << e.what() << std::endl;
+      //    std::cerr << "d_packetsym_cnt is " << d_packetsym_cnt << endl;
+      //    std::cerr << "count is " << count << endl;
+      //}
+      
       break;
       ////
       /*

@@ -172,8 +172,11 @@ def make_packet(payload, enc_ptr, samples_per_symbol, bits_per_symbol,
     #ccEncoder.cc3_encode(cccodedpayload, ccnb, RSLEN)
 
     ######################
-    ldpcnb = 1978
-    ldpccl = 2209 
+    #ldpcnb = 1978
+    #ldpccl = 2209
+    # rate 1/2 wifi code
+    ldpcnb = 972
+    ldpccl = 1944 
 
     # just add dummy bits to the payload_with_crc
     coded_payload = payload_with_crc + ('x' * (ldpccl-ldpcnb))
@@ -211,8 +214,10 @@ def make_packet(payload, enc_ptr, samples_per_symbol, bits_per_symbol,
         pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
                        coded_payload, '\x55'))
     '''
-    
-    ldpc.encode_ldpc(enc_ptr, whiten(payload_with_crc, 0), coded_payload, ldpcnb)
+    # array code
+    #ldpc.encode_ldpc(enc_ptr, whiten(payload_with_crc, 0), coded_payload, ldpcnb)
+    # rate 1/2 ldpc code
+    ldpc.encode_ldpc_general(enc_ptr, whiten(payload_with_crc, 0), coded_payload, ldpcnb)
     pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
                        coded_payload, '\x55'))
     if pad_for_usrp:

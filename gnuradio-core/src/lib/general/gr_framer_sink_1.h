@@ -64,7 +64,7 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
  private:
   enum state_t {STATE_SYNC_SEARCH, STATE_HAVE_SYNC, STATE_HAVE_HEADER};
 
-  static const int MAX_PKT_LEN    = 10000; //4096; // Xu: make it larger
+  static const int MAX_PKT_LEN    = 20000; //4096; // Xu: make it larger
   static const int HEADERBITLEN   = 32;
   
 
@@ -95,21 +95,25 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   */
   //TC: For soft LDPC decoding
   void *handle_ldpc;
-  FP_Decoder *p_decoder_ldpc;
+ 
   FP_Decoder *(*get_obj)(void);
+  FP_Decoder *(*get_obj_general)(const char*, const char*, int vflag);
   void (*del_obj)(FP_Decoder*);
   void (* decode_ldpc)(FP_Decoder *, unsigned char *, unsigned char *, int);
-  static const int LDPCCLEN = 2209;// pad 1670 bits with zeros and encode
-  static const int LDPCINFOLEN = 1978;
+  FP_Decoder *(* decode_ldpc_general)(FP_Decoder *, unsigned char *, unsigned char *, int);
+  //static const int LDPCCLEN = 2209;// pad 1670 bits with zeros and encode
+  //static const int LDPCINFOLEN = 1978;
   //--------- new part end 
 
  protected:
+  FP_Decoder *p_decoder_ldpc;
+ 
   gr_framer_sink_1(gr_msg_queue_sptr target_queue);
-
+  
   void enter_search();
   void enter_have_sync();
   void enter_have_header(int payload_len, int whitener_offset);
-
+  
   bool header_ok()
   {
     // confirm that two copies of header info are identical

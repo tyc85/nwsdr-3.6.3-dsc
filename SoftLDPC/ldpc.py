@@ -90,8 +90,8 @@ class FP_Encoder(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, FP_Encoder, name)
     __repr__ = _swig_repr
-    def __init__(self): 
-        this = _ldpc.new_FP_Encoder()
+    def __init__(self, *args): 
+        this = _ldpc.new_FP_Encoder(*args)
         try: self.this.append(this)
         except: self.this = this
     __swig_destroy__ = _ldpc.delete_FP_Encoder
@@ -125,6 +125,22 @@ encode_ldpc = _ldpc.encode_ldpc
 def decode_ldpc(*args):
   return _ldpc.decode_ldpc(*args)
 decode_ldpc = _ldpc.decode_ldpc
+
+def create_enc_obj_general(*args):
+  return _ldpc.create_enc_obj_general(*args)
+create_enc_obj_general = _ldpc.create_enc_obj_general
+
+def create_dec_obj_general(*args):
+  return _ldpc.create_dec_obj_general(*args)
+create_dec_obj_general = _ldpc.create_dec_obj_general
+
+def encode_ldpc_general(*args):
+  return _ldpc.encode_ldpc_general(*args)
+encode_ldpc_general = _ldpc.encode_ldpc_general
+
+def decode_ldpc_general(*args):
+  return _ldpc.decode_ldpc_general(*args)
+decode_ldpc_general = _ldpc.decode_ldpc_general
 # This file is compatible with both classic and new-style classes.
 
 

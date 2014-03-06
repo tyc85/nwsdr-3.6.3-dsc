@@ -1,0 +1,1 @@
+g++ -O2  ArrayLDPC_Encoder.cpp ArrayLDPC_Decoder.cpp rngs.cpp rvgs.cpp PerfTest.cpp Wrapper.cpp -o test -lm -ldl
