@@ -40,7 +40,7 @@ from sensing_path import sensing_path
 #from sensereceive_path import sensereceive_path
 from receive_path import receive_path 
 
-import time, struct, sys
+import time, struct, sys, random
 
 #import os 
 #print os.getpid()
@@ -50,12 +50,11 @@ global bandchoose
 bandchoose = 2
 
 class my_top_block(gr.top_block):
-    def __init__(self, modulator, demodulator, rx_callback, options):
+    def __init__(self, modulator, options):
         gr.top_block.__init__(self)
 
 
 #####################################################################
-        #samp_rate= 3000000
         samp_rate = options.bitrate*options.samples_per_symbol
         fa = 1.25* samp_rate/4 #1000000
 
@@ -64,7 +63,6 @@ class my_top_block(gr.top_block):
         if(options.tx_freq is not None):
             # Work-around to get the modulation's bits_per_symbol
             args = modulator.extract_kwargs_from_options(options)
-            #symbol_rate = 1500000 / modulator(**args).bits_per_symbol()    #BZ
             symbol_rate = options.bitrate / modulator(**args).bits_per_symbol()
 
             self.sink = uhd_transmitter(options.args, symbol_rate,
@@ -81,11 +79,6 @@ class my_top_block(gr.top_block):
             sys.stderr.write("No sink defined, dumping samples to null sink.\n\n")
             self.sink = gr.null_sink(gr.sizeof_gr_complex)
 
-        # do this after for any adjustments to the options that may
-        # occur in the sinks (specifically the UHD sink)
-        #self.txpath = transmit_path(modulator, options)
-
-        #self.connect(self.txpath, self.sink)
 
 	# do this after for any adjustments to the options that may
         # occur in the sinks (specifically the UHD sink)
@@ -93,7 +86,6 @@ class my_top_block(gr.top_block):
         self.txpath1 = transmit_path(modulator, options)
         self.txpath2 = transmit_path(modulator, options)
 
-	#self.connect(self.txpath, self.sink)
 
 	# Define the math operator blocks
 	
@@ -139,15 +131,6 @@ class my_top_block(gr.top_block):
         self.connect((self.analog_sig_source_x_0_0, 0), (self.gr_multiply_xx_0, 0))
         self.connect((self.const_source_x_0, 0), (self.gr_multiply_xx_0, 1)) 
 
-	# txpath1 * exp(-jw1t)
-	#self.connect(self.txpath1, (self.gr_multiply_xx_1, 0))
-        
-	# txpath2 * exp(jw1t)
-	#self.connect(self.txpath2, (self.gr_multiply_xx_2, 0))
-	
-        
-
-
 
        
         self.connect(self.txpath1, (self.gr_multiply_xx_11, 0))
@@ -186,17 +169,13 @@ class my_top_block(gr.top_block):
         self.connect(self.gr_f2c, self.txgate, self.sink)
 
 
-
 ########################################################################
 
-
-
-
         self.tx_enabled = True
-        sense_symbol_rate=2500000
+        sense_symbol_rate=2500000# the sensing band is 5M
         sense_samples_per_symbol=2
-        sense_rx_freq=2500000000#600000000
-        sense_rx_gain=20
+        sense_rx_freq=options.tx_freq # the sensing central frequency is the same to transmit part
+        sense_rx_gain=5 #this value should be modified
         options.chbw_factor=1
 
 
@@ -211,10 +190,6 @@ class my_top_block(gr.top_block):
 
 	# do sense
         self.sensepath = sensing_path(options)
-
-
-	self.sense_flag=False
-        self.senserxpath = receive_path(demodulator, rx_callback, options) 
         self.connect(self.sensesource, self.sensepath)
 
 	
@@ -225,10 +200,6 @@ class my_top_block(gr.top_block):
 shutdown_event = threading.Event()
 
 def main():
-    #global tx_enabled, sense_flag
-    #tx_enabled = False
-    #sense_flag = True
-  
 
     def send_pkt(payload='', eof=False):
         return tb.txpath.send_pkt(payload, eof)
@@ -246,63 +217,20 @@ def main():
 
     n_rcvd = 0
     n_right = 0
-    
-    def rx_callback(ok, payload):
-        global n_rcvd, n_right
-        (pktno,) = struct.unpack('!H', payload[0:2])
-        n_rcvd += 1
-        if ok:
-            n_right += 1
-
-        #print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" % (
-        #    ok, pktno, n_rcvd, n_right)
-	
-    #def dowork():
-    #    global tx_enabled
-    #    while not shutdown_event.is_set():
-            #tx_enabled=False
-            #tb.txgate.set_enabled(False)
-            #time.sleep(0.2)
-            #tb.sensegate.set_enabled(True)
-            #time.sleep(0.2)
-    #        if (time.time() % 10 <= 8):
-    #            tx_enabled=True
-    #            tb.txgate.set_enabled(True)
-                #time.sleep(.01)
-    #            tb.sensegate.set_enabled(False)
-    #            sense_flag=True                 
-    #        else:
-    #            if sense_flag:
-    #                tx_enabled=False
-    #                tb.txgate.set_enabled(False)
-                #time.sleep(.01)
-    #                tb.sensegate.set_enabled(True)
-    #                sense_flag=False
-    #            else:
-    #                tx_enabled=True
-    #                tb.txgate.set_enabled(True)
-                    #time.sleep(.01)
-    #                tb.sensegate.set_enabled(False)                       	
-                
-    #        time.sleep(0.2)				
+    			
 
     mods = digital.modulation_utils.type_1_mods()
-    demods = digital.modulation_utils.type_1_demods()
 
     parser = OptionParser(option_class=eng_option, conflict_handler="resolve")
     expert_grp = parser.add_option_group("Expert")
 
     parser.add_option("-m", "--modulation", type="choice", choices=mods.keys(),
-                      default='psk',
-                      help="Select modulation from: %s [default=%%default]"
+                      default='gmsk',
+                      help="Select modulation from: %s [default=gmsk]"
                             % (', '.join(mods.keys()),))
-    #parser.add_option("-d", "--demodulation", type="choice", choices=demods.keys(),
-    #                  default='gmsk',
-    #                  help="Select demodulation for sensing from: %s [default=%%default]"
-    #                        % (', '.join(demods.keys()),))
     parser.add_option("-s", "--size", type="eng_float", default=1500,
                       help="set packet size [default=%default]")
-    parser.add_option("-M", "--megabytes", type="eng_float", default=1.0,
+    parser.add_option("-M", "--megabytes", type="eng_float", default=1000,
                       help="set megabytes to transmit [default=%default]")
     parser.add_option("","--discontinuous", action="store_true", default=False,
                       help="enable discontinous transmission (bursts of 5 packets)")
@@ -328,15 +256,14 @@ def main():
         source_file = open(options.from_file, 'r')
 
     # build the graph
-    tb = my_top_block(mods[options.modulation], demods[options.modulation], rx_callback, options)
+    tb = my_top_block(mods[options.modulation],  options)
+
 
     r = gr.enable_realtime_scheduling()
     if r != gr.RT_OK:
         print "Warning: failed to enable realtime scheduling"
 
     tb.start()                       # start flow graph
-    #t = threading.Thread(target=dowork, args=(), name='worker')
-    #t.start()
 
         
     # generate and send packets
@@ -346,77 +273,80 @@ def main():
     pktno = 0
     pkt_size = int(options.size)
     count_pkt=0
-    non_available=0
-    sense_result=[0,0,0]
-    sense_old_result=[0,0,0]	
+    sense_result=[1,1,1]
+    temp_sense_result=[1,1,1]
+    previous_sense_result=[1,1,1]
+    non_available=1
+    non_available_count=0
+    all_available_count=0
+    start_flag=1
 
     while n < nbytes:
-        if (count_pkt%500 == 0 and sense_n==1) or non_available==1: #sence once
+        if (count_pkt%500 == 0 and sense_n==1):# or non_available==1: #sence once
             tb.txgate.set_enabled(True)
-            #time.sleep(.5)
+            time.sleep(.6)
             tb.sensegate.set_enabled(True) #t
-            
-            if first_sense==1:#first time to sense
-                sense_result = tb.sensepath.GetAvailableSpectrum()
-                sense_old_result=sense_result
-                first_sense=0
-            else:#wait for the transmitter to finish transmitting
-            
-                                
+            previous_sense_result = temp_sense_result
+            sense_result = tb.sensepath.GetAvailableSpectrum()
+            temp_sense_result = sense_result                            
             sumsense_result=sum(sense_result)
-            sense_result_difsqr=(sense_result[0]-sense_old_result[0])^2+(sense_result[1]-sense_old_result[1])^2+(sense_result[2]-sense_old_result[2])^2
-            #once sensing the own transmitter ,keep sensing //wait for the transmitter to finish transmitting 
-            if sense_result_difsqr==0 or sumsense_result==0: 
-                non_available=1
-            #else wait for 0.01s and sense the actual channel
-            else: 
-                non_available=0
+            #avoid sensing others' sensing period but if it is the start time, using the 3 subchannels   
+            if sumsense_result==3:             
+                sense_result = previous_sense_result #
+                sumsense_result=sum(sense_result)
+            if sumsense_result==0: #if no sub-channel is available, keep sensing
                 time.sleep(0.2)
-                sense_result = tb.sensepath.GetAvailableSpectrum()
-                sense_old_result = sense_result
+                non_available=1
+                non_available_count += 1
+                if non_available_count == 13: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
+                    active_index=random.randint(0,2)
+                    sense_result = [0, 0, 0]
+                    sense_result[active_index] = 1
+                    non_available = 0
+                    non_available_count = 0                
+            else:
+                non_available = 0
+                non_available_count = 0
                 
+            if sumsense_result >= 2: #if more than 1 sub-channels are available, count the number
+                all_available_count += 1
+                if all_available_count == 3: # after 10 times using more than one sub-channels, shut down all sub-channels to give the chance to other teams to transmit
+                    inactive_index=random.randint(0,2)
+                    if sense_result[inactive_index]==0: # if the selected sub-channel is inactive, change the index
+                        inactive_index=(inactive_index+1)%3
+                    sense_result[inactive_index] = 0 #inactive one sub-channel to other team
+                    all_available_count = 0                  
+            else:
+                all_available_count = 0
+            sense_n=0 # this makes sure that after sensing, transmit continues
+            #diff_sum_sense_result=sumsense_result-sumtemp_sense_result
+            #if diff_sum_sense > 1
+            #sense_result=[0,1,1]
+            print sense_result
             
-            #avail_subc_str = subc_bin2str(avail_subc_bin)
- #           print avail_subc_bin
-            #time.sleep(0.002)
-            sense_n=0
-            #tb.txgate.set_enabled(True)
-            #tb.sensegate.set_enabled(False)
+
         else:
-            first_sense=1
             # linklab, loop to empty the lower layer buffers to avoid detecting old signals
             #send_pkt(eof=False)
             count_pkt += 1
             sense_n=1
             tb.txgate.set_enabled(True) #t
-            #time.sleep(.01)
-            tb.sensegate.set_enabled(False)
-            #time.sleep(0.001)
-            if options.from_file is None:
-                data = (pkt_size - 2) * chr(pktno & 0xff) 
-                
-            else:
-                data = source_file.read(pkt_size - 2)
-                if data == '':
-                    break;
-
-            payload = struct.pack('!H', pktno & 0xffff) + data
-            
-            
+            tb.sensegate.set_enabled(False)                      
             data_waste=(pkt_size - 2) * chr(0xff)
 
-            #sense_result=[0,0,0]
-            
-            
-            #time.sleep(1)
             
             if sense_result[0]==1:  # left
                 tb.const_source_x_11.set_amplitude(1)
+                if options.from_file is None:
+                    data = (pkt_size - 2) * chr(pktno & 0xff) 
+                else:
+                    data = source_file.read(pkt_size - 2)
+                    if data == '':
+                        break;
                 payload1 = struct.pack('!H', pktno & 0xffff) + data
                 send_pkt1(payload1)
                 pktno += 1    
                 n += len(payload1)
-                #print 0
                 sys.stderr.write('.')
             else:
                 tb.const_source_x_11.set_amplitude(0)
@@ -425,12 +355,17 @@ def main():
 	            
             if sense_result[1]==1:  #medium
                 tb.const_source_x_00.set_amplitude(1)
+                if options.from_file is None:
+                    data = (pkt_size - 2) * chr(pktno & 0xff) 
+                else:
+                    data = source_file.read(pkt_size - 2)
+                    if data == '':
+                        break;
                 payload0 = struct.pack('!H', pktno & 0xffff) + data
                 send_pkt0(payload0)
                 pktno += 1    
                 n += len(payload0)
                 sys.stderr.write('.')
-                #print 1
             else:
                 tb.const_source_x_00.set_amplitude(0)
                 payload0 = struct.pack('!H', pktno & 0xffff) + data_waste
@@ -438,12 +373,17 @@ def main():
                 	            	        
             if sense_result[2]==1:  #right
                 tb.const_source_x_22.set_amplitude(1)
+                if options.from_file is None:
+                    data = (pkt_size - 2) * chr(pktno & 0xff) 
+                else:
+                    data = source_file.read(pkt_size - 2)
+                    if data == '':
+                        break;
                 payload2 = struct.pack('!H', pktno & 0xffff) + data
                 send_pkt2(payload2)
                 pktno += 1    
                 n += len(payload2)
-                sys.stderr.write('.')
-                #print 2	
+                sys.stderr.write('.')	
             else:
                 tb.const_source_x_22.set_amplitude(0)
                 payload2 = struct.pack('!H', pktno & 0xffff) + data_waste
@@ -451,11 +391,7 @@ def main():
                 
             if options.discontinuous and pktno % 5 == 4:
                 time.sleep(1)
-            #pktno += 1
 
-
-#            pktno += 1
-#    send_pkt(eof=True)
 
 
 

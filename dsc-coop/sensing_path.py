@@ -59,6 +59,8 @@ class sensing_path(gr.hier_block2):
         # linklab, fft size for sensing, different from fft length for tx/rx
         self.fft_size = FFT_SIZE
 
+	self._thr_sense=options.thr_sense
+
         # interpolation rate: sensing fft size / ofdm fft size
         self.interp_rate = self.fft_size/FFT_SIZE #options.fft_length
 
@@ -231,12 +233,12 @@ class sensing_path(gr.hier_block2):
     	
     	result=[1, 1, 1]
     	
-    	if temp_result_1 >= SENSE_THR:
+    	if temp_result_1 >= self._thr_sense:
     	    result[0]=0
     	    
-    	if temp_result_2 >= SENSE_THR:
+    	if temp_result_2 >= self._thr_sense:
     	    result[1]=0    	    
-    	if temp_result_3 >= SENSE_THR:
+    	if temp_result_3 >= self._thr_sense:
     	    result[2]=0    	    
     	    
 

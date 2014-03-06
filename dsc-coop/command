@@ -1,2 +1,16 @@
-cd FX
-./benchmark3_tx.py -f 2.5G -r 1.25M -S 4 -m gmsk --tx-gain=30 -M 1000
+./dsc_coop_rx.py -f 600M -r 1.25M -S 4 -m gmsk --rx-gain=20
+
+
+
+./dsc_coop_tx.py -f 600M -r 1.25M -S 4 -m gmsk -M 1000 --tx-gain=30 --tx-amplitude 0.3 -s 1442
+
+
+
+
+Commands on the grid
+ ssh wildcats@console.grid.orbit-lab.org
+ 
+ enter nwr folder, then
+ scp -r dsc-coop root@node1-20:
+ 
+ ssh root@node1-20
