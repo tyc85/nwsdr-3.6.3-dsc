@@ -1,0 +1,15 @@
+128 bit access code:
+SNR=20dB threshold=24 catch all, all true
+
+SNR=15dB threshold=24 catch all, 93% true
+
+SNR=10dB threshold=24 catch 92%, 0.3% true
+SNR=10dB threshold=30 catch 94%, 0.3% true
+
+SNR=5dB threshold=24 catch 50%, all wrong
+SNR=5dB threshold=30 catch 58%, all wrong
+SNR=5dB threshold=36 catch 65%, all wrong
+
+SNR=3dB threshold=24 catch 21%, all wrong
+SNR=3dB threshold=30 catch 42%, all wrong
+SNR=3dB threshold=36 "Floating point exception (core dumped)"
