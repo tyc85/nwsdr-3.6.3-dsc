@@ -28,7 +28,6 @@
 #include <gr_io_signature.h>
 #include <gr_math.h>
 #include <stdexcept>
-#include <cstdio>
 
 digital_binary_slicer_fb_sptr
 digital_make_binary_slicer_fb ()
@@ -36,16 +35,10 @@ digital_make_binary_slicer_fb ()
   return gnuradio::get_initial_sptr(new digital_binary_slicer_fb ());
 }
 
-// Xu: The second output port outputs float soft info
-static int os[] = {sizeof(char), sizeof(float)};
-static std::vector<int> osig(os, os+sizeof(os)/sizeof(int));
-
-
 digital_binary_slicer_fb::digital_binary_slicer_fb ()
   : gr_sync_block ("binary_slicer_fb",
-		   gr_make_io_signature (1, 1, sizeof (float)), 
-		   //gr_make_io_signature (1, 1, sizeof (unsigned char))) // Commented by Xu		
-		   gr_make_io_signaturev (1, 2, osig))
+		   gr_make_io_signature (1, 1, sizeof (float)),
+		   gr_make_io_signature (1, 1, sizeof (unsigned char)))
 {
 }
 
@@ -57,19 +50,9 @@ digital_binary_slicer_fb::work (int noutput_items,
   const float *in = (const float *) input_items[0];
   unsigned char *out = (unsigned char *) output_items[0];
 
-  // Xu: The second output port passes the soft values
-  float * out_symbol;
-  if (output_items.size() ==2){
-    out_symbol = (float *) output_items[1];  // float point
-  }
 
   for (int i = 0; i < noutput_items; i++){
     out[i] = gr_binary_slicer(in[i]);
-  
-    // Xu
-    if (output_items.size() ==2)
-	out_symbol[i] = in[i];
-	//printf("soft symbol from slicer is %f \n", out_symbol[i]);
   }
   
   return noutput_items;

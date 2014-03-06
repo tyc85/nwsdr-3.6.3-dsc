@@ -22,8 +22,10 @@
 from gnuradio import gr
 from gnuradio import eng_notation
 #from gnuradio import digital
-
+######## for cats module ##########
 from cat_pkt import cat_mod_pkts 
+import gmsk_cats
+###################################
 
 import copy
 import sys

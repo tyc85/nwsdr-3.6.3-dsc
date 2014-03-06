@@ -24,7 +24,9 @@ from gnuradio import gr, gru
 from gnuradio import eng_notation
 #from gnuradio import digital # Commented by Xu 2014-2-9
 
+########## cats module ###########
 from cat_pkt import cat_demod_pkts 
+import gmsk_cats
 
 import copy
 import sys

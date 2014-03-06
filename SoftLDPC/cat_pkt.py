@@ -143,6 +143,7 @@ class cat_demod_pkts(gr.hier_block2):
 	"""
 
 	gr.hier_block2.__init__(self, "demod_pkts",
+
 				gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
 				gr.io_signature(0, 0, 0))                    # Output signature
 
@@ -158,12 +159,12 @@ class cat_demod_pkts(gr.hier_block2):
             threshold = 12              # FIXME raise exception
             #threshold = 14 ## relax the sync
             #print threshold
-        threshold = 12
+        threshold = 16
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
         self.correlator = digital_swig.correlate_access_code_bb(access_code, threshold)
         
         self.framer_sink = gr.framer_sink_1(self._rcvd_pktq)
-
+        # potentiall set length here using self.framer_sink.cat_setlength(1944)
         # Modified by Xu
         #self.connect(self, self._demodulator, self.correlator, self.framer_sink)
         
