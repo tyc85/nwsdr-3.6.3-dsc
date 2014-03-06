@@ -30,7 +30,7 @@
 #include <stdexcept>
 #include <iostream>
 
-#define DEBUG_CR_MM_FF	0		// must be defined as 0 or 1
+#define DEBUG_CR_MM_FF	1		// must be defined as 0 or 1
 
 // Public constructor
 
@@ -134,10 +134,10 @@ digital_clock_recovery_mm_ff::general_work (int noutput_items,
 
     // produce output sample
     out[oo] = d_interp->interpolate (&in[ii], d_mu);
-	if (pam4==0)
-    mm_val = slice(d_last_sample) * out[oo] - slice(out[oo]) * d_last_sample;
-else
-    mm_val = (slice_pam4(d_last_sample) * out[oo] - slice_pam4(out[oo]) * d_last_sample)/5.0;
+    if (pam4==0)
+    	mm_val = slice(d_last_sample) * out[oo] - slice(out[oo]) * d_last_sample;
+    else
+    	mm_val = (slice_pam4(d_last_sample) * out[oo] - slice_pam4(out[oo]) * d_last_sample)/10.0;
     d_last_sample = out[oo];
 
     d_omega = d_omega + d_gain_omega * mm_val;
@@ -150,7 +150,9 @@ else
     oo++;
 
     if (DEBUG_CR_MM_FF && d_logfile){
-      fwrite(&d_omega, sizeof(d_omega), 1, d_logfile);
+      // fwrite(&d_omega, sizeof(d_omega), 1, d_logfile);
+      fprintf(d_logfile, "%f, ", d_omega );
+	//printf( "%d pam4 in clock recovery\n", pam4 );
     }
   }
 

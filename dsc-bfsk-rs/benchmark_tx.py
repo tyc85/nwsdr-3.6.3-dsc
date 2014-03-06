@@ -86,7 +86,7 @@ def main():
                       help="Select modulation from: %s [default=%%default]"
                             % (', '.join(mods.keys()),))
 
-    parser.add_option("-s", "--size", type="eng_float", default=1500,
+    parser.add_option("-s", "--size", type="eng_float", default=1442,
                       help="set packet size [default=%default]")
     parser.add_option("-M", "--megabytes", type="eng_float", default=1.0,
                       help="set megabytes to transmit [default=%default]")

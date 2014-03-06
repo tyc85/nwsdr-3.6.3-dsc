@@ -29,6 +29,9 @@ digital_make_clock_recovery_mm_ff (float omega, float gain_omega,
 
 class digital_clock_recovery_mm_ff : public gr_sync_block
 {
+ public:
+  void set_pam4();
+
  private:
   digital_clock_recovery_mm_ff (float omega, float gain_omega,
 				float mu, float gain_mu,

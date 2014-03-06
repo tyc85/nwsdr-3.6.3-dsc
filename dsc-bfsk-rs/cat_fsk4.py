@@ -101,7 +101,7 @@ class gmsk_cats_mod(gr.hier_block2):
 	self.nrz = gr.bytes_to_syms()
 	if _def_pam4:
         	self.nrz.setpam4()
-		print "pam4 transmitter"
+		# print "pam4 transmitter"
 
 	# Form Gaussian filter
         # Generate Gaussian response (Needs to be convolved with window below).
@@ -250,7 +250,7 @@ class gmsk_cats_demod(gr.hier_block2):
         self.slicer = digital.binary_slicer_fb()
 	if _def_pam4:
 		self.slicer.setpam4()
-		print "pam4 receiver"
+		self.clock_recovery.set_pam4()
 
         if verbose:
             self._print_verbage()
