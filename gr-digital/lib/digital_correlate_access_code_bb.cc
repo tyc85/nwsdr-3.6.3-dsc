@@ -115,8 +115,11 @@ digital_correlate_access_code_bb::work (int noutput_items,
     int new_flag = 0;
 
     wrong_bits  = (d_data_reg ^ d_access_code) & d_mask;
-    wrong_bits += (d_data_reg1 ^ d_access_code1) & d_mask;
     nwrong = gr_count_bits64(wrong_bits);
+    //printf("%d\n",nwrong);
+    wrong_bits = (d_data_reg1 ^ d_access_code1) & d_mask;
+    nwrong += gr_count_bits64(wrong_bits);
+    //printf("%d\n",nwrong);
 
     // test for access code with up to threshold errors
     new_flag = (nwrong <= d_threshold);
@@ -141,7 +144,7 @@ digital_correlate_access_code_bb::work (int noutput_items,
       d_flag_reg |= d_flag_bit;
     }
   }
-
+  //printf("%d\n",d_threshold);
   return noutput_items;
 }
   
