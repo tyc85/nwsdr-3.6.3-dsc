@@ -267,9 +267,9 @@ gr_framer_sink_1::work (int noutput_items,
               snr_sum += cat_snr[j];
             }
             snr_sum /=10;}
-          cat_num++;
-          printf("snr=%f\n",10*log10(snr_sum));
-              }
+            cat_num++;
+            //printf("snr=%f\n",10*log10(snr_sum));
+          }
           
           enter_have_sync();
           break;
