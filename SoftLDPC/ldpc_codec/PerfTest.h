@@ -24,7 +24,7 @@ FP_Encoder* create_enc_obj_general(const char *in, int vflag);
 
 extern "C" FP_Decoder* create_dec_obj_general(const char *in_h, const char *in_idx, int vflag);
 
-extern "C" FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char* uchar_in, 
+extern "C" int decode_ldpc_general(FP_Decoder* p_decoder, float* in, 
 						unsigned char* uchar_out, int in_len_bit);
 
 int encode_ldpc_general(FP_Encoder* p_encoder, char* uchar_in, 

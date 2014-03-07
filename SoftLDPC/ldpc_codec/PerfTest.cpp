@@ -27,7 +27,7 @@ using std::ofstream;
 //--------- new wrapper code for rate 1/2 802.11n ldpc code
 
 // the input of the decode_ldpc is 8bit fixed point soft information
-extern "C" FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char* uchar_in, 
+extern "C" int decode_ldpc_general(FP_Decoder* p_decoder, float* in, 
 						unsigned char* uchar_out, int in_len_bit)
 {
 	//static const int WIFI_CLENTH = 1944;
@@ -59,7 +59,7 @@ extern "C" FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char*
 			VarAddr = p_decoder->getInfoIndex(i);
 			for(j = 0; j < 8; j++)
 			{
-				temp_in = (float(uchar_in[VarAddr*8 + j]) - 128);
+				temp_in = (in[VarAddr*8 + j] - 128);
 				//d_packet_byte = (d_packet_byte << 1) | ((pkt_symbol[i*8 + j] - 128) > 0? 1:0);
 				byte = (byte << 1) | ((temp_in) > 0? 1:0);
 
@@ -76,7 +76,7 @@ extern "C" FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char*
 	if(CWD_LENGTH != in_len_bit)
 	{
 		cerr << "codeword length not match, constant is " << CWD_LENGTH 
-		<< ", but in_len_bit is "<<in_len_bit<<endl;
+		<< ", but in_len_bit is " << in_len_bit << endl;
 		exit(1);
 	}
 	iter_count = 0;
@@ -85,6 +85,7 @@ extern "C" FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char*
 		//every cwd_cnt + i*8 bit is the first batch
 		counter = 0;
 		//cout << " cwd_cnt " << cwd_cnt << endl;
+		//cout << "rev symbol: ";
 		for(i = 0; i < CWD_LENGTH; i++)
 		{	
 			VarAddr = cwd_cnt + i*8;
@@ -94,14 +95,19 @@ extern "C" FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char*
 			// how to estimate channel value???
 			// chl_val = 10
 			
-			temp_in = (float(uchar_in[VarAddr]) - 128)/32;
-			temp_in = -temp_in*4; // chage sign and mul channel value est
-			int_in[counter] = int(temp_in *(1 << FRAC_WIDTH)); //make to fixed point
-			
+			//temp_in = (in[VarAddr] - 128)/32;
+			//temp_in = -temp_in*4; // chage sign and mul channel value est
+			//int_in[counter] = int(temp_in *(1 << FRAC_WIDTH)); //make to fixed point
+			//****** 
+			//* for gmsk the soft value range from -0.5 to 0.5, for bpsk
+			//* what is the range??? might be worth it to find out. 
+			//cout << in[VarAddr] << " "; 
+			int_in[counter] = int(-8*in[VarAddr] * (1 << FRAC_WIDTH) );
 			//int_in[counter] = -(float(uchar_in[VarAddr]) - 128);
 			//int_in[counter] = 
 			counter ++;
 		}
+		//cout << endl;
 
 		p_decoder -> setState(PCV);
 		iter = p_decoder -> decode_general_fp(int_in);
@@ -113,7 +119,7 @@ extern "C" FP_Decoder* decode_ldpc_general(FP_Decoder* p_decoder, unsigned char*
 		cout << "avg iter: " << iter_count <<endl;
 
 	//cout << "finished decode ldpc general p_dec = " << p_decoder << endl;
-	return p_decoder;
+	return 0;
 }
 
 
@@ -251,10 +257,7 @@ extern "C" int decode_ldpc(FP_Decoder* p_decoder, unsigned char* uchar_in,
 	static const int char_size = sizeof(char)*8;
 	static int sign;
 	static int in_len_byte;
-	//unsigned char *t_uchar_in = reinterpret_cast<unsigned char*>(uchar_in);
-	//unsigned char *t_uchar_out = reinterpret_cast<unsigned char*>(uchar_out);
-	//unsigned char *t_uchar_in = uchar_in;
-	//unsigned char *t_uchar_out = uchar_out;
+
 	counter = 0;
 	//cwd_cnt = 0;// repeat the decoding for 8 times
 	// the info bits are padded with 1978 - 1670 = 308 zeros

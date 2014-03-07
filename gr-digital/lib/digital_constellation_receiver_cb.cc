@@ -49,6 +49,7 @@ digital_make_constellation_receiver_cb(digital_constellation_sptr constell,
 
 // Xu: Make the seond port output the raw complex samples
 //static int ios[] = {sizeof(char), sizeof(float), sizeof(float), sizeof(float), sizeof(gr_complex)};
+// TC: five output, which I am not sure what was happening
 static int ios[] = {sizeof(char), sizeof(gr_complex), sizeof(float), sizeof(float), sizeof(float)};
 
 static std::vector<int> iosig(ios, ios+sizeof(ios)/sizeof(int));
@@ -57,9 +58,9 @@ digital_constellation_receiver_cb::digital_constellation_receiver_cb (digital_co
   : gr_block ("constellation_receiver_cb",
 	      gr_make_io_signature (1, 1, sizeof (gr_complex)),
 	      gr_make_io_signaturev (1, 5, iosig)),
-    gri_control_loop(loop_bw, fmax, fmin),
-    d_constellation(constellation), 
-    d_current_const_point(0)
+        gri_control_loop(loop_bw, fmax, fmin),
+        d_constellation(constellation), 
+        d_current_const_point(0)
 {
   if (d_constellation->dimensionality() != 1)
     throw std::runtime_error ("This receiver only works with constellations of dimension 1.");

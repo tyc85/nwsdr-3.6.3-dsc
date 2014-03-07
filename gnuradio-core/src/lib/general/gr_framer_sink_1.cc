@@ -87,21 +87,21 @@ gr_make_framer_sink_1(gr_msg_queue_sptr target_queue)
 }
 
 // Xu: Make two input port, the second one passes the soft values
-// TC:what is this part doing???
+// 
 static int is[] = {sizeof(unsigned char), sizeof(float)};
 static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 
 gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
   : gr_sync_block ("framer_sink_1",
-       		   //gr_make_io_signaturev (1, 2, isig), // The second input port inputs float soft info
-		   gr_make_io_signature (1, 2, sizeof(unsigned char)), // fixed point info 
+       gr_make_io_signaturev (1, 2, isig), // The second input port inputs float soft info
+		   //gr_make_io_signature (1, 2, sizeof(unsigned char)), // fixed point info 
 		   //gr_make_io_signature (1, 1, sizeof(unsigned char)), // Commented by Xu
 		   gr_make_io_signature (0, 0, 0)),
     d_target_queue(target_queue)
 {
   enter_search();
-  // define a flag for array code or general ldpc code
-  static const int ldpcflag = 0;
+  char *error;
+
   dlerror();  // clear error
   handle_ldpc = dlopen ("/lib/_ldpc.so", RTLD_LAZY);
   if (!handle_ldpc) 
@@ -109,12 +109,16 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
     fputs (dlerror(), stderr);
     exit(1);
   }
-  if(ldpcflag)
-  { 
+  // set to wifi code for now
+  cat_code_mode = WIFI;
+  //---- later should move the following chunk of code to cat_setcode()
+  switch(cat_code_mode)
+  {
+    case ARRAY:
     // TC: load the array code function from ldpc.so
     
     *(void **)(&decode_ldpc)= dlsym(handle_ldpc, "decode_ldpc");
-    char *error;
+    
     if ((error = dlerror()) != NULL)  
     {
       fputs(error, stderr);
@@ -137,13 +141,14 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
     }
     dlerror();
     p_decoder_ldpc = get_obj();
-  }
-  else
-  {
+    break;
+    
+    case WIFI:
     //TC: load the general ldpc code
     //*(void **)(&decode_ldpc)= dlsym(handle_ldpc, "decode_ldpc_general");
     decode_ldpc_general 
-    = (FP_Decoder* (*)(FP_Decoder *, unsigned char *, unsigned char *, int))
+    = (int (*)(FP_Decoder *, float *, unsigned char *, int))
+    //= (FP_Decoder* (*)(FP_Decoder *, unsigned char *, unsigned char *, int))
     dlsym(handle_ldpc, "decode_ldpc_general");
     char *error;
     if ((error = dlerror()) != NULL)  
@@ -153,14 +158,17 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
     }
     dlerror();  // clear error
     // don't really understand this implementation yet
-    get_obj_general = (FP_Decoder* (*)(const char*,const char*, int)) dlsym(handle_ldpc, "create_dec_obj_general");
+    get_obj_general 
+    = (FP_Decoder* (*)(const char*,const char*, int)) 
+    dlsym(handle_ldpc, "create_dec_obj_general");
     if ((error = dlerror()) != NULL)  
     {
       fputs(error, stderr);
       exit(1);
     }
     dlerror();  // clear error
-    del_obj = (void (*)(FP_Decoder*)) dlsym(handle_ldpc, "destroy_dec_obj");
+    del_obj 
+    = (void (*)(FP_Decoder*)) dlsym(handle_ldpc, "destroy_dec_obj");
     if ((error = dlerror()) != NULL)  
     {
        fputs(error, stderr);
@@ -168,10 +176,16 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
     }
     dlerror();
     //Decoder.ReadH("H_802.11_IndZero.txt");
-    p_decoder_ldpc = get_obj_general("H_802.11_IndZero.txt", "wifi_infoindx.txt", 1);
+    p_decoder_ldpc 
+    = get_obj_general("H_802.11_IndZero.txt", "wifi_infoindx.txt", 1);
+    break;
+    
+    default:
+    // hard decoding
+    break;
   }
     
-  cout << "constructed decoder with pointer " << p_decoder_ldpc << endl;
+  //cout << "constructed decoder with pointer " << p_decoder_ldpc << endl;
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()
@@ -192,11 +206,11 @@ gr_framer_sink_1::work (int noutput_items,
   int count=0;
 
   // Xu: Make the second input port pass the soft values
-  //const float *in_symbol; // float point
-  const unsigned char *in_symbol; // fixed point
+  const float *in_symbol; // float point
+  //const unsigned char *in_symbol; // fixed point
   if(input_items.size() == 2){
-    //in_symbol = (const float*) input_items[1]; // float point
-    in_symbol = (const unsigned char*) input_items[1]; // fixed point
+    in_symbol = (const float*) input_items[1]; // float point
+    //in_symbol = (const unsigned char*) input_items[1]; // fixed point
   }
   if (VERBOSE)
     fprintf(stderr,">>> Entering state machine\n");
@@ -286,9 +300,9 @@ gr_framer_sink_1::work (int noutput_items,
       while (count < noutput_items)
       {
         
-             pkt_symbol[d_packetsym_cnt++] = in_symbol[count++]; 
-        
-       
+        pkt_symbol[d_packetsym_cnt++] = in_symbol[count++]; 
+        //---- TC: need to quantize the symbols here for LDPC and cc decoding
+        //cout << "pkt_symbol is" << pkt_symbol[d_packetsym_cnt];
         //printf("pkt_symbol is %u \n", pkt_symbol[d_packetsym_cnt-1]);
         /*
         if (d_packetsym_cnt%8 ==0 )
@@ -308,13 +322,10 @@ gr_framer_sink_1::work (int noutput_items,
           }
         }
         */
-        
-		
 
-	   
         if (d_packetsym_cnt== d_packetlen*8)
         { // Collect all symbols
-    
+          //cout << endl;
           // Decode here!// (*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);
           //--------------------
           // array ldpc code
@@ -326,7 +337,7 @@ gr_framer_sink_1::work (int noutput_items,
           //cout << "before callindg decoder in frame sink p_dec= " << p_decoder_ldpc << endl;
           //--!!! p_decoder_ldpc will dissapear!!!! => don't know why!!!
           //p_decoder_ldpc = (*decode_ldpc_general)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
-        
+          
           (*decode_ldpc_general)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
           
           

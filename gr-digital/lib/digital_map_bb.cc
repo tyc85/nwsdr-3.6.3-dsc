@@ -39,7 +39,7 @@ digital_make_map_bb (const std::vector<int> &map)
 //std::vector<int> io_sizes;
 //io_sizes.push_back(sizeof(unsigned char));
 //io_sizes.push_back(sizeof(gr_complex));
-
+// TC: second port is complex numbers
 static int ios[] = {sizeof(unsigned char), sizeof(gr_complex)};
 static std::vector<int> iosig(ios, ios+sizeof(ios)/sizeof(int));
 digital_map_bb::digital_map_bb (const std::vector<int> &map)

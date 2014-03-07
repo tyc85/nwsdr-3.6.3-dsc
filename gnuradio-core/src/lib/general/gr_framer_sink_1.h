@@ -59,12 +59,12 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   friend GR_CORE_API gr_framer_sink_1_sptr
   gr_make_framer_sink_1 (gr_msg_queue_sptr target_queue);
   //------ TC: similar setlength method
-  void cat_setlength(int in) {d_packetlen = in;};
+  
 
  private:
   enum state_t {STATE_SYNC_SEARCH, STATE_HAVE_SYNC, STATE_HAVE_HEADER};
 
-  static const int MAX_PKT_LEN    = 20000; //4096; // Xu: make it larger
+  static const int MAX_PKT_LEN    = 10000; //4096; // Xu: make it larger
   static const int HEADERBITLEN   = 32;
   
 
@@ -84,8 +84,10 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   int info_packetlen;
   //Xu: For Soft CC decoding
   //void *handle;
-  unsigned char out_symbol[MAX_PKT_LEN]; // Xu: allocate memory to decoded symbols
-  unsigned char pkt_symbol[MAX_PKT_LEN*8];
+  // Xu: allocate memory to decoded symbols packed in bytes
+  unsigned char out_symbol[MAX_PKT_LEN]; 
+  // Xu: allocate memory to for floating point input stream
+  float pkt_symbol[MAX_PKT_LEN*8];
   int d_packetsym_cnt; // how many symbols are collected
   /*
   static const int RSLEN = 1670;  // in byte
@@ -100,9 +102,17 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   FP_Decoder *(*get_obj_general)(const char*, const char*, int vflag);
   void (*del_obj)(FP_Decoder*);
   void (* decode_ldpc)(FP_Decoder *, unsigned char *, unsigned char *, int);
-  FP_Decoder *(* decode_ldpc_general)(FP_Decoder *, unsigned char *, unsigned char *, int);
+  int (* decode_ldpc_general)(FP_Decoder *, float *, unsigned char *, int);
+  //int (* decode_ldpc_general)(FP_Decoder *, unsigned char *, unsigned char *, int);
   //static const int LDPCCLEN = 2209;// pad 1670 bits with zeros and encode
   //static const int LDPCINFOLEN = 1978;
+  //TC: for channel coding mode: 
+  // 0: hard decoding, no code
+  // 3: soft with cc ldpc
+  // 1: soft with arrya ldpc
+  // 2: soft with wifi ldpc
+  int cat_code_mode;
+  enum CAT_CODE_MODE { ARRAY, WIFI, CC};
   //--------- new part end 
 
  protected:
@@ -131,6 +141,9 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
 
  public:
   ~gr_framer_sink_1();
+  void setlen(int in){d_packetlen = in;};
+  void cat_setlength(int in) {d_packetlen = in;};
+  void cat_setcode(int in){cat_code_mode = in;}
 
   int work(int noutput_items,
 	   gr_vector_const_void_star &input_items,

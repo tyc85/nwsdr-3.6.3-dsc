@@ -103,7 +103,7 @@ public:
 private:
 	int Address;
 	int BRAM_fp[RAM_DEPTH];
-	double BRAM[RAM_DEPTH]; //save memory see if it's faster
+	double BRAM[2]; //save memory see if it's faster
 	int DataBus;
 	int WrE;
 	int RdE;

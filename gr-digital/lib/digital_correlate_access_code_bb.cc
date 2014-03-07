@@ -45,8 +45,13 @@ digital_make_correlate_access_code_bb (const std::string &access_code, int thres
 static int is[] = {sizeof(char), sizeof(float)};
 static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 
+// TC: although we can just use isig to generate the i/o, it is better
+// to define an output vector type that matches the desired i/o type
 // The second output port outputs fixed point soft info
-static int os[] = {sizeof(char), sizeof(unsigned char)};
+//---- this is for fixed point output
+//static int os[] = {sizeof(char), sizeof(unsigned char)};
+//---- this is for floating point output
+static int os[] = {sizeof(char), sizeof(float)};
 static std::vector<int> osig(os, os+sizeof(os)/sizeof(int));
 
 digital_correlate_access_code_bb::digital_correlate_access_code_bb (
@@ -103,16 +108,19 @@ digital_correlate_access_code_bb::work (int noutput_items,
 
   // Xu
   const float * in_symbol;
-  //float * out_symbol; // The second output port outputs float soft info
-  unsigned char* out_symbol; // The second output port outputs fixed point soft info
+  float * out_symbol; // The second output port outputs float soft info
+  //unsigned char* out_symbol; // The second output port outputs fixed point soft info
   
+  // TC: count the number of input ports to be consistent with default
   if (input_items.size()==2)
+  {
     in_symbol = (const float *) input_items[1];
-
-
-  if (output_items.size() ==2){
-    //out_symbol = (float *) output_items[1];  // float point
-    out_symbol = (unsigned char *) output_items[1]; // fixed point
+  }
+  // TC: count the number of output ports to be consistent with default
+  if (output_items.size() ==2)
+  {
+    out_symbol = (float *) output_items[1];  // float point
+    //out_symbol = (unsigned char *) output_items[1]; // fixed point
   }
   
   for (int i = 0; i < noutput_items; i++){
@@ -124,16 +132,25 @@ digital_correlate_access_code_bb::work (int noutput_items,
     t |= ((d_flag_reg >> 63) & 0x1) << 1;	// flag bit
     out[i] = t;
 
-    // Xu
+    /*
+    // Xu: quantizaed output with data type of unsigned char
     if(output_items.size() == 2){
       //out_symbol[i] = softinfo_reg[rptr]; // float point
       
       // Fixed point
       out_symbol[i] = 127.5 + 32*softinfo_reg[rptr];
       if(out_symbol[i] <0)
-	out_symbol[i] = 0;
+        out_symbol[i] = 0;
       else if(out_symbol[i] >255)
-	out_symbol[i]  = 255;
+        out_symbol[i]  = 255;
+
+      rptr = (rptr+1) % 64;    
+    }
+    */
+    if(output_items.size() == 2)
+    {
+      // directly access floating point
+      out_symbol[i] = softinfo_reg[rptr];
 
       rptr = (rptr+1) % 64;    
     }

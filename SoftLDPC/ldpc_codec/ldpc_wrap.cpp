@@ -2943,9 +2943,10 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_FP_Decoder swig_types[1]
 #define SWIGTYPE_p_FP_Encoder swig_types[2]
 #define SWIGTYPE_p_char swig_types[3]
-#define SWIGTYPE_p_unsigned_char swig_types[4]
-static swig_type_info *swig_types[6];
-static swig_module_info swig_module = {swig_types, 5, 0, 0, 0, 0};
+#define SWIGTYPE_p_float swig_types[4]
+#define SWIGTYPE_p_unsigned_char swig_types[5]
+static swig_type_info *swig_types[7];
+static swig_module_info swig_module = {swig_types, 6, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3851,7 +3852,7 @@ fail:
 SWIGINTERN PyObject *_wrap_decode_ldpc_general(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   FP_Decoder *arg1 = (FP_Decoder *) 0 ;
-  unsigned char *arg2 = (unsigned char *) 0 ;
+  float *arg2 = (float *) 0 ;
   unsigned char *arg3 = (unsigned char *) 0 ;
   int arg4 ;
   void *argp1 = 0 ;
@@ -3866,7 +3867,7 @@ SWIGINTERN PyObject *_wrap_decode_ldpc_general(PyObject *SWIGUNUSEDPARM(self), P
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
-  FP_Decoder *result = 0 ;
+  int result;
   
   if (!PyArg_ParseTuple(args,(char *)"OOOO:decode_ldpc_general",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_FP_Decoder, 0 |  0 );
@@ -3874,11 +3875,11 @@ SWIGINTERN PyObject *_wrap_decode_ldpc_general(PyObject *SWIGUNUSEDPARM(self), P
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "decode_ldpc_general" "', argument " "1"" of type '" "FP_Decoder *""'"); 
   }
   arg1 = reinterpret_cast< FP_Decoder * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_unsigned_char, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_float, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "decode_ldpc_general" "', argument " "2"" of type '" "unsigned char *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "decode_ldpc_general" "', argument " "2"" of type '" "float *""'"); 
   }
-  arg2 = reinterpret_cast< unsigned char * >(argp2);
+  arg2 = reinterpret_cast< float * >(argp2);
   res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_unsigned_char, 0 |  0 );
   if (!SWIG_IsOK(res3)) {
     SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "decode_ldpc_general" "', argument " "3"" of type '" "unsigned char *""'"); 
@@ -3889,8 +3890,8 @@ SWIGINTERN PyObject *_wrap_decode_ldpc_general(PyObject *SWIGUNUSEDPARM(self), P
     SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "decode_ldpc_general" "', argument " "4"" of type '" "int""'");
   } 
   arg4 = static_cast< int >(val4);
-  result = (FP_Decoder *)decode_ldpc_general(arg1,arg2,arg3,arg4);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_FP_Decoder, 0 |  0 );
+  result = (int)decode_ldpc_general(arg1,arg2,arg3,arg4);
+  resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
   return NULL;
@@ -3929,6 +3930,7 @@ static swig_type_info _swigt__p_ControlFSM = {"_p_ControlFSM", "ControlFSM *", 0
 static swig_type_info _swigt__p_FP_Decoder = {"_p_FP_Decoder", "FP_Decoder *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_FP_Encoder = {"_p_FP_Encoder", "FP_Encoder *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_float = {"_p_float", "float *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_unsigned_char = {"_p_unsigned_char", "unsigned char *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
@@ -3936,6 +3938,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_FP_Decoder,
   &_swigt__p_FP_Encoder,
   &_swigt__p_char,
+  &_swigt__p_float,
   &_swigt__p_unsigned_char,
 };
 
@@ -3943,6 +3946,7 @@ static swig_cast_info _swigc__p_ControlFSM[] = {  {&_swigt__p_ControlFSM, 0, 0, 
 static swig_cast_info _swigc__p_FP_Decoder[] = {  {&_swigt__p_FP_Decoder, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_FP_Encoder[] = {  {&_swigt__p_FP_Encoder, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_float[] = {  {&_swigt__p_float, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_unsigned_char[] = {  {&_swigt__p_unsigned_char, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
@@ -3950,6 +3954,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_FP_Decoder,
   _swigc__p_FP_Encoder,
   _swigc__p_char,
+  _swigc__p_float,
   _swigc__p_unsigned_char,
 };
 
