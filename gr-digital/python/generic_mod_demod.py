@@ -129,8 +129,10 @@ class generic_mod(gr.hier_block2):
         self.chunks2symbols = digital.chunks_to_symbols_bc(self._constellation.points())
 
         # pulse shaping filter
+        #nfilts = 32
         nfilts = 32
-        ntaps = nfilts * 11 * int(self._samples_per_symbol)    # make nfilts filters of ntaps each
+        #ntaps = nfilts * 11 * int(self._samples_per_symbol)    # make nfilts filters of ntaps each
+        ntaps = nfilts * 7 * int(self._samples_per_symbol)    # make nfilts filters of ntaps each
         self.rrc_taps = gr.firdes.root_raised_cosine(
             nfilts,          # gain
             nfilts,          # sampling rate based on 32 filters in resampler
@@ -245,7 +247,8 @@ class generic_demod(gr.hier_block2):
         
 	gr.hier_block2.__init__(self, "generic_demod",
 				gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
-				gr.io_signature(1, 1, gr.sizeof_char))       # Output signature
+                                gr.io_signature2(2,2,gr.sizeof_char, gr.sizeof_float)) # Xu: make the second port output softvalues
+				#gr.io_signature(1, 1, gr.sizeof_char))       # Output signature
 				
         self._constellation = constellation.base()
         self._samples_per_symbol = samples_per_symbol
@@ -261,8 +264,10 @@ class generic_demod(gr.hier_block2):
 
         arity = pow(2,self.bits_per_symbol())
 
+        #nfilts = 32
+        #ntaps = 11 * int(self._samples_per_symbol*nfilts)
         nfilts = 32
-        ntaps = 11 * int(self._samples_per_symbol*nfilts)
+        ntaps = 7 * int(self._samples_per_symbol*nfilts)
 
         # Automatic gain control
         self.agc = gr.agc2_cc(0.6e-1, 1e-3, 1, 1, 100)
@@ -301,17 +306,34 @@ class generic_demod(gr.hier_block2):
 
         if log:
             self._setup_logging()
+ 
+        # Modified by Xu
+        #print "reconnecting the blocks in generic-mod-demod"
+        #self.connect(self,self.agc, self.freq_recov,self.time_recov, self.receiver,self.symbol_mapper,self.unpack,self)
+  
         
+        self.connect(self,self.agc, self.freq_recov,self.time_recov, self.receiver)
+        self.connect((self.receiver,0), (self.symbol_mapper,0)) 
+        self.connect((self.symbol_mapper,0),  (self.unpack,0))
+        self.connect((self.unpack,0), (self,0))
+
+        
+        self.connect((self.receiver,1), (self.symbol_mapper,1)) 
+        self.connect((self.symbol_mapper,1),  (self.unpack,1))
+        self.connect((self.unpack,1), (self,1)) 
+        
+        '''
         # Connect and Initialize base class
         blocks = [self, self.agc, self.freq_recov,
                   self.time_recov, self.receiver]
         if differential:
             blocks.append(self.diffdec)
         if self._constellation.apply_pre_diff_code():
-            blocks.append(self.symbol_mapper)
+            blocks.append(self.symbol_mapper) 
+         
         blocks += [self.unpack, self]
         self.connect(*blocks)
-
+        '''
     def samples_per_symbol(self):
         return self._samples_per_symbol
 

@@ -29,8 +29,16 @@
 #include <cstdio>
 #include <stdexcept>
 #include <string.h>
+#include <iostream>
+#include <stdio.h>
 
 #define VERBOSE 0
+
+// Xu: Include .so
+#include <dlfcn.h>
+
+// TC: for decoder class, local dir
+#include "ArrayLDPCMacro.h"
 
 inline void
 gr_framer_sink_1::enter_search()
@@ -64,6 +72,12 @@ gr_framer_sink_1::enter_have_header(int payload_len, int whitener_offset)
   d_packetlen_cnt = 0;
   d_packet_byte = 0;
   d_packet_byte_index = 0;
+
+  // Xu: Will hard code the d_packetlen in the real implementation
+  d_packetsym_cnt = 0;
+  //d_packetlen = 5034; 
+  //d_packetlen = 2209;
+  //printf("packetlen is %d\n", d_packetlen);
 }
 
 gr_framer_sink_1_sptr
@@ -72,18 +86,123 @@ gr_make_framer_sink_1(gr_msg_queue_sptr target_queue)
   return gnuradio::get_initial_sptr(new gr_framer_sink_1(target_queue));
 }
 
+// Xu: Make two input port, the second one passes the soft values
+// 
+static int is[] = {sizeof(unsigned char), sizeof(float)};
+static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 
 gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
   : gr_sync_block ("framer_sink_1",
-		   gr_make_io_signature (1, 1, sizeof(unsigned char)),
+       gr_make_io_signaturev (1, 2, isig), // The second input port inputs float soft info
+		   //gr_make_io_signature (1, 2, sizeof(unsigned char)), // fixed point info 
+		   //gr_make_io_signature (1, 1, sizeof(unsigned char)), // Commented by Xu
 		   gr_make_io_signature (0, 0, 0)),
     d_target_queue(target_queue)
 {
   enter_search();
+  
+  // For SNR estimator
+  for(int k= 0; k<10; k++){
+    cat_snr[k] = 0; 
+  }
+  //cat_snr = {0};
+  cat_num = 0;
+  
+  char *error;
+
+  dlerror();  // clear error
+  handle_ldpc = dlopen ("/lib/_ldpc.so", RTLD_LAZY);
+  if (!handle_ldpc) 
+  {
+    fputs (dlerror(), stderr);
+    exit(1);
+  }
+  // set to wifi code for now
+  cat_code_mode = WIFI;
+  //---- later should move the following chunk of code to cat_setcode()
+  switch(cat_code_mode)
+  {
+    case ARRAY:
+    // TC: load the array code function from ldpc.so
+    
+    *(void **)(&decode_ldpc)= dlsym(handle_ldpc, "decode_ldpc");
+    
+    if ((error = dlerror()) != NULL)  
+    {
+      fputs(error, stderr);
+      exit(1);
+    }
+    dlerror();  // clear error
+    // don't really understand this implementation yet
+    get_obj = (FP_Decoder* (*)()) dlsym(handle_ldpc, "create_dec_obj");
+    if ((error = dlerror()) != NULL)  
+    {
+      fputs(error, stderr);
+      exit(1);
+    }
+    dlerror();  // clear error
+    del_obj = (void (*)(FP_Decoder*)) dlsym(handle_ldpc, "destroy_dec_obj");
+    if ((error = dlerror()) != NULL)  
+    {
+       fputs(error, stderr);
+       exit(1);
+    }
+    dlerror();
+    p_decoder_ldpc = get_obj();
+    break;
+    
+    case WIFI:
+    //TC: load the general ldpc code
+    //*(void **)(&decode_ldpc)= dlsym(handle_ldpc, "decode_ldpc_general");
+    decode_ldpc_general 
+    = (int (*)(FP_Decoder *, float *, unsigned char *, int))
+    //= (FP_Decoder* (*)(FP_Decoder *, unsigned char *, unsigned char *, int))
+    dlsym(handle_ldpc, "decode_ldpc_general");
+    char *error;
+    if ((error = dlerror()) != NULL)  
+    {
+      fputs(error, stderr);
+      exit(1);
+    }
+    dlerror();  // clear error
+    // don't really understand this implementation yet
+    get_obj_general 
+    = (FP_Decoder* (*)(const char*,const char*, int)) 
+    dlsym(handle_ldpc, "create_dec_obj_general");
+    if ((error = dlerror()) != NULL)  
+    {
+      fputs(error, stderr);
+      exit(1);
+    }
+    dlerror();  // clear error
+    del_obj 
+    = (void (*)(FP_Decoder*)) dlsym(handle_ldpc, "destroy_dec_obj");
+    if ((error = dlerror()) != NULL)  
+    {
+       fputs(error, stderr);
+       exit(1);
+    }
+    dlerror();
+    //Decoder.ReadH("H_802.11_IndZero.txt");
+    p_decoder_ldpc 
+    = get_obj_general("H_802.11_IndZero.txt", "wifi_infoindx.txt", 1);
+    break;
+    
+    default:
+    // hard decoding
+    break;
+  }
+    
+  //cout << "constructed decoder with pointer " << p_decoder_ldpc << endl;
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()
 {
+  // Xu
+  //dlclose(handle);
+  //del_obj(p_decoder_ldpc);
+  //cout << "deleted decoder with pointer \n";
+  dlclose(handle_ldpc);
 }
 
 int
@@ -94,6 +213,18 @@ gr_framer_sink_1::work (int noutput_items,
   const unsigned char *in = (const unsigned char *) input_items[0];
   int count=0;
 
+  // Xu: Used for SNR Estimator
+  const float AC_CODE[64]={1,0,1,0,1,1,0,0,1,1,0,1,1,1,0,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,1,0,1,1,1,1,0,0,1,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,0};
+  float h=0 ,s=0,noise=0,snr=0,snr_sum=0;
+  int p,j; 
+  
+  // Xu: Make the second input port pass the soft values
+  const float *in_symbol; // float point
+  //const unsigned char *in_symbol; // fixed point
+  if(input_items.size() == 2){
+    in_symbol = (const float*) input_items[1]; // float point
+    //in_symbol = (const unsigned char*) input_items[1]; // fixed point
+  }
   if (VERBOSE)
     fprintf(stderr,">>> Entering state machine\n");
 
@@ -102,83 +233,225 @@ gr_framer_sink_1::work (int noutput_items,
 
     case STATE_SYNC_SEARCH:    // Look for flag indicating beginning of pkt
       if (VERBOSE)
-	fprintf(stderr,"SYNC Search, noutput=%d\n", noutput_items);
+        fprintf(stderr,"SYNC Search, noutput=%d\n", noutput_items);
 
       while (count < noutput_items) {
-	if (in[count] & 0x2){  // Found it, set up for header decode
-	  enter_have_sync();
-	  break;
-	}
-	count++;
+        if (in[count] & 0x2){  // Found it, set up for header decode
+          
+        // Xu: SNR Estimator
+        if(input_items.size() == 2){
+          for(p=64;p>0;p--){
+            //printf("%f\n", in_soft_symbol[count-p]);
+            if(AC_CODE[64-p]>0)
+               s=s+in_symbol[count-p];
+            else 
+               s=s-in_symbol[count-p];
+            }
+          h = s/64;
+          for(p=64;p>0;p--){
+            if(AC_CODE[64-p]>0)
+              noise+=(h-in_symbol[count-p])*(h-in_symbol[count-p]);
+            else
+              noise+=(h+in_symbol[count-p])*(h+in_symbol[count-p]);
+          }
+          //printf("noise=%f\n",noise);
+          snr=64*h*h/noise;
+          cat_snr[cat_num%10]=snr;
+          if(cat_num<10){
+            for(j=0;j<cat_num;j++){
+              snr_sum += cat_snr[j];
+            }
+            snr_sum /=cat_num+1;}
+          else{
+            for(j=0;j<10;j++){
+              snr_sum += cat_snr[j];
+            }
+            snr_sum /=10;}
+            cat_num++;
+            //printf("snr=%f\n",10*log10(snr_sum));
+          }
+          
+          enter_have_sync();
+          break;
+        }
+        count++;
       }
       break;
 
     case STATE_HAVE_SYNC:
       if (VERBOSE)
-	fprintf(stderr,"Header Search bitcnt=%d, header=0x%08x\n",
-		d_headerbitlen_cnt, d_header);
+        fprintf(stderr,"Header Search bitcnt=%d, header=0x%08x\n",
+          d_headerbitlen_cnt, d_header);
 
       while (count < noutput_items) {	// Shift bits one at a time into header
-	d_header = (d_header << 1) | (in[count++] & 0x1);
-	if (++d_headerbitlen_cnt == HEADERBITLEN) {
-
-	  if (VERBOSE)
-	    fprintf(stderr, "got header: 0x%08x\n", d_header);
-
-	  // we have a full header, check to see if it has been received properly
-	  if (header_ok()){
-	    int payload_len;
-	    int whitener_offset;
-	    header_payload(&payload_len, &whitener_offset);
-	    enter_have_header(payload_len, whitener_offset);
-
-	    if (d_packetlen == 0){	    // check for zero-length payload
-	      // build a zero-length message
-	      // NOTE: passing header field as arg1 is not scalable
-	      gr_message_sptr msg =
-		gr_make_message(0, d_packet_whitener_offset, 0, 0);
-
-	      d_target_queue->insert_tail(msg);		// send it
-	      msg.reset();  				// free it up
-
-	      enter_search();
-	    }
-	  }
-	  else
-	    enter_search();				// bad header
-	  break;					// we're in a new state
-	}
+        d_header = (d_header << 1) | (in[count++] & 0x1);
+        if (++d_headerbitlen_cnt == HEADERBITLEN) {
+      
+          if (VERBOSE)
+            fprintf(stderr, "got header: 0x%08x\n", d_header);
+      
+          // we have a full header, check to see if it has been received properly
+          // Commented by Xu: Go ahead and decode the packet even 
+          // though the header is in error => do this later
+          //if (header_ok()){
+          if(1)
+          {
+            int payload_len;
+            int whitener_offset;
+            header_payload(&payload_len, &whitener_offset);
+            enter_have_header(payload_len, whitener_offset);
+      
+            if (d_packetlen == 0){	    // check for zero-length payload
+              // build a zero-length message
+              // NOTE: passing header field as arg1 is not scalable
+              gr_message_sptr msg =
+              gr_make_message(0, d_packet_whitener_offset, 0, 0);
+      
+              d_target_queue->insert_tail(msg);		// send it
+              msg.reset();  				// free it up
+      
+              enter_search();
+            }
+          }
+          else
+            enter_search();				// bad header
+          break;					// we're in a new state
+        }
       }
       break;
 
     case STATE_HAVE_HEADER:
       if (VERBOSE)
-	fprintf(stderr,"Packet Build\n");
+        fprintf(stderr,"Packet Build\n");
 
-      while (count < noutput_items) {   // shift bits into bytes of packet one at a time
-	d_packet_byte = (d_packet_byte << 1) | (in[count++] & 0x1);
-	if (d_packet_byte_index++ == 7) {	  	// byte is full so move to next byte
-	  d_packet[d_packetlen_cnt++] = d_packet_byte;
-	  d_packet_byte_index = 0;
+      // Xu: Include .so file 
+      int info_packetlen;
+      unsigned char tempchar;
+      int i, j,offset;
+  
+      //--- hard set the packet length here. change later
+      //--------------------
+      // array code: 
+      //cat_setlength(2209);
+      //info_packetlen = 1978;
+      //--------------------
+      
+      //--------------------
+      //wifi ldpc code:
+      //cout << "in framer sink p_dec= " << p_decoder_ldpc << endl;
+      info_packetlen = 972;
+      cat_setlength(1944);
+      //--------------------
+      //try
+      //{
+      while (count < noutput_items)
+      {
+        
+        pkt_symbol[d_packetsym_cnt++] = in_symbol[count++]; 
+        //---- TC: need to quantize the symbols here for LDPC and cc decoding
+        //cout << "pkt_symbol is" << pkt_symbol[d_packetsym_cnt];
+        //printf("pkt_symbol is %u \n", pkt_symbol[d_packetsym_cnt-1]);
+        /*
+        if (d_packetsym_cnt%8 ==0 )
+        {
+          offset = d_packetsym_cnt -8;
+            
+          //printf("offset is %d, original pkt symbol is \n", offset);
+          //for (i=0;i<8; i++)
+          //  printf("%u ",pkt_symbol[offset+i]);
+          //printf("\n");
+          
+          // reverse the symbols
+          for (i=0; i<4; i++){
+            tempchar = pkt_symbol[offset+i];
+            pkt_symbol[offset + i] = pkt_symbol[offset+7-i];
+            pkt_symbol[offset+7-i] = tempchar;
+          }
+        }
+        */
 
-	  if (d_packetlen_cnt == d_packetlen){		// packet is filled
+        if (d_packetsym_cnt== d_packetlen*8)
+        { // Collect all symbols
+          //cout << endl;
+          // Decode here!// (*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);
+          //--------------------
+          // array ldpc code
+          //(*decode_ldpc)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
+          
+          //---- general and array ldpc both use the same pointer, 
+          // a flag is used to set which decoder to load in constructor
+          //cout << "collected enough symbosl, start decoding\n";
+          //cout << "before callindg decoder in frame sink p_dec= " << p_decoder_ldpc << endl;
+          //--!!! p_decoder_ldpc will dissapear!!!! => don't know why!!!
+          //p_decoder_ldpc = (*decode_ldpc_general)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
+          
+          (*decode_ldpc_general)(p_decoder_ldpc, pkt_symbol, out_symbol, d_packetlen);
+          
+          
+          // uncoded case: simply remove dummy bits
+          /*for(i = 0; i < INFO_LENGTH; i++)
+          {
+            d_packet_byte = 0;
+            for(j = 0; j < 8; j++)
+            {
+              d_packet_byte = (d_packet_byte << 1) | ((pkt_symbol[i*8 + j] - 128) > 0? 1:0);
+            }
+            out_symbol[i] = d_packet_byte;
+          }
+          */
 
-	    // build a message
-	    // NOTE: passing header field as arg1 is not scalable
-	    gr_message_sptr msg =
-	      gr_make_message(0, d_packet_whitener_offset, 0, d_packetlen_cnt);
-	    memcpy(msg->msg(), d_packet, d_packetlen_cnt);
+          gr_message_sptr msg = gr_make_message(0, d_packet_whitener_offset, 0, info_packetlen);
 
-	    d_target_queue->insert_tail(msg);		// send it
-	    msg.reset();  				// free it up
+          memcpy(msg->msg(), out_symbol, info_packetlen);
 
-	    enter_search();
-	    break;
-	  }
-	}
+          d_target_queue->insert_tail(msg);		// send it
+          msg.reset();  				// free it up
+          enter_search();
+          break;
+        }
       }
+      
+      //}
+      //catch (std::exception& e)
+      //{
+      //    std::cerr << "Exception catched : " << e.what() << std::endl;
+      //    std::cerr << "d_packetsym_cnt is " << d_packetsym_cnt << endl;
+      //    std::cerr << "count is " << count << endl;
+      //}
+      
       break;
+      ////
+      /*
+      while (count < noutput_items) {   // shift bits into bytes of packet one at a time
+        
+	
+		// Xu: Hard decoding 
+		//d_packet_byte = (d_packet_byte << 1) | ( (in_symbol[count++] >127.5?1:0) & 0x1); // Xu: Test the fixed point symbols
+		//d_packet_byte = (d_packet_byte << 1) | ( (in_symbol[count++] >0?1:0) & 0x1); // Xu: Test the float point symbols
+		d_packet_byte = (d_packet_byte << 1) | (in[count++] & 0x1); // Commented by Xu
+		if (d_packet_byte_index++ == 7) {	  	// byte is full so move to next byte
+			d_packet[d_packetlen_cnt++] = d_packet_byte;
+			d_packet_byte_index = 0;
 
+			if (d_packetlen_cnt == d_packetlen){		// packet is filled
+
+				// build a message
+				// NOTE: passing header field as arg1 is not scalable
+				gr_message_sptr msg =
+				gr_make_message(0, d_packet_whitener_offset, 0, d_packetlen_cnt);
+				memcpy(msg->msg(), d_packet, d_packetlen_cnt);
+
+				d_target_queue->insert_tail(msg);		// send it
+				msg.reset();  				// free it up
+
+				enter_search();
+				break;
+				}
+		}
+       
+     }
+      break;
+*/
     default:
       assert(0);
 

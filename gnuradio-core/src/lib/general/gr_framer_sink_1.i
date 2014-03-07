@@ -31,5 +31,7 @@ class gr_framer_sink_1 : public gr_sync_block
   gr_framer_sink_1(gr_msg_queue_sptr target_queue);
 
  public:
+ void setlen(int);
+ void cat_setlength(int in);
   ~gr_framer_sink_1();
 };

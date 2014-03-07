@@ -26,6 +26,8 @@
 
 #include <digital_map_bb.h>
 #include <gr_io_signature.h>
+#include <stdio.h>
+//#include <gr_math.h>
 
 digital_map_bb_sptr
 digital_make_map_bb (const std::vector<int> &map)
@@ -33,11 +35,21 @@ digital_make_map_bb (const std::vector<int> &map)
   return gnuradio::get_initial_sptr(new digital_map_bb (map));
 }
 
+// Xu
+//std::vector<int> io_sizes;
+//io_sizes.push_back(sizeof(unsigned char));
+//io_sizes.push_back(sizeof(gr_complex));
+// TC: second port is complex numbers
+static int ios[] = {sizeof(unsigned char), sizeof(gr_complex)};
+static std::vector<int> iosig(ios, ios+sizeof(ios)/sizeof(int));
 digital_map_bb::digital_map_bb (const std::vector<int> &map)
   : gr_sync_block ("map_bb",
-		   gr_make_io_signature (1, 1, sizeof (unsigned char)),
-		   gr_make_io_signature (1, 1, sizeof (unsigned char)))
+		   gr_make_io_signaturev (1, 2, iosig), // Xu: Make the input output port number = 2
+		   gr_make_io_signaturev (1, 2, iosig))
+		   //gr_make_io_signature (1, 1, sizeof (unsigned char)), // Commented by Xu
+		   //gr_make_io_signature (1, 1, sizeof (unsigned char)))
 {
+
   for (int i = 0; i < 0x100; i++)
     d_map[i] = i;
 
@@ -53,9 +65,32 @@ digital_map_bb::work (int noutput_items,
 {
   const unsigned char *in = (const unsigned char *) input_items[0];
   unsigned char *out = (unsigned char *) output_items[0];
+  
+  // Xu: Use the second port to output complex samples
+  //printf("symbol mapper: here");
+  
+  const gr_complex *in_symbol;
+  gr_complex *out_symbol;
+  if(input_items.size() == 2)
+    in_symbol = (const gr_complex*) input_items[1];
 
-  for (int i = 0; i < noutput_items; i++)
+  if(output_items.size() == 2)
+    out_symbol = (gr_complex*) output_items[1];
+  
+  
+
+  for (int i = 0; i < noutput_items; i++){
     out[i] = d_map[in[i]];
+
+    
+    // XU: Use the second port to output complex samples
+    
+    //printf("out char is %c", out[i]);
+    if(output_items.size() == 2){
+      out_symbol[i] = in_symbol[i];
+    }
+    
+  }
 
   return noutput_items;
 }
