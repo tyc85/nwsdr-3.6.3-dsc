@@ -176,8 +176,8 @@ def main():
         mod.add_options(expert_grp)
 
     (options, args) = parser.parse_args ()   
-    options.tx_freq = options.tx_freq + options.carrier_sep/2
-    options.rx_freq = options.rx_freq - options.carrier_sep/2
+    options.tx_freq = options.tx_freq - options.carrier_sep/2
+    options.rx_freq = options.rx_freq + options.carrier_sep/2
 
     #########################################
     # Xu Chen: Hard Code Parameters 
