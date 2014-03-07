@@ -130,21 +130,40 @@ digital_clock_recovery_mm_ff::general_work (int noutput_items,
   int   ni = ninput_items[0] - d_interp->ntaps(); // don't use more input than this
   float mm_val;
 
+if (pam4==0){
   while (oo < noutput_items && ii < ni ){
 
     // produce output sample
     out[oo] = d_interp->interpolate (&in[ii], d_mu);
-    if (pam4==0)
-    	mm_val = slice(d_last_sample) * out[oo] - slice(out[oo]) * d_last_sample;
-    else
-    	mm_val = (slice_pam4(d_last_sample) * out[oo] - slice_pam4(out[oo]) * d_last_sample)/10.0;
+    mm_val = slice(d_last_sample) * out[oo] - slice(out[oo]) * d_last_sample;
     d_last_sample = out[oo];
 
     d_omega = d_omega + d_gain_omega * mm_val;
     d_omega = d_omega_mid + gr_branchless_clip(d_omega-d_omega_mid, d_omega_relative_limit);   // make sure we don't walk away
     d_mu = d_mu + d_omega + d_gain_mu * mm_val;
 
-//d_mu = 2.0; // DG, NEED TO REMOVE THIS LATER
+    ii += (int) floor(d_mu);
+    d_mu = d_mu - floor(d_mu);
+    oo++;
+
+    if (DEBUG_CR_MM_FF && d_logfile){
+      fwrite(&d_omega, sizeof(d_omega), 1, d_logfile);
+    }
+  }
+} else
+{
+  while (oo < noutput_items && ii < ni ){
+
+    // produce output sample
+    out[oo] = d_interp->interpolate (&in[ii], d_mu);
+    mm_val = (slice_pam4(d_last_sample) * out[oo] - slice_pam4(out[oo]) * d_last_sample)/5.0;
+    d_last_sample = out[oo];
+
+    d_omega = d_omega + d_gain_omega * mm_val;
+    d_omega = d_omega_mid + gr_branchless_clip(d_omega-d_omega_mid, d_omega_relative_limit);   // make sure we don't walk away
+    d_mu = d_mu + d_omega + d_gain_mu * 0.05 * mm_val;
+
+	//d_mu = 2.0; // DG, NEED TO REMOVE THIS LATER
     ii += (int) floor(d_mu);
     d_mu = d_mu - floor(d_mu);
     oo++;
@@ -154,6 +173,8 @@ digital_clock_recovery_mm_ff::general_work (int noutput_items,
       fprintf(d_logfile, "%f, ", d_omega );
     }
   }
+
+}
 
   consume_each (ii);
 
