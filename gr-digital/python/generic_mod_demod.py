@@ -129,8 +129,10 @@ class generic_mod(gr.hier_block2):
         self.chunks2symbols = digital.chunks_to_symbols_bc(self._constellation.points())
 
         # pulse shaping filter
+        #nfilts = 32
         nfilts = 32
-        ntaps = nfilts * 11 * int(self._samples_per_symbol)    # make nfilts filters of ntaps each
+        #ntaps = nfilts * 11 * int(self._samples_per_symbol)    # make nfilts filters of ntaps each
+        ntaps = nfilts * 7 * int(self._samples_per_symbol)    # make nfilts filters of ntaps each
         self.rrc_taps = gr.firdes.root_raised_cosine(
             nfilts,          # gain
             nfilts,          # sampling rate based on 32 filters in resampler
@@ -262,8 +264,10 @@ class generic_demod(gr.hier_block2):
 
         arity = pow(2,self.bits_per_symbol())
 
+        #nfilts = 32
+        #ntaps = 11 * int(self._samples_per_symbol*nfilts)
         nfilts = 32
-        ntaps = 11 * int(self._samples_per_symbol*nfilts)
+        ntaps = 7 * int(self._samples_per_symbol*nfilts)
 
         # Automatic gain control
         self.agc = gr.agc2_cc(0.6e-1, 1e-3, 1, 1, 100)

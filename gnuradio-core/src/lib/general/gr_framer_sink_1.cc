@@ -100,6 +100,14 @@ gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue)
     d_target_queue(target_queue)
 {
   enter_search();
+  
+  // For SNR estimator
+  for(int k= 0; k<10; k++){
+    cat_snr[k] = 0; 
+  }
+  //cat_snr = {0};
+  cat_num = 0;
+  
   char *error;
 
   dlerror();  // clear error
@@ -205,6 +213,11 @@ gr_framer_sink_1::work (int noutput_items,
   const unsigned char *in = (const unsigned char *) input_items[0];
   int count=0;
 
+  // Xu: Used for SNR Estimator
+  const float AC_CODE[64]={1,0,1,0,1,1,0,0,1,1,0,1,1,1,0,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,1,0,1,1,1,1,0,0,1,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,0};
+  float h=0 ,s=0,noise=0,snr=0,snr_sum=0;
+  int p,j; 
+  
   // Xu: Make the second input port pass the soft values
   const float *in_symbol; // float point
   //const unsigned char *in_symbol; // fixed point
@@ -224,6 +237,40 @@ gr_framer_sink_1::work (int noutput_items,
 
       while (count < noutput_items) {
         if (in[count] & 0x2){  // Found it, set up for header decode
+          
+        // Xu: SNR Estimator
+        if(input_items.size() == 2){
+          for(p=64;p>0;p--){
+            //printf("%f\n", in_soft_symbol[count-p]);
+            if(AC_CODE[64-p]>0)
+               s=s+in_symbol[count-p];
+            else 
+               s=s-in_symbol[count-p];
+            }
+          h = s/64;
+          for(p=64;p>0;p--){
+            if(AC_CODE[64-p]>0)
+              noise+=(h-in_symbol[count-p])*(h-in_symbol[count-p]);
+            else
+              noise+=(h+in_symbol[count-p])*(h+in_symbol[count-p]);
+          }
+          //printf("noise=%f\n",noise);
+          snr=64*h*h/noise;
+          cat_snr[cat_num%10]=snr;
+          if(cat_num<10){
+            for(j=0;j<cat_num;j++){
+              snr_sum += cat_snr[j];
+            }
+            snr_sum /=cat_num+1;}
+          else{
+            for(j=0;j<10;j++){
+              snr_sum += cat_snr[j];
+            }
+            snr_sum /=10;}
+          cat_num++;
+          printf("snr=%f\n",10*log10(snr_sum));
+              }
+          
           enter_have_sync();
           break;
         }

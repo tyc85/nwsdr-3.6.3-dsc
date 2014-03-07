@@ -113,6 +113,9 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   // 2: soft with wifi ldpc
   int cat_code_mode;
   enum CAT_CODE_MODE { ARRAY, WIFI, CC};
+  //--------- SNR estimator
+  float cat_snr[10];
+  int cat_num;
   //--------- new part end 
 
  protected:
