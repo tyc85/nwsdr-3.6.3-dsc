@@ -141,7 +141,10 @@ gr_framer_sink_1::work (int noutput_items,
   int count=0;
 
   // Xu: Used for SNR Estimator
-  const float AC_CODE[64]={1,0,1,0,1,1,0,0,1,1,0,1,1,1,0,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,1,0,1,1,1,1,0,0,1,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,0};
+  //const float AC_CODE[64]={1,0,1,0,1,1,0,0,1,1,0,1,1,1,0,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,1,0,1,1,1,1,0,0,1,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,0}; // default access code
+  // new access code
+  const float AC_CODE[64]={0 ,0 ,0 ,0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1 ,1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0};
+
   float h=0 ,s=0,noise=0,snr=0,snr_sum=0;
   int p,j; 
 
@@ -259,7 +262,7 @@ gr_framer_sink_1::work (int noutput_items,
 	      void (* softdecode)(const unsigned char *, unsigned char *, int , int);
 	      char *error;
 	      int info_packetlen;
-
+              float snr_data_based, sum_sig = 0, sum_noise = 0;  //Zhiyi : snr estimator based on data
 	
 	      *(void **)(&softdecode)= dlsym(handle, "cc3_softdecode");
 	      
@@ -268,8 +271,18 @@ gr_framer_sink_1::work (int noutput_items,
 	      
 	      while (count < noutput_items){
 
+		// Zhiyi: Snr estimate
+		sum_sig += in_symbol[count]*in_symbol[count];
+                if (in_symbol[count]>0){
+                    sum_noise += (1-in_symbol[count])*(1-in_symbol[count]);
+                }
+                else {
+                    sum_noise += (-1-in_symbol[count])*(-1-in_symbol[count]);
+                }
+
 		//pkt_symbol[d_packetsym_cnt++] = in_symbol[count++];
-		// Convert float point to fixed point
+		// Convert float point to fixed point           
+                
 		pkt_symbol[d_packetsym_cnt] = 127.5 + 32*in_symbol[count++]; 
 		if( pkt_symbol[d_packetsym_cnt] <0)
 			pkt_symbol[d_packetsym_cnt] = 0;
@@ -282,6 +295,9 @@ gr_framer_sink_1::work (int noutput_items,
  		
 
 		if (d_packetsym_cnt== d_packetlen*8){ // Collect all symbols
+			// Zhiyi: snr estimator
+                        snr_data_based = 10*log10(sum_sig/sum_noise);
+                        printf("snr based on data =%f\n", snr_data_based);
 
 			// Decode here!
 	      		(*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);

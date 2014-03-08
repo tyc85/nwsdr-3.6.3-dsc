@@ -88,7 +88,7 @@ class GR_CORE_API gr_framer_sink_1 : public gr_sync_block
   // Used for SNR estimate
   float cat_snr[10];
   int cat_num;
-
+  float cat_snr_data_based;
  protected:
   gr_framer_sink_1(gr_msg_queue_sptr target_queue);  
 
