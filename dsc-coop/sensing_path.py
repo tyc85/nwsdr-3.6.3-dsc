@@ -31,7 +31,7 @@ import numpy, struct
 
 
 # linklab, define constants
-FFT_SIZE      = 32       # fft size for sensing  
+FFT_SIZE      = 64       # fft size for sensing  
 LOW_THRES     = -45        # low power threshold in dB to identify free freq blocks
 HIGH_THRES    = -25        # high power threshold in dB to identify busy freq blocks
 SMOOTH_LENGTH = 10       # smooth length
@@ -220,15 +220,17 @@ class sensing_path(gr.hier_block2):
             # if power very low, available 
             if psd[i] < LOW_THRES: 
                 avail_subc_bin[carrier_index] = 1
-    	print psd
+#    	print psd
     	
     	
-    	temp_result_1=sum(psd[0:round(FFT_SIZE/3,0)])/round(FFT_SIZE/3,0)
-    	temp_result_2=sum(psd[round(FFT_SIZE/3,0):round(2*FFT_SIZE/3,0)])/(round(2*FFT_SIZE/3,0) - (round(FFT_SIZE/3,0)))
-    	temp_result_3=sum(psd[round(2*FFT_SIZE/3,0):round(FFT_SIZE,0)])/(round(FFT_SIZE,0) -  (round(2*FFT_SIZE/3,0)))
-#    	print temp_result_1
-#    	print temp_result_2
-#    	print temp_result_3
+    	temp_result_1=sum(psd[round(1*FFT_SIZE/12,0):round(3*FFT_SIZE/12,0)])/(round(3*FFT_SIZE/12,0)-round(1*FFT_SIZE/12,0))
+    	temp_result_2=sum(psd[round(5*FFT_SIZE/12,0):round(7*FFT_SIZE/12,0)])/(round(7*FFT_SIZE/12,0)-round(5*FFT_SIZE/12,0))
+    	temp_result_3=sum(psd[round(9*FFT_SIZE/12,0):round(11*FFT_SIZE/12,0)])/(round(11*FFT_SIZE/12,0)-round(9*FFT_SIZE/12,0))
+    	#temp_result_2=sum(psd[round(FFT_SIZE/3,0):round(2*FFT_SIZE/3,0)])/(round(2*FFT_SIZE/3,0) - (round(FFT_SIZE/3,0)))
+    	#temp_result_3=sum(psd[round(2*FFT_SIZE/3,0):round(FFT_SIZE,0)])/(round(FFT_SIZE,0) -  (round(2*FFT_SIZE/3,0)))
+    	print temp_result_1
+    	print temp_result_2
+    	print temp_result_3
     	
     	
     	result=[1, 1, 1]

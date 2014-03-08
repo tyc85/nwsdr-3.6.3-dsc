@@ -286,7 +286,7 @@ def main():
     start_flag=1
 
     while n < nbytes:
-        if (count_pkt%500 == 0 and sense_n==1):# or non_available==1: #sence once
+        if (count_pkt%500 == 0 and sense_n==1) or non_available==1: #sence once
             tb.txgate.set_enabled(True)
             time.sleep(.6)
             tb.sensegate.set_enabled(True) #t
@@ -302,7 +302,7 @@ def main():
                 time.sleep(0.2)
                 non_available=1
                 non_available_count += 1
-                if non_available_count == 13: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
+                if non_available_count == 8: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
                     active_index=random.randint(0,2)
                     sense_result = [0, 0, 0]
                     sense_result[active_index] = 1
@@ -325,7 +325,7 @@ def main():
             sense_n=0 # this makes sure that after sensing, transmit continues
             #diff_sum_sense_result=sumsense_result-sumtemp_sense_result
             #if diff_sum_sense > 1
-            #sense_result=[0,1,1]
+            #sense_result=[1,0,0]
             print sense_result
             
 
