@@ -1,0 +1,8 @@
+Changes made to gr_frame_sink_1.cc, gr_frame_sink_1.h
+
+- Hard code the d_packetlen = 5034
+- Make th MAX_LEN = 30000
+
+Install instruction:
+
+mv to gnuradio/gnuradio-core/src/lib/general

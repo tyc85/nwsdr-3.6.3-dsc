@@ -72,10 +72,7 @@ class my_top_block(gr.top_block):
         self.rxpath = receive_path(demodulator, rx_callback, options) 
 
         self.connect(self.source, self.rxpath)
-    
-        # Xu: Set the decoding mode and packetlength
-        self.rxpath.packet_receiver.framer_sink.setlen(5034) # Xu: set d_packetlen 
-        self.rxpath.packet_receiver.framer_sink.setdec('s') # Xu: set hard decoding or soft-decoding 
+
 
        
 

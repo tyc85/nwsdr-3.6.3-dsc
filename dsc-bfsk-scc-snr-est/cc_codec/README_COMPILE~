@@ -1,0 +1,5 @@
+0. Make sure the make file include all the new added .c files
+1. Run "Make"
+2. Make sure "cat_cccodec3.i" include all the functions
+3. Run the script make_so_x86.sh
+

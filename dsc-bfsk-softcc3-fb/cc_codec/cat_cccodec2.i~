@@ -1,0 +1,13 @@
+%module cat_cccodec
+
+%{
+extern void cc_encode(unsigned char* block, int nbytes, int rs_length);
+extern void cc_decode(unsigned char* block, int codelength, int cclen);
+int cc_codelength(int nbytes, int rs_length);
+int cc_nbytes(int codelength, int cclen);
+%}
+
+extern void cc_encode(unsigned char* block, int nbytes, int rs_length);
+extern void cc_decode(unsigned char* block, int codelength, int cclen);
+int cc_codelength(int nbytes, int rs_length);
+int cc_nbytes(int codelength, int cclen);

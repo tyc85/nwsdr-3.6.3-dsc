@@ -42,12 +42,6 @@ void gr_framer_sink_1::setlen(int len)
   d_len = len;
 }
 
-void gr_framer_sink_1::setdec(char dec)
-{
-  d_dec = dec;
-  
-}
-
 inline void
 gr_framer_sink_1::enter_search()
 {
@@ -101,27 +95,21 @@ static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 gr_framer_sink_1::gr_framer_sink_1(gr_msg_queue_sptr target_queue) 
   : gr_sync_block ("framer_sink_1",
 		   //gr_make_io_signature (1, 1, sizeof(unsigned char)), Commented by Xu
-		   gr_make_io_signaturev (1, 2, isig), // The second input port inputs float soft info
-		   //gr_make_io_signature (1, 2, sizeof(unsigned char)), // fixed point info
+		   //gr_make_io_signaturev (1, 2, isig), // The second input port inputs float soft info
+		   gr_make_io_signature (1, 2, sizeof(unsigned char)), // fixed point info
+
 		   gr_make_io_signature (0, 0, 0)),
     d_target_queue(target_queue)
 {
+  d_len = 0; // Xu: initilize d_len = 0
   enter_search();
 
-  d_len = 0; // Xu: initilize d_len = 0  
-
   // Xu: For soft decoding
-  d_dec = 'h';
   handle = dlopen ("/lib/cat_cccodec3.so", RTLD_LAZY);
   if (!handle) {
     fputs (dlerror(), stderr);
     exit(1);
    }
-  for(int k= 0; k<10; k++){
-    cat_snr[k] = 0; 
-  }
-  //cat_snr = {0};
-  cat_num = 0;
 }
 
 gr_framer_sink_1::~gr_framer_sink_1 ()
@@ -140,22 +128,14 @@ gr_framer_sink_1::work (int noutput_items,
   const unsigned char *in = (const unsigned char *) input_items[0];
   int count=0;
 
-  // Xu: Used for SNR Estimator
-  //const float AC_CODE[64]={1,0,1,0,1,1,0,0,1,1,0,1,1,1,0,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,1,0,1,1,1,1,0,0,1,0,1,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,1,0,0}; // default access code
-  // new access code
-  const float AC_CODE[64]={0 ,0 ,0 ,0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1 ,1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0};
-
-  float h=0 ,s=0,noise=0,snr=0,snr_sum=0;
-  int p,j; 
-
   // Xu: Make the second input port pass the soft values
-  //const float *in_soft_symbol; // float point
-  const float *in_symbol; // float point
+  //const float *in_symbol; // float point
+  const unsigned char *in_symbol; // fixed point
   if(input_items.size() == 2){
-    in_symbol = (const float*) input_items[1]; // float point
-    //in_symbol = (const unsigned char*) input_items[1]; // fixed point
+    //in_symbol = (const float*) input_items[1]; // float point
+    in_symbol = (const unsigned char*) input_items[1]; // fixed point
   }
- 
+
 
   if (VERBOSE)
     fprintf(stderr,">>> Entering state machine\n");
@@ -169,42 +149,6 @@ gr_framer_sink_1::work (int noutput_items,
 
       while (count < noutput_items) {
 	if (in[count] & 0x2){  // Found it, set up for header decode
-
-          // Xu: SNR Estimator
-	  if(input_items.size() == 2){
-		  for(p=64;p>0;p--){
-		    //printf("%f\n", in_soft_symbol[count-p]);
-		    if(AC_CODE[64-p]>0)
-		       s=s+in_symbol[count-p];
-		    else 
-		       s=s-in_symbol[count-p];
-		    }
-		  h = s/64;
-		  for(p=64;p>0;p--){
-		    if(AC_CODE[64-p]>0)
-		      noise+=(h-in_symbol[count-p])*(h-in_symbol[count-p]);
-		    else
-		      noise+=(h+in_symbol[count-p])*(h+in_symbol[count-p]);
-		  }
-		  //printf("noise=%f\n",noise);
-		  snr=64*h*h/noise;
-		  cat_snr[cat_num%10]=snr;
-		  if(cat_num<10){
-		    for(j=0;j<cat_num;j++){
-		      snr_sum += cat_snr[j];
-		    }
-		    snr_sum /=cat_num+1;}
-		  else{
-		    for(j=0;j<10;j++){
-		      snr_sum += cat_snr[j];
-		    }
-		    snr_sum /=10;}
-		  cat_num++;
-		  printf("snr=%f\n",10*log10(snr_sum));
-          }
-
-          //
-
 	  enter_have_sync();
 	  break;
 	}
@@ -254,15 +198,16 @@ gr_framer_sink_1::work (int noutput_items,
       if (VERBOSE)
 	fprintf(stderr,"Packet Build\n");
 
-      if (d_dec=='s'){ 
-		
+      if (d_len >1670){ 
 	      // Xu: Soft decoding starts here!
 	      //printf("soft decoding starts \n"); 
 	      //void *handle;
 	      void (* softdecode)(const unsigned char *, unsigned char *, int , int);
 	      char *error;
 	      int info_packetlen;
-              float snr_data_based, sum_sig = 0, sum_noise = 0;  //Zhiyi : snr estimator based on data
+	      unsigned char tempchar;
+	      int i,offset;
+
 	
 	      *(void **)(&softdecode)= dlsym(handle, "cc3_softdecode");
 	      
@@ -271,38 +216,12 @@ gr_framer_sink_1::work (int noutput_items,
 	      
 	      while (count < noutput_items){
 
-		// Zhiyi: Snr estimate
-		//sum_sig += in_symbol[count]*in_symbol[count]; // Commented by Xu
-		sum_sig += 1; // Modified by Xu
-                if (in_symbol[count]>0){
-                    sum_noise += (1-in_symbol[count])*(1-in_symbol[count]); 
-                }
-                else {
-                    sum_noise += (-1-in_symbol[count])*(-1-in_symbol[count]);
-                }
-
-		//pkt_symbol[d_packetsym_cnt++] = in_symbol[count++];
-		// Convert float point to fixed point           
-                
-		pkt_symbol[d_packetsym_cnt] = 127.5 + 32*in_symbol[count++]; 
-		if( pkt_symbol[d_packetsym_cnt] <0)
-			pkt_symbol[d_packetsym_cnt] = 0;
-		else if (pkt_symbol[d_packetsym_cnt] > 255)
-			pkt_symbol[d_packetsym_cnt] = 255;
-			
-
-		d_packetsym_cnt ++;
+	        // 1571 1589 376 1566
+		pkt_symbol[d_packetsym_cnt++] = in_symbol[count++]; 
 		//printf("pkt_symbol is %u \n", pkt_symbol[d_packetsym_cnt-1]);
  		
 
 		if (d_packetsym_cnt== d_packetlen*8){ // Collect all symbols
-			// Zhiyi: snr estimator
-			if (sum_noise >0) // Xu: make sure not divded by 0!
-                        	snr_data_based = 10*log10(sum_sig/sum_noise);
-			else
-				snr_data_based = 100;
-
-                        printf("snr based on data =%f\n", snr_data_based);
 
 			// Decode here!
 	      		(*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);
@@ -326,8 +245,9 @@ gr_framer_sink_1::work (int noutput_items,
 	      break;
 	}
 	else{ // Conventional Decoding here
-		
+
 	      while (count < noutput_items) {   // shift bits into bytes of packet one at a time
+		//d_packet_byte = (d_packet_byte << 1) | ( (in_symbol[count++] >127.5?1:0) & 0x1); // Xu: Test the fixed point symbols
 		//printf("Test hard decoding of fixed point symbols \n"); // Xu
 
 		d_packet_byte = (d_packet_byte << 1) | (in[count++] & 0x1);

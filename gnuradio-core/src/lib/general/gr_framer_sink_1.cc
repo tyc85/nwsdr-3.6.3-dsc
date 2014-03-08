@@ -272,9 +272,10 @@ gr_framer_sink_1::work (int noutput_items,
 	      while (count < noutput_items){
 
 		// Zhiyi: Snr estimate
-		sum_sig += in_symbol[count]*in_symbol[count];
+		//sum_sig += in_symbol[count]*in_symbol[count]; // Commented by Xu
+		sum_sig += 1; // Modified by Xu
                 if (in_symbol[count]>0){
-                    sum_noise += (1-in_symbol[count])*(1-in_symbol[count]);
+                    sum_noise += (1-in_symbol[count])*(1-in_symbol[count]); 
                 }
                 else {
                     sum_noise += (-1-in_symbol[count])*(-1-in_symbol[count]);
@@ -296,7 +297,11 @@ gr_framer_sink_1::work (int noutput_items,
 
 		if (d_packetsym_cnt== d_packetlen*8){ // Collect all symbols
 			// Zhiyi: snr estimator
-                        snr_data_based = 10*log10(sum_sig/sum_noise);
+			if (sum_noise >0) // Xu: make sure not divded by 0!
+                        	snr_data_based = 10*log10(sum_sig/sum_noise);
+			else
+				snr_data_based = 100;
+
                         printf("snr based on data =%f\n", snr_data_based);
 
 			// Decode here!
