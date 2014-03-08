@@ -174,7 +174,7 @@ def main():
 
         
         while not shutdown_event.is_set():
-            if time.time() % 30 <= 30 and tx_enabled == False:
+            if time.time() % 10 <= 5 and tx_enabled == False:
 
                 ########################################
                 # Feedback message
@@ -196,7 +196,7 @@ def main():
                 
                 print "Tx side: Transmitting at the forward link"
 
-            if time.time() % 30 > 30 and tx_enabled == True:
+            if time.time() % 10 > 5 and tx_enabled == True:
                 tx_enabled = False
                 tb.txgate.set_enabled(False)
                 time.sleep(0.01)

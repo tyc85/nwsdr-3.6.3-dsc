@@ -171,7 +171,7 @@ def main():
         
         flag=0
         while not shutdown_event.is_set():
-            if time.time() % 30 <= 30 and tx_enabled==True:
+            if time.time() % 10 <= 5 and tx_enabled==True:
                 
                 if flag==0:
                     pre_rcvd = n_rcvd
@@ -198,7 +198,7 @@ def main():
 
                 
 
-            if time.time() % 30 > 30 and tx_enabled==False:
+            if time.time() % 10 > 5 and tx_enabled==False:
                 #print "tx bandwidth1", tb.sig1.get_sampling_rate(), "tx bandwidth2", tb.sig2.get_sampeling_rate()
                 # Define feedback state here
                 if (n_rcvd > pre_rcvd ) and float(n_right - pre_right)/float(n_rcvd - pre_rcvd) > 0.8:
@@ -232,7 +232,7 @@ def main():
         if ok:
             n_right += 1
             serve.send(payload[2:])
-        if pktno % 20 == 1:
+        if pktno >0:
             print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
                 ok, pktno, n_rcvd, n_right)
 
@@ -294,12 +294,13 @@ def main():
         parser.print_help(sys.stderr)
         sys.exit(1)
 
+    '''
     if options.from_file is None:
         if options.rx_freq is None:
             sys.stderr.write("You must specify -f FREQ or --freq FREQ\n")
             parser.print_help(sys.stderr)
             sys.exit(1)
-
+    '''
 
 
     # packet_sink

@@ -186,6 +186,6 @@ class _queue_watcher_thread(_threading.Thread):
         while self.keep_running:
             msg = self.rcvd_pktq.delete_head()
             #ok, payload = cat_packet_utils.unmake_packet(msg.to_string(), int(msg.arg1()), True) 
-            ok, payload = cat_packet_utils.unmake_packet(msg.to_string(), int(msg.arg1()), True, mode) # Xu: add the mode 
+            ok, payload = cat_packet_utils.unmake_packet(msg.to_string(), int(msg.arg1()), True, self.mode) # Xu: add the mode 
             if self.callback:
                 self.callback(ok, payload)
