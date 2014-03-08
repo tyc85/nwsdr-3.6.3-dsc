@@ -43,7 +43,7 @@ import socket
 ############3#####
 class dsc_pkt_src(object):
     def __init__(self, server, port=5123 ):
-        self.pkt_size = 1972 # 1440 bytes of data  
+        self.pkt_size = 966 # 1440 bytes of data  
         self.pkt_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.pkt_server_socket.connect((server,port))
         self.MESSAGE = struct.pack('!l', self.pkt_size)
@@ -147,20 +147,48 @@ def main():
     n = 0
     pktno = 0
     pkt_size = int(options.size)
-    #serve = dsc_pkt_src("127.0.0.1")
-    while n < nbytes:
-        if options.from_file is None:
-            data = (pkt_size - 2) * chr(0)
-            #data = (pkt_size - 2) * chr(pktno & 0xff)
-            #data = (pkt_size - 2) * chr( 0xff) 
-            #data = serve.read()
-        else:
-            data = source_file.read(pkt_size - 2)
-            if data == '':
-                break;
+    serve = dsc_pkt_src("127.0.0.1")
+    totaldata = []
+    first_run = True
 
-        payload = struct.pack('!H',pktno & 0xffff) + data
-        send_pkt(payload)
+    while True:
+        if first_run:
+            if options.from_file is None:
+                #data = (pkt_size - 2) * chr(0)
+                #data = (pkt_size - 2) * chr(pktno & 0xff)
+                #data = (pkt_size - 2) * chr( 0xff) 
+                if pktno ==1000:
+                    first_run = False
+
+                data = serve.read()
+                if len(data) != 966:
+                    if len(totaldata) == 0: # cannot fetch data from server
+                        pass
+                    else: # End of file
+                        first_run = False
+                else:
+                    payload = struct.pack('!H',pktno & 0xffff) + data
+                    send_pkt(payload)
+                    pktno += 1
+                    totaldata.append(data)
+            else:
+                data = source_file.read(pkt_size - 2)
+                if data == '':
+                    break;
+                payload = struct.pack('!H',pktno & 0xffff) + data
+                send_pkt(payload)
+        else:
+            if len(totaldata) > pktno:
+                payload = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
+                send_pkt(payload)
+                pktno = (pktno + 1) % len(totaldata)
+            else:
+                pktno = 0
+                payload = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
+                send_pkt(payload)
+                pktno = (pktno + 1) % len(totaldata)
+
+        
         n += len(payload)
         sys.stderr.write('.')
         if options.discontinuous and pktno % 5 == 4:
