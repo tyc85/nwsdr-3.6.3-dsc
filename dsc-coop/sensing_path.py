@@ -64,6 +64,7 @@ class sensing_path(gr.hier_block2):
         self.fft_size = FFT_SIZE
 
 	self._thr_sense=options.thr_sense
+	print self._thr_sense
 
         # interpolation rate: sensing fft size / ofdm fft size
         self.interp_rate = self.fft_size/FFT_SIZE #options.fft_length
