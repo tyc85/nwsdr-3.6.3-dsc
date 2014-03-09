@@ -50,12 +50,17 @@ class GR_CORE_API gr_bytes_to_syms : public gr_sync_interpolator
 {
   friend GR_CORE_API gr_bytes_to_syms_sptr gr_make_bytes_to_syms ();
 
+public:
   gr_bytes_to_syms ();
+
+ private:
+  int mfsk; // DG
 
  public:
   int work (int noutput_items,
 	    gr_vector_const_void_star &input_items,
 	    gr_vector_void_star &output_items);
+  void set_mfsk(int m); // DG
 };
 
 #endif /* INCLUDED_GR_BYTES_TO_SYMS_H */

@@ -26,5 +26,9 @@ gr_bytes_to_syms_sptr gr_make_bytes_to_syms ();
 
 class gr_bytes_to_syms : public gr_sync_interpolator
 {
+public:
   gr_bytes_to_syms ();
+
+ public:
+ void set_mfsk(int m); // DG
 };

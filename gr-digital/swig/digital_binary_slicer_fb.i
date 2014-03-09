@@ -24,10 +24,11 @@ GR_SWIG_BLOCK_MAGIC(digital,binary_slicer_fb);
 
 digital_binary_slicer_fb_sptr digital_make_binary_slicer_fb ();
 
-class digital_binary_slicer_fb : public gr_sync_block
+class digital_binary_slicer_fb : public gr_sync_interpolator
+/*class digital_binary_slicer_fb : public gr_sync_block*/
 {
  private:
   digital_binary_slicer_fb ();
-
  public:
+void set_mfsk(int m);
 };

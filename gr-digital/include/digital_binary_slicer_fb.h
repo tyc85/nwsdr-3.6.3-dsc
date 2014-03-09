@@ -24,7 +24,7 @@
 #define INCLUDED_DIGITAL_BINARY_SLICER_FB_H
 
 #include <digital_api.h>
-#include <gr_sync_block.h>
+#include <gr_sync_interpolator.h>
 
 class digital_binary_slicer_fb;
 typedef boost::shared_ptr<digital_binary_slicer_fb> digital_binary_slicer_fb_sptr;
@@ -39,7 +39,7 @@ DIGITAL_API digital_binary_slicer_fb_sptr digital_make_binary_slicer_fb ();
  * x <  0 --> 0
  * x >= 0 --> 1
  */
-class DIGITAL_API digital_binary_slicer_fb : public gr_sync_block
+class DIGITAL_API digital_binary_slicer_fb : public gr_sync_interpolator
 {
   friend DIGITAL_API digital_binary_slicer_fb_sptr digital_make_binary_slicer_fb ();
   digital_binary_slicer_fb ();
@@ -48,6 +48,12 @@ class DIGITAL_API digital_binary_slicer_fb : public gr_sync_block
   int work (int noutput_items,
 	    gr_vector_const_void_star &input_items,
 	    gr_vector_void_star &output_items);
+  void set_mfsk(int m);
+  void set_th1(float);
+ private:
+  int mfsk;
+  float th1;
+  float th2;
 };
 
 #endif
