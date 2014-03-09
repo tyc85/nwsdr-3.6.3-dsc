@@ -18,7 +18,7 @@
 
 using namespace std;
 
-enum Simulation {MAX_ITER = 10, NUM_PEEK = 1000000, SEED = 100};
+enum Simulation {MAX_ITER = 18, NUM_PEEK = 1000000, SEED = 100};
 enum CodeWifi {
 		NUM_VAR = 1944, NUM_CHK = 972, NUM_CGRP = 12, NUM_VGRP = 24, CHK_DEG = 8, VAR_DEG = 11,
 		P = 81, CIR_SIZE = 81, INFO_LENGTH = 972, CWD_LENGTH = 1944, 
