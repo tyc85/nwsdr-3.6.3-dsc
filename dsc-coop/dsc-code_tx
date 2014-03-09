@@ -424,7 +424,8 @@ def main():
                 send_pkt1(payload1)
                 pktno += 1    
                 n += len(payload1)
-                sys.stderr.write('.')
+                if  options.verbose:
+                    sys.stderr.write('.')
             else:
                 tb.const_source_x_11.set_amplitude(0)
                 payload1 = struct.pack('!H', pktno & 0xffff) + data_waste
@@ -442,7 +443,8 @@ def main():
                 send_pkt0(payload0)
                 pktno += 1    
                 n += len(payload0)
-                sys.stderr.write('.')
+                if  options.verbose:
+                    sys.stderr.write('.')
             else:
                 tb.const_source_x_00.set_amplitude(0)
                 payload0 = struct.pack('!H', pktno & 0xffff) + data_waste
@@ -460,7 +462,8 @@ def main():
                 send_pkt2(payload2)
                 pktno += 1    
                 n += len(payload2)
-                sys.stderr.write('.')	
+                if  options.verbose:
+                    sys.stderr.write('.')	
             else:
                 tb.const_source_x_22.set_amplitude(0)
                 payload2 = struct.pack('!H', pktno & 0xffff) + data_waste

@@ -180,8 +180,7 @@ def main():
         if ok:
             n_right += 1
             serve.send(payload[2:])
-        print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d\n" %(
-            ok, pktno, n_rcvd, n_right)
+        #print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d\n" %( ok, pktno, n_rcvd, n_right)
             #try:            
             #   data = s.recv(4) # if a ready packet is received
             #   s.send(payload[2:])
@@ -213,7 +212,7 @@ def main():
     expert_grp = parser.add_option_group("Expert")
 
     parser.add_option("-m", "--modulation", type="choice", choices=demods.keys(), 
-                      default='psk',
+                      default='gmsk',
                       help="Select modulation from: %s [default=%%default]"
                             % (', '.join(demods.keys()),))
     parser.add_option("","--from-file", default=None,
