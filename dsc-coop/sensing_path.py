@@ -31,13 +31,17 @@ import numpy, struct
 
 
 # linklab, define constants
-FFT_SIZE      = 32       # fft size for sensing  
+FFT_SIZE      = 64       # fft size for sensing  
 LOW_THRES     = -45        # low power threshold in dB to identify free freq blocks
 HIGH_THRES    = -25        # high power threshold in dB to identify busy freq blocks
 SMOOTH_LENGTH = 10       # smooth length
 EDGE_THRES    = 5          # edge detection threshold in dB
 
-SENSE_THR=-125
+SENSE_ALLTHR_MAX=-110
+SENSE_ALLTHR_MIN=-150
+SENSE_ALLTHR_MAX_COUNT=0
+SENSE_ALLTHR_MIN_COUNT=0
+
 
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -153,6 +157,7 @@ class sensing_path(gr.hier_block2):
 
     # linklab, get available subcarriers via edge detection
     def GetAvailableSpectrum(self):
+        global SENSE_ALLTHR_MAX_COUNT, SENSE_ALLTHR_MAX, SENSE_ALLTHR_MIN_COUNT, SENSE_ALLTHR_MIN
         
         # get PSD map
         psd = self.GetPSD()
@@ -220,29 +225,55 @@ class sensing_path(gr.hier_block2):
             # if power very low, available 
             if psd[i] < LOW_THRES: 
                 avail_subc_bin[carrier_index] = 1
-    	print psd
+    	#print psd
     	
     	
-    	temp_result_1=sum(psd[0:round(FFT_SIZE/3,0)])/round(FFT_SIZE/3,0)
-    	temp_result_2=sum(psd[round(FFT_SIZE/3,0):round(2*FFT_SIZE/3,0)])/(round(2*FFT_SIZE/3,0) - (round(FFT_SIZE/3,0)))
-    	temp_result_3=sum(psd[round(2*FFT_SIZE/3,0):round(FFT_SIZE,0)])/(round(FFT_SIZE,0) -  (round(2*FFT_SIZE/3,0)))
-#    	print temp_result_1
-#    	print temp_result_2
-#    	print temp_result_3
     	
+    	temp_result_1=sum(psd[round(1*FFT_SIZE/12,0):round(3*FFT_SIZE/12,0)])/(round(3*FFT_SIZE/12,0)-round(1*FFT_SIZE/12,0))
+    	temp_result_2=sum(psd[round(5*FFT_SIZE/12,0):round(7*FFT_SIZE/12,0)])/(round(7*FFT_SIZE/12,0)-round(5*FFT_SIZE/12,0))
+    	temp_result_3=sum(psd[round(9*FFT_SIZE/12,0):round(11*FFT_SIZE/12,0)])/(round(11*FFT_SIZE/12,0)-round(9*FFT_SIZE/12,0))
+    	#temp_result_2=sum(psd[round(FFT_SIZE/3,0):round(2*FFT_SIZE/3,0)])/(round(2*FFT_SIZE/3,0) - (round(FFT_SIZE/3,0)))
+    	#temp_result_3=sum(psd[round(2*FFT_SIZE/3,0):round(FFT_SIZE,0)])/(round(FFT_SIZE,0) -  (round(2*FFT_SIZE/3,0)))
+    	print temp_result_1
+    	print temp_result_2
+    	print temp_result_3
+    	
+    	
+    	temp_result=[temp_result_1, temp_result_2, temp_result_3];
+    	temp_result_max=max(temp_result);
+    	temp_result_min=min(temp_result);
+    	temp_result_dif=temp_result_max-temp_result_min;
+    	
+    	if temp_result_dif >= self._thr_sense: #some channel is available, some is non-available, the default value of _thr_sense=15dB
+    	    sense_thread=(temp_result_max+temp_result_min)/2;
+        else:  #all channels are availalbe or non-available  	    
+    	    sense_thread=(SENSE_ALLTHR_MAX+SENSE_ALLTHR_MIN)/2;
+    	    temp_result_ave=sum(temp_result)/3;
+    	    #if all channels are available, the gain should be less than -130dB
+    	    #if all channels are non-available, the gain should be larger than -130dB
+    	    if temp_result_ave>=sense_thread: # all channels are non-available, update the sense_allthr_max
+    	        SENSE_ALLTHR_MAX_COUNT += 1;
+    	        SENSE_ALLTHR_MAX = (SENSE_ALLTHR_MAX*SENSE_ALLTHR_MAX_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MAX_COUNT+1);
+    	    else: #all channels are available, update the sense_allthr_min
+    	        SENSE_ALLTHR_MIN_COUNT += 1;
+    	        SENSE_ALLTHR_MIN = (SENSE_ALLTHR_MIN*SENSE_ALLTHR_MIN_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MIN_COUNT+1);    	        
+    	                	
     	
     	result=[1, 1, 1]
     	
-    	if temp_result_1 >= self._thr_sense:
+    	if temp_result_1 >= sense_thread:
     	    result[0]=0
     	    
-    	if temp_result_2 >= self._thr_sense:
+    	if temp_result_2 >= sense_thread:
     	    result[1]=0    	    
-    	if temp_result_3 >= self._thr_sense:
+    	if temp_result_3 >= sense_thread:
     	    result[2]=0    	    
     	    
-
-
+        #print SENSE_ALLTHR_MAX_COUNT
+        print SENSE_ALLTHR_MAX
+        #print SENSE_ALLTHR_MIN_COUNT
+        print SENSE_ALLTHR_MIN        
+        print sense_thread
         print result    
         return result
         #return avail_subc_bin
