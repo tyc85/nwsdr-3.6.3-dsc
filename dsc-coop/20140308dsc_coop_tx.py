@@ -231,8 +231,8 @@ def main():
     parser.add_option("-s", "--size", type="eng_float", default=1500,
                       help="set packet size [default=%default]")
 
-    parser.add_option("-t", "--thr-sense", type="eng_float", default=15,
-                      help="Threshold for sensing dif[default=%default]")
+    parser.add_option("-t", "--thr-sense", type="eng_float", default=-120,
+                      help="Threshold for sensing [default=%default]")
 
     parser.add_option("-M", "--megabytes", type="eng_float", default=1000,
                       help="set megabytes to transmit [default=%default]")
@@ -325,7 +325,7 @@ def main():
             sense_n=0 # this makes sure that after sensing, transmit continues
             #diff_sum_sense_result=sumsense_result-sumtemp_sense_result
             #if diff_sum_sense > 1
-            sense_result=[1,1,1]
+            #sense_result=[0,1,0]
             #set amplitude
             sumsense_result=sum(sense_result)
             if sumsense_result ==3:
