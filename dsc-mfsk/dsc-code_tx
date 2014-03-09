@@ -73,7 +73,7 @@ class my_top_block(gr.top_block):
         self.connect(self.txpath, self.sink)
 
         # Set mode
-        self.mode = 3
+        self.mode = 2
         self.txpath.packet_transmitter.mode = self.mode
 
 
@@ -184,8 +184,7 @@ def main():
 
     # build the graph
     tb = my_top_block(mods[options.modulation], options)
-    #tb.set_mfsk(4)
-    #tb.set_mfsk(2)
+    tb.set_mfsk(2)
 
     r = gr.enable_realtime_scheduling()
     if r != gr.RT_OK:

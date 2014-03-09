@@ -80,16 +80,17 @@ digital_binary_slicer_fb::work (int noutput_items,
 {
   const float *in = (const float *) input_items[0];
   unsigned char *out = (unsigned char *) output_items[0];
+  float inval;  
 
   // Xu: The second output port passes the soft values
   float * out_symbol;
 
-if (mfsk==2)
-{
   if (output_items.size() ==2){
     out_symbol = (float *) output_items[1];  // float point
   }
 
+if (mfsk==2)
+{
   for (int i = 0; i < noutput_items; i++){
     out[i] = gr_binary_slicer(in[i]);
   
@@ -99,5 +100,34 @@ if (mfsk==2)
 	//printf("soft symbol from slicer is %f \n", out_symbol[i]);
   }
 } 
+else
+{
+  assert (noutput_items % 2 == 0);
+  assert (output_items.size() == 2);
+  for (int i = 0; i < noutput_items/2; i++){
+    inval =in[i];
+    if (inval >=0.0)
+    {
+      *out++=1;
+      *out_symbol++=1;
+    }
+    else
+    {
+     *out++=0; 
+     *out_symbol++=-1; 
+    }
+    if ((inval>th2) && (inval < th1))
+    {
+      *out++=1;
+      *out_symbol++=1;
+    }
+    else
+    {
+     *out++=0; 
+     *out_symbol++=-1; 
+    }
+
+  } // i loop
+} // 4fsk
   return noutput_items;
 }
