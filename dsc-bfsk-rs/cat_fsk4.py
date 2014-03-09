@@ -33,12 +33,9 @@ import numpy
 from pprint import pprint
 import inspect
 
-#lib = "./libpam4.so"
-#cat = cdll.LoadLibrary(lib)
-
 # default values (used in __init__ and add_options)
 _def_samples_per_symbol = 2
-_def_bt = 0.35
+_def_bt = 2
 _def_verbose = False
 _def_log = False
 _def_foobar = 3.14159
@@ -48,7 +45,7 @@ _def_mu = 0.5
 _def_freq_error = 0.0
 _def_omega_relative_limit = 0.005
 
-_def_pam4 = 1   # 2fsk if 0, 4fsk if 1
+_def_mfsk = 2   # 2fsk if 0, 4fsk if 1
 
 # FIXME: Figure out how to make GMSK work with pfb_arb_resampler_fff for both
 # transmit and receive so we don't require integer samples per symbol.
@@ -99,9 +96,7 @@ class gmsk_cats_mod(gr.hier_block2):
 
 	# Turn it into NRZ data.
 	self.nrz = gr.bytes_to_syms()
-	if _def_pam4:
-        	self.nrz.setpam4()
-		# print "pam4 transmitter"
+        self.nrz.set_mfsk(_def_mfsk)
 
 	# Form Gaussian filter
         # Generate Gaussian response (Needs to be convolved with window below).
@@ -128,6 +123,11 @@ class gmsk_cats_mod(gr.hier_block2):
 
 	# Connect & Initialize base class
 	self.connect(self, self.nrz, self.gaussian_filter, self.fmmod, self)
+
+    def set_mfsk(self,m=2):
+	_def_mfsk = m
+	self.nrz.set_mfsk(m)
+	self.fmmod.set_sensitivity(pi/_def_samples_per_symbol/m)
 
     def samples_per_symbol(self):
         return self._samples_per_symbol
@@ -248,9 +248,9 @@ class gmsk_cats_demod(gr.hier_block2):
 
         # slice the floats at 0, outputting 1 bit (the LSB of the output byte) per sample
         self.slicer = digital.binary_slicer_fb()
-	if _def_pam4:
-		self.slicer.setpam4()
-		self.clock_recovery.set_pam4()
+	#if _def_mfsk:
+	#	self.slicer.set_fsk4()
+	#	self.clock_recovery.set_fsk4()
 
         if verbose:
             self._print_verbage()
@@ -260,6 +260,12 @@ class gmsk_cats_demod(gr.hier_block2):
 
 	# Connect & Initialize base class
 	self.connect(self, self.fmdemod, self.clock_recovery, self.slicer, self)
+
+    def set_mfsk(self,m=2):
+	_def_mfsk = m
+	self.slicer.set_mfsk(m)
+	self.clock_recovery.set_mfsk(m)
+	self.fmdemod.set_gain(1.0/(pi/_def_samples_per_symbol/m))
 
     def samples_per_symbol(self):
         return self._samples_per_symbol

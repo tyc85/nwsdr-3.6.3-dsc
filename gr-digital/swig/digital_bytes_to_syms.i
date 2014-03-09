@@ -30,5 +30,5 @@ protected:
   digital_bytes_to_syms();
 
  public:
- void setpam4(); // DG
+ void set_fsk4(); // DG
 };

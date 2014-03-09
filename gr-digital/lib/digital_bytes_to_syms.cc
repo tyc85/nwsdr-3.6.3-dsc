@@ -29,13 +29,13 @@
 #include <assert.h>
 
 static const int BITS_PER_BYTE = 8;
-static const int PAM4_PER_BYTE = 4; // DG
+static const int FSK4_PER_BYTE = 4; // DG
 static const float constellation[4] = {-3, -1, 3, 1}; // DG
 
 // DG
-void digital_bytes_to_syms::setpam4 ()
+void digital_bytes_to_syms::set_fsk4 ()
 {
-  pam4 = 1;
+  fsk4 = 1;
 }
 
 digital_bytes_to_syms_sptr
@@ -50,8 +50,8 @@ digital_bytes_to_syms::digital_bytes_to_syms ()
 			  gr_make_io_signature (1, 1, sizeof (float)),
 			  BITS_PER_BYTE)
 {
-  pam4 = 0;
-  assert (pam4 == 1);
+  fsk4 = 0;
+  assert (fsk4 == 1);
 }
 
 int
@@ -62,7 +62,7 @@ digital_bytes_to_syms::work (int noutput_items,
   const unsigned char *in = (unsigned char *) input_items[0];
   float *out = (float *) output_items[0];
 
-  if (pam4==0)    {
+  if (fsk4==0)    {
   assert (noutput_items % BITS_PER_BYTE == 0);
   
   for (int i = 0; i < noutput_items / BITS_PER_BYTE; i++) {
@@ -79,9 +79,9 @@ digital_bytes_to_syms::work (int noutput_items,
   }
     }
   else    {
-  assert (noutput_items % PAM4_PER_BYTE == 0);
+  assert (noutput_items % FSK4_PER_BYTE == 0);
   
-  for (int i = 0; i < noutput_items / PAM4_PER_BYTE; i++) {
+  for (int i = 0; i < noutput_items / FSK4_PER_BYTE; i++) {
     int x = in[i];
 
     *out++ = constellation[(x >> 6) & 0x3];

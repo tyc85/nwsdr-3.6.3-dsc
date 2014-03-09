@@ -56,7 +56,7 @@ digital_clock_recovery_mm_ff::digital_clock_recovery_mm_ff (float omega, float g
     d_last_sample(0), d_interp(new gri_mmse_fir_interpolator()),
     d_logfile(0), d_omega_relative_limit(omega_relative_limit)
 {
-  pam4 = 0;
+  mfsk = 2;
   if (omega <  1)
     throw std::out_of_range ("clock rate must be > 0");
   if (gain_mu <  0  || gain_omega < 0)
@@ -95,7 +95,7 @@ slice(float x)
 }
 
 static inline float
-slice_pam4(float x)
+slice_fsk4(float x)
 {
   static float th1=2.0F;
   static float th2=-2.0F;
@@ -130,7 +130,7 @@ digital_clock_recovery_mm_ff::general_work (int noutput_items,
   int   ni = ninput_items[0] - d_interp->ntaps(); // don't use more input than this
   float mm_val;
 
-if (pam4==0){
+if (mfsk==2){
   while (oo < noutput_items && ii < ni ){
 
     // produce output sample
@@ -156,7 +156,7 @@ if (pam4==0){
 
     // produce output sample
     out[oo] = d_interp->interpolate (&in[ii], d_mu);
-    mm_val = (slice_pam4(d_last_sample) * out[oo] - slice_pam4(out[oo]) * d_last_sample)/5.0;
+    mm_val = (slice_fsk4(d_last_sample) * out[oo] - slice_fsk4(out[oo]) * d_last_sample)/5.0;
     d_last_sample = out[oo];
 
     d_omega = d_omega + d_gain_omega * mm_val;

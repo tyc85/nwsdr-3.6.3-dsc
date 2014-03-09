@@ -46,15 +46,18 @@ digital_binary_slicer_fb::digital_binary_slicer_fb ()
 {
   th1=2; //1.57079;   // pi over 2
   th2=-th1;
-  pam4=0;
+  mfsk=2;
 }
 
 
-void digital_binary_slicer_fb::setpam4 ()
+void digital_binary_slicer_fb::set_mfsk (int m)
 {
-  pam4=1;
-  set_interpolation(2);
-  std::cout << "pam4=1; interp=2\n";
+  mfsk = m;
+  if (mfsk==2)
+    set_interpolation(1);
+  else
+    set_interpolation(2);
+  // std::cout << "fsk4=1; interp=2\n";
 }
 
 void digital_binary_slicer_fb::set_th1 (float th)
@@ -72,12 +75,12 @@ digital_binary_slicer_fb::work (int noutput_items,
   unsigned char *out = (unsigned char *) output_items[0];
   float inval;  
 
-if (pam4==0)
+if (mfsk==2)
 {
   for (int i = 0; i < noutput_items; i++){
     out[i] = gr_binary_slicer(in[i]);
   }
-}  // pam4==0
+}  // 2fsk
 else
 {
   assert (noutput_items % 2 == 0);
@@ -92,7 +95,7 @@ else
     else
      *out++=0;
   } // i loop
-} // pam4 != 0
+} // 4fsk
   
   return noutput_items;
 }

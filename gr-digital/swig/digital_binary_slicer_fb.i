@@ -34,5 +34,5 @@ class digital_binary_slicer_fb : public gr_sync_interpolator
   digital_binary_slicer_fb ();
 
  public:
-  void setpam4();
+  void set_mfsk(int m);
 };

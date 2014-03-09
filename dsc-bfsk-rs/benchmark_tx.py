@@ -64,8 +64,12 @@ class my_top_block(gr.top_block):
         # do this after for any adjustments to the options that may
         # occur in the sinks (specifically the UHD sink)
         self.txpath = transmit_path(modulator, options)
-
+        
         self.connect(self.txpath, self.sink)
+
+    def set_mfsk(self,m):
+        self.txpath.modulator.set_mfsk(m)
+
 
 # /////////////////////////////////////////////////////////////////////////////
 #                                   main
@@ -114,6 +118,7 @@ def main():
 
     # build the graph
     tb = my_top_block(mods[options.modulation], options)
+    tb.set_mfsk(4)
 
     r = gr.enable_realtime_scheduling()
     if r != gr.RT_OK:

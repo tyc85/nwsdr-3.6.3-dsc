@@ -69,6 +69,9 @@ class my_top_block(gr.top_block):
 
         self.connect(self.source, self.rxpath)
 
+    def set_mfsk(self,m):
+        self.rxpath.demodulator.set_mfsk(m)
+
 
 # /////////////////////////////////////////////////////////////////////////////
 #                                   main
@@ -126,6 +129,7 @@ def main():
 
     # build the graph
     tb = my_top_block(demods[options.modulation], rx_callback, options)
+    tb.set_mfsk(4)
 
     r = gr.enable_realtime_scheduling()
     if r != gr.RT_OK:

@@ -28,8 +28,7 @@ class gr_bytes_to_syms : public gr_sync_interpolator
 {
 public:
   gr_bytes_to_syms ();
-  gr_bytes_to_syms (int flag);
 
  public:
- void setpam4(); // DG
+ void set_mfsk(int m); // DG
 };
