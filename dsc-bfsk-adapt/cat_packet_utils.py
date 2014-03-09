@@ -151,14 +151,14 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
     (packed_preamble, ignore) = conv_1_0_string_to_packed_binary_string(preamble)
     
     payload_with_crc = crc.gen_and_append_crc32(payload)
-
+    '''
     # Xu: Always whiten the infor bit
     MAXLEN = len(random_mask_tuple)
     if len(payload_with_crc)> MAXLEN :
         raise ValueError, "len(payload_with_crc) must be in [0, %d]" % (MAXLEN,)
              
     payload_with_crc = whiten(payload_with_crc,0)
-
+    '''
     # !!! Important: make sure  1<= mode <= 2  
     # Need to change the region here!   
     #if mode<1 or mode >2:
@@ -292,9 +292,9 @@ def unmake_packet(whitened_payload_with_crc, whitener_offset=0, dewhitening=True
     Decoder.cat_decode(rsbitstr, cl) 
 
 
-    #ok, payload = crc.check_crc32(rsbitstr[0:nb])
+    ok, payload = crc.check_crc32(rsbitstr[0:nb])
     # Xu: Always dewhitening the info bit
-    ok, payload = crc.check_crc32( dewhiten(rsbitstr[0:nb],0)) 
+    #ok, payload = crc.check_crc32( dewhiten(rsbitstr[0:nb],0)) 
 
     ##########################################################
 

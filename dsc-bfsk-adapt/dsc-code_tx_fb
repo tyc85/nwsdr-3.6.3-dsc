@@ -169,43 +169,50 @@ def main():
     fbmode = 2
     fbpayload = 1440* chr(fbmode)
 
+
     def dowork():
-        global n_rcvd, n_right, tx_enabled, tb, fbmode
+        global n_rcvd, n_right, tx_enabled, tb, fbmode,  fbpayload
 
         
         while not shutdown_event.is_set():
-            if time.time() % 10 <= 5 and tx_enabled == False:
+            if time.time() % 10 <= 5: 
+                if tx_enabled == False:
 
-                ########################################
-                # Feedback message
-                # fbmode = 1: High rate 
-                # fbmode = 2: Low rate
-                ##########################################
-                
-                if fbmode == 1 and tb.mode != fbmode: # High-rate
-                    tb.setmode(fbmode)
-                elif fbmode == 2 and tb.mode != fbmode: # Low-rate
-                    tb.setmode(fbmode)
-                elif fbmode !=1 and fbmode !=2 and tb.mode != 2:
+                    ########################################
+                    # Feedback message
+                    # fbmode = 1: High rate 
+                    # fbmode = 2: Low rate
+                    ##########################################
+                    
+                    if fbmode == 1 and tb.mode != fbmode: # High-rate
+                        tb.setmode(fbmode)
+                    elif fbmode == 2 and tb.mode != fbmode: # Low-rate
+                        tb.setmode(fbmode)
+                    elif fbmode !=1 and fbmode !=2 and tb.mode != 2:
+                        tb.setmode(2)
+
+                    tx_enabled = True            
+                    tb.txgate.set_enabled(True)
+                    tb.rxgate.set_enabled(False)
+                    #sys.stderr.write("TX")
+                    
+                    print "Tx side: Transmitting at the forward link"
+
+            else:
+                if tx_enabled == True:
                     tb.setmode(2)
+                    fbmode = 2 
 
-                tx_enabled = True            
-                tb.txgate.set_enabled(True)
-                tb.rxgate.set_enabled(False)
-                #sys.stderr.write("TX")
-                
-                print "Tx side: Transmitting at the forward link"
+                    tx_enabled = False
+                    tb.txgate.set_enabled(False)
+                    time.sleep(0.01)
+                    tb.rxgate.set_enabled(True)
+                      
+                    time.sleep(0.75)
+                    #fbmode = ord(fbpayload[0])
+                    
 
-            if time.time() % 10 > 5 and tx_enabled == True:
-                tx_enabled = False
-                tb.txgate.set_enabled(False)
-                time.sleep(0.01)
-                tb.rxgate.set_enabled(True)
-                  
-                time.sleep(0.75)
-                fbmode = ord(fbpayload[0])
-
-                print "Tx side: Receiving feedback, fbmode ", fbmode
+                    print "Tx side: Receiving feedback, fbmode ", fbmode
                 
                     
                 
@@ -218,13 +225,16 @@ def main():
     # rx_callback used to receive the feedback from transmitter
     def rx_callback(ok, payload):
         #global n_rcvd, n_right, start_time, stop_rcv
-        global n_rcvd, n_right
+        global n_rcvd, n_right, fbpayload, fbmode
         (pktno,) = struct.unpack('!H', payload[0:2])
         n_rcvd += 1
         if ok:
             n_right += 1
             fbpayload = payload[2:]
-        print "2- conv, 1-rs: rx fbmode is ", ord(fbpayload[0])
+            fbmode = ord(fbpayload[0])
+        
+        #print "2- conv, 1-rs: rx fbmode is ", ord(fbpayload[0])
+        print "2- conv, 1-rs: tb mode is ", tb.mode
         print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
             ok, pktno, n_rcvd, n_right)
 

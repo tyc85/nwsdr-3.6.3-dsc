@@ -200,7 +200,7 @@ gr_framer_sink_1::work (int noutput_items,
 		    }
 		    snr_sum /=10;}
 		  cat_num++;
-		  printf("snr=%f\n",10*log10(snr_sum));
+		  //printf("snr=%f\n",10*log10(snr_sum));
           }
 
           //
@@ -302,7 +302,7 @@ gr_framer_sink_1::work (int noutput_items,
 			else
 				snr_data_based = 100;
 
-                        printf("snr based on data =%f\n", snr_data_based);
+                        //printf("snr based on data =%f\n", snr_data_based);
 
 			// Decode here!
 	      		(*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN);
