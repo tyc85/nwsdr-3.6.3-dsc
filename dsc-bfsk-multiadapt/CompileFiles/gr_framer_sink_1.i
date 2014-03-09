@@ -34,6 +34,5 @@ class gr_framer_sink_1 : public gr_sync_block
  void setlen(int len); // Xu: set d_len
  void setdec(char dec); // // Xu: set hard decoding or soft decoding
  void setmode(int mode);
-
   ~gr_framer_sink_1();
 };
