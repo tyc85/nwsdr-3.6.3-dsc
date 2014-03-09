@@ -122,6 +122,8 @@ cat_cccodec3.so: $(LIBS)
 
 cat_cccodec3.o: cat_cccodec3.c fec.h
 
+cat_cccodec2.o: cat_cccodec2.c fec.h
+
 dotprod.o: dotprod.c fec.h
 
 dotprod_port.o: dotprod_port.c fec.h
