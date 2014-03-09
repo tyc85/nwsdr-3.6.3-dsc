@@ -2,7 +2,7 @@
 
 
 
-./dsc_coop_tx.py -f 600M -r 1.25M -S 4 -m gmsk -M 1000 --tx-gain=20 --tx-amplitude 0.3 -s 1442 -t -120
+./dsc_coop_tx.py -f 600M -r 1.25M -S 4 -m gmsk -M 1000 --tx-gain=30 --tx-amplitude 0.3 -s 1442
 
 
 

@@ -249,8 +249,8 @@ class sensing_path(gr.hier_block2):
         else:  #all channels are availalbe or non-available  	    
     	    sense_thread=(SENSE_ALLTHR_MAX+SENSE_ALLTHR_MIN)/2;
     	    temp_result_ave=sum(temp_result)/3;
-    	    #if all channels are available, the gain should be less than -140dB
-    	    #if all channels are non-available, the gain should be larger than -140dB
+    	    #if all channels are available, the gain should be less than -130dB
+    	    #if all channels are non-available, the gain should be larger than -130dB
     	    if temp_result_ave>=sense_thread: # all channels are non-available, update the sense_allthr_max
     	        SENSE_ALLTHR_MAX_COUNT += 1;
     	        SENSE_ALLTHR_MAX = (SENSE_ALLTHR_MAX*SENSE_ALLTHR_MAX_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MAX_COUNT+1);
@@ -269,9 +269,9 @@ class sensing_path(gr.hier_block2):
     	if temp_result_3 >= sense_thread:
     	    result[2]=0    	    
     	    
-       # print SENSE_ALLTHR_MAX_COUNT
+        #print SENSE_ALLTHR_MAX_COUNT
         print SENSE_ALLTHR_MAX
-       # print SENSE_ALLTHR_MIN_COUNT
+        #print SENSE_ALLTHR_MIN_COUNT
         print SENSE_ALLTHR_MIN        
         print sense_thread
         print result    

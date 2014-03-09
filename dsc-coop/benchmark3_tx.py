@@ -298,7 +298,7 @@ def main():
                 time.sleep(0.2)
                 non_available=1
                 non_available_count += 1
-                if non_available_count == 13: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
+                if non_available_count == 8: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
                     active_index=random.randint(0,2)
                     sense_result = [0, 0, 0]
                     sense_result[active_index] = 1

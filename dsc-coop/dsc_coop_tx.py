@@ -284,7 +284,12 @@ def main():
     non_available_count=0
     all_available_count=0
     start_flag=1
-
+    time_start=time.time();
+    time_resource_sum=0;
+    time_resource=0;
+    thr_give=3;
+    thr_break=8;
+    
     while n < nbytes:
         if (count_pkt%500 == 0 and sense_n==1) or non_available==1: #sence once
             tb.txgate.set_enabled(True)
@@ -302,7 +307,7 @@ def main():
                 time.sleep(0.2)
                 non_available=1
                 non_available_count += 1
-                if non_available_count == 8: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
+                if non_available_count >= thr_break: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
                     active_index=random.randint(0,2)
                     sense_result = [0, 0, 0]
                     sense_result[active_index] = 1
@@ -314,7 +319,7 @@ def main():
                 
             if sumsense_result >= 2: #if more than 1 sub-channels are available, count the number
                 all_available_count += 1
-                if all_available_count == 3: # after 10 times using more than one sub-channels, shut down all sub-channels to give the chance to other teams to transmit
+                if all_available_count >= thr_give: # after 10 times using more than one sub-channels, shut down all sub-channels to give the chance to other teams to transmit
                     inactive_index=random.randint(0,2)
                     if sense_result[inactive_index]==0: # if the selected sub-channel is inactive, change the index
                         inactive_index=(inactive_index+1)%3
@@ -325,7 +330,7 @@ def main():
             sense_n=0 # this makes sure that after sensing, transmit continues
             #diff_sum_sense_result=sumsense_result-sumtemp_sense_result
             #if diff_sum_sense > 1
-            sense_result=[1,1,1]
+            #sense_result=[1,0,1]
             #set amplitude
             sumsense_result=sum(sense_result)
             if sumsense_result ==3:
@@ -340,12 +345,40 @@ def main():
                 tb.txpath0.set_tx_amplitude(0.5)
                 tb.txpath1.set_tx_amplitude(0.5)
                 tb.txpath2.set_tx_amplitude(0.5)
-            print sense_result
-            
 
+            time_end=time.time();
+            time_use=time_end-time_start;
+            percentage=time_resource_sum/(time_use*3); 
+            
+            #percentage=0.1 
+            current_time=time.time()-time_start;
+            print sense_result 
+            print percentage 
+            print current_time
+            if current_time > 100 and percentage < 0.25:
+                print "Here "
+                thr_give=100
+                thr_break=1
+            else:
+                thr_give=3
+                thr_break=8
+                #if percentage < 1/4:
+                
+                #    print "Here "
+                #    thr_give=100
+                #    thr_break=1
+                #else: 
+                #    thr_give=3
+                #    thr_break=8
+                        
+            
+            
+            
+            
         else:
             # linklab, loop to empty the lower layer buffers to avoid detecting old signals
             #send_pkt(eof=False)
+            time_circle_start=time.time();
             count_pkt += 1
             sense_n=1
             tb.txgate.set_enabled(True) #t
@@ -405,7 +438,11 @@ def main():
             else:
                 tb.const_source_x_22.set_amplitude(0)
                 payload2 = struct.pack('!H', pktno & 0xffff) + data_waste
-                send_pkt2(payload2)	                
+                send_pkt2(payload2)
+            time_circle_end=time.time();
+            time_circle=time_circle_end-time_circle_start;
+            time_resource=time_circle*sumsense_result;
+            time_resource_sum += time_resource;	                
                 
             if options.discontinuous and pktno % 5 == 4:
                 time.sleep(1)
