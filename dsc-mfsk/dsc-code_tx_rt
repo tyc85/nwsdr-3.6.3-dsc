@@ -195,7 +195,13 @@ def main():
         while not shutdown_event.is_set():
             if time.time() % 10 <= 5: 
                 if tx_enabled == False:
-
+                    # collecting missing pkt number
+                    pkt_list = []
+                    pkt_tb = pkt_tb1+pkt_tb2
+                    #print "pkt_tb len", len(pkt_tb)
+                    for i in range(0,total_pkt):
+                        if ((ord(pkt_tb[int(math.floor(i/8))]) >> int(i % 8)) & 1) == 0:
+                            pkt_list.append(i) 
                     ################################
                     # mode = 1: bfsk + RS code 
                     # mode = 2: bfsk + RS code + 1/2 Conv Code w/ soft decoding
@@ -217,13 +223,11 @@ def main():
                     #sys.stderr.write("TX")
                     
                     print "Source: Transmitting at the forward link"
-                    # collecting missing pkt number
-                    pkt_list = []
-                    pkt_tb = pkt_tb1+pkt_tb2
-                    print "current pkt_tb=", pkt_tb
-                    for i in range(0,total_pkt):
-                        if ((ord(pkt_tb[int(math.floor(i/8))]) >> int(i % 8)) & 1) == 0:
-                            pkt_list.append(i) 
+                   
+                    
+                   
+                    #print "current pkt_tb=", pkt_tb
+                    
 
             else:
                 if tx_enabled == True:
@@ -259,10 +263,10 @@ def main():
             fbmode = ord(fbpayload[0])
             if ord(fbpayload[1])==1:
                 #print "loading first part of missing pkt"
-                pkt_tb1 = fbpayload[2:n1]
+                pkt_tb1 = fbpayload[2:2+n1]
             elif ord(fbpayload[1])==2:
                 #print "loading second part of missing pkt"
-                pkt_tb2 = fbpayload[2:total_byte-n1]
+                pkt_tb2 = fbpayload[2:2+total_byte-n1]
         #print "2- conv, 1-rs: rx fbmode is ", ord(fbpayload[0])
         #print "2- conv, 1-rs: tb mode is ", tb.mode
         print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
@@ -377,11 +381,13 @@ def main():
                     
             else: # When first_run = False, pktno = len(total)
                 if pkt_list == []:
+                    print "all pkts finished"
                     pktno = (pktno + 1) % len(totaldata)
                     payload = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
                     if len(payload) == 1442: # Make sure payload is 1442 bytes for decoder to work
                         send_pkt(payload)
                         sys.stderr.write('.')
+                        #print "tbmode is ", tb.mode
 
                     #print "nothing in pk_list"
                     #payload = struct.pack('!H', 0 & 0xffff) + totaldata[0]
@@ -389,12 +395,13 @@ def main():
                     #    send_pkt(payload)
                         #sys.stderr.write('.')
                 else:
-                    print pkt_list
+                    print "current missing total No ", len(pkt_list)
                     for i in pkt_list:
                         payload = struct.pack('!H', i & 0xffff) + totaldata[i]
                         if len(payload) == 1442:
                             send_pkt(payload)
                             sys.stderr.write('.')
+                            #print "tbmode is ", tb.mode
 
         
         

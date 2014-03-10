@@ -179,7 +179,7 @@ def main():
         
         flag=0
         while not shutdown_event.is_set():
-            if (time.time()-0) % 10 <= 5:
+            if (time.time()+2) % 10 <= 5:
                 if tx_enabled==True:
                     #tb.setmode(fbmode)
                     if flag==0:
@@ -366,16 +366,18 @@ def main():
             data1 = data1 + (1438-n1)*chr(0xa)
             payload1 = struct.pack('!H', 1 & 0xffff) + data1
             if len(payload1) == 1442:
-                print "sending first feedback"
+                #print "sending first feedback"
             	send_pkt(payload1)
+                sys.stderr.write('.')
             data2 = chr(fbmode)
             data2 = data2 + chr(2)
             data2 = data2 + pkt_str[n1:total_byte]
             data2 = data2 + (1438+n1-total_byte)*chr(0xa)
             payload2 = struct.pack('!H', 2 & 0xffff) + data2
             if len(payload2) == 1442:
-                print "sending second feedback"
+                #print "sending second feedback"
                 send_pkt(payload2)
+                sys.stderr.write('.')
 
     tb.wait()         # wait for it to finish
     
