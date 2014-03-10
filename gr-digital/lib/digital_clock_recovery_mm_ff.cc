@@ -122,7 +122,7 @@ digital_clock_recovery_mm_ff::general_work (int noutput_items,
 
     d_omega = d_omega + d_gain_omega * mm_val;
     d_omega = d_omega_mid + gr_branchless_clip(d_omega-d_omega_mid, d_omega_relative_limit);   // make sure we don't walk away
-    d_mu = d_mu + d_omega + d_gain_mu * mm_val;
+    d_mu = d_mu + d_omega + d_gain_mu * mm_val;//add by BZ
 
     ii += (int) floor(d_mu);
     d_mu = d_mu - floor(d_mu);
