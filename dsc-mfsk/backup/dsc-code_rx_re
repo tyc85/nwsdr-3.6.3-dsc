@@ -25,7 +25,7 @@ from gnuradio import eng_notation
 from gnuradio.eng_option import eng_option
 from optparse import OptionParser
 import time
-
+import math
 # From gr-digital
 from gnuradio import digital
 
@@ -36,7 +36,7 @@ from uhd_interface import uhd_receiver
 from uhd_interface import uhd_transmitter
 
 import struct
-import sys, socket
+import sys, socket,math
 
 from gnuradio import analog
 from gnuradio.gr import firdes
@@ -106,8 +106,7 @@ class my_top_block(gr.top_block):
 
         self.connect(self.txpath, self.txgate, self.sink)
 
-        self.setmode(3) # Xu: Set default mode =3
-        self.txpath.packet_transmitter.mode = 3
+        self.setmode(2) # Xu: Set default mode =2
 
         self.tx_enabled = False
        
@@ -115,21 +114,19 @@ class my_top_block(gr.top_block):
     def setmode(self, mode):
         ################################
         # mode = 1: bfsk + RS code 
-        # mode = 2: bfsk + RS code + 1/2 Conv Code w/ soft decoding
-        # mode = 3: bfsk + RS code + 1/3 Conv Code w/ soft decoding
-        # mode = 4: 4fsk + RS code 
-        # mode = 5: 4fsk + RS code + 1/2 Conv Code w/ soft decoding
-        # mode = 6: 4fsk + RS code + 1/3 Conv Code w/ soft decoding
+        # mode = 2: bfsk + RS code + 1/3 Conv Code + soft decoding
         #################################
 
         self.mode = mode
-
+        self.txpath.packet_transmitter.mode = mode
         self.rxpath.packet_receiver._watcher.mode = mode
-        self.rxpath.packet_receiver.framer_sink.setmode(mode)
-        if mode <=3:
-            self.rxpath.demodulator.set_mfsk(2)
-        else:
-            self.rxpath.demodulator.set_mfsk(4)
+
+        if mode == 1:
+            self.rxpath.packet_receiver.framer_sink.setlen(1670)
+            self.rxpath.packet_receiver.framer_sink.setdec('h')
+        elif mode == 2:
+            self.rxpath.packet_receiver.framer_sink.setlen(5034)
+            self.rxpath.packet_receiver.framer_sink.setdec('s')
 
 
 
@@ -154,7 +151,7 @@ shutdown_event = threading.Event()
 global n_rcvd, n_right
 
 def main():
-    global n_rcvd, n_right, fbpktno,  missing_packets, tx_enabled, pre_rcvd, pre_right, tb, fbmode
+    global n_rcvd, n_right, fbpktno,  missing_packets, tx_enabled, pre_rcvd, pre_right, tb, fbmode, pkt_tb, pkt_str
     #global n_rcvd, n_right, start_time, stop_rcv
     
     #TIMEOUT = 600 # 600 sec for hurdle 3
@@ -165,45 +162,61 @@ def main():
     tx_enabled = False
     fbmode=2
     fbpktno = 1
-
-    #missing_packets = 
+    total_pkt = 1024
+    total_byte = int(math.ceil(total_pkt / 8))
+    n1 = int(math.ceil(total_byte / 2))
+    pkt_str = total_byte*chr(0)
+    pkt_tb = list(pkt_str)
     
     # Used for feedback
     def dowork():
-        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, n_rcvd, n_right, fbpktno
+        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, fbpktno, pkt_tb, pkt_str
         
         flag=0
         while not shutdown_event.is_set():
-            if (time.time()-0) % 10 <= 5:
+            if time.time() % 10 <= 5:
                 if tx_enabled==True:
                     #tb.setmode(fbmode)
                     if flag==0:
                         pre_rcvd = n_rcvd
                         pre_right = n_right
                         flag = 1
-
+                    # Reset code rate mode according to fbmode
                     
-                    if fbmode <1 or fbmode >6:
-                        fbmode = 3
- 
-                    if tb.mode != fbmode:
+                    if fbmode == 1 and tb.mode != fbmode:
+                        tb.setmode(fbmode)
+
+                        
+                        #print "L->H"
+                    elif fbmode == 2 and tb.mode != fbmode:
                         tb.setmode(fbmode)
                     
+
+                    # IMPORTANT: fbmode can only be 0 or 1
 
                     tx_enabled = False
                     tb.txgate.set_enabled(False)
                     tb.rxgate.set_enabled(True)
                     
-                    print "Dest: receiving, tb.mode=", tb.mode
+                    print "Rx side: receiving forward signal"
+                    print "2- conv, 1-rs: rx tb.mode is ", tb.mode
                 
 
             else :
                 if tx_enabled==False:
-                   
+                    #print "tx bandwidth1", tb.sig1.get_sampling_rate(), "tx bandwidth2", tb.sig2.get_sampeling_rate()
                     # Define feedback state here
+                    pkt_str = "".join(pkt_tb)
+                    tb.setmode(2)
+                    print pre_rcvd, pre_right
+                    if (n_rcvd > pre_rcvd ) and float(n_right - pre_right)/float(n_rcvd - pre_rcvd) > 0.8:
+                        # High rate
+                        fbmode = 1
+                    else:
+                        # Low Rate
+                        fbmode = 2
                     
-                    fbmode = next_mode()
-
+                    #fbmode = 3 - fbmode  
                     flag = 0
                     
                     fbpktno += 1                
@@ -214,59 +227,24 @@ def main():
                     
                     tb.txgate.set_enabled(True)
 
-                    print "Dest: sending feedback, fbmode=", fbmode
+                    print "Rx side: sending feedback signal, fbmode is", fbmode
                 
 
             time.sleep(.01)
 
-    def rank_to_mode(rank):
-        # rank =0 is the highest rate
-
-        if rank<0:
-            return 4
-        if rank>4:
-            return 3
-        a = (4,1,6,2,3)
-        return a[rank]
-
-    def mode_to_rank(mode):
-        b = (1,3,4,0,1,2)
-        return b[mode-1]
-
-    def next_mode():
-        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, n_rcvd, n_right, fbpktno
-
-        if n_right == pre_right: # switch to the lowest rate if nth is received
-            return 3
-
-
-        rank = mode_to_rank(tb.mode)
-        if n_rcvd==pre_rcvd:
-            return rank_to_mode(rank + 1)
-
-        throughput = float(n_right - pre_right)/float(n_rcvd - pre_rcvd)
-
-        if throughput > 0.95:
-            # Higher rate
-            return rank_to_mode(rank - 1)        
-        
-        if throughput < 0.4:
-            # Lower Rate
-            return rank_to_mode(rank + 1)
-        
-        return tb.mode
-
     
     def rx_callback(ok, payload):
         #global n_rcvd, n_right, start_time, stop_rcv
-        global n_rcvd, n_right
+        global n_rcvd, n_right, pkt_tb
         (pktno,) = struct.unpack('!H', payload[0:2])
         n_rcvd += 1
         if ok:
             n_right += 1
             serve.send(payload[2:])
-        if pktno >0:
-            print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
+            idx = int(math.floor(pktno/8))
+            pkt_tb[idx] = chr(ord(pkt_tb[idx]) | (1 << int(pktno % 8)))
+            #print "changing pkt_tb", pkt_tb
+        print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
                 ok, pktno, n_rcvd, n_right)
 
 
@@ -356,10 +334,25 @@ def main():
 
     while True:
         if tx_enabled:
-            data = 1440*chr(fbmode)
-            payload = struct.pack('!H', fbpktno & 0xffff) + data
-            send_pkt(payload)
-            sys.stderr.write('.')
+            data1 = chr(fbmode)
+            data1 = data1 + chr(1)
+            data1 = data1 + pkt_str[0:n1]
+            data1 = data1 + (1438-n1)*chr(0xa)
+            payload1 = struct.pack('!H', 1 & 0xffff) + data1
+            if len(payload1) == 1442:
+                print "sending first feedback"
+            	send_pkt(payload1)
+            data2 = chr(fbmode)
+            data2 = data2 + chr(2)
+            data2 = data2 + pkt_str[n1:total_byte]
+            data2 = data2 + (1438+n1-total_byte)*chr(0xa)
+            payload2 = struct.pack('!H', 2 & 0xffff) + data2
+            #print "payload2 length", len(payload2)
+            if len(payload2) == 1442:
+                print "sending second feedback", ord(data2[1])
+                send_pkt(payload2)
+            
+            #sys.stderr.write('.')
         
     tb.wait()         # wait for it to finish
     

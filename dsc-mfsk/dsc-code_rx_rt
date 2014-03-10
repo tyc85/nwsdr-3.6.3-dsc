@@ -36,7 +36,7 @@ from uhd_interface import uhd_receiver
 from uhd_interface import uhd_transmitter
 
 import struct
-import sys, socket
+import sys, socket, math
 
 from gnuradio import analog
 from gnuradio.gr import firdes
@@ -154,7 +154,7 @@ shutdown_event = threading.Event()
 global n_rcvd, n_right
 
 def main():
-    global n_rcvd, n_right, fbpktno,  missing_packets, tx_enabled, pre_rcvd, pre_right, tb, fbmode
+    global n_rcvd, n_right,  missing_packets, tx_enabled, pre_rcvd, pre_right, tb, fbmode, pkt_tb, pkt_str
     #global n_rcvd, n_right, start_time, stop_rcv
     
     #TIMEOUT = 600 # 600 sec for hurdle 3
@@ -164,13 +164,18 @@ def main():
     pre_right = 0
     tx_enabled = False
     fbmode=2
-    fbpktno = 1
+
+    total_pkt = 1024
+    total_byte = int(math.ceil(total_pkt / 8))
+    n1 = int(math.ceil(total_byte / 2))
+    pkt_str = total_byte*chr(0)
+    pkt_tb = list(pkt_str)
 
     #missing_packets = 
     
     # Used for feedback
     def dowork():
-        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, n_rcvd, n_right, fbpktno
+        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, n_rcvd, n_right, pkt_tb, pkt_str
         
         flag=0
         while not shutdown_event.is_set():
@@ -199,14 +204,12 @@ def main():
 
             else :
                 if tx_enabled==False:
-                   
+                    #print "current pkt table", pkt_tb
                     # Define feedback state here
-                    
+                    pkt_str = "".join(pkt_tb)  #change bytearray to string
                     fbmode = next_mode()
 
-                    flag = 0
-                    
-                    fbpktno += 1                
+                    flag = 0             
 
 
                     tb.rxgate.set_enabled(False)            
@@ -234,7 +237,7 @@ def main():
         return b[mode-1]
 
     def next_mode():
-        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, n_rcvd, n_right, fbpktno
+        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, n_rcvd, n_right
 
         if n_right == pre_right: # switch to the lowest rate if nth is received
             return 3
@@ -259,15 +262,16 @@ def main():
     
     def rx_callback(ok, payload):
         #global n_rcvd, n_right, start_time, stop_rcv
-        global n_rcvd, n_right
+        global n_rcvd, n_right, pkt_tb
         (pktno,) = struct.unpack('!H', payload[0:2])
         n_rcvd += 1
         if ok:
             n_right += 1
             serve.send(payload[2:])
-        if pktno >0:
-            print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
-                ok, pktno, n_rcvd, n_right)
+            idx = int(math.floor(pktno/8))
+            pkt_tb[idx] = chr(ord(pkt_tb[idx]) | (1 << int(pktno % 8)))
+        print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
+            ok, pktno, n_rcvd, n_right)
 
 
     # Used for transmitting feedback
@@ -356,11 +360,23 @@ def main():
 
     while True:
         if tx_enabled:
-            data = 1440*chr(fbmode)
-            payload = struct.pack('!H', fbpktno & 0xffff) + data
-            send_pkt(payload)
-            sys.stderr.write('.')
-        
+            data1 = chr(fbmode)
+            data1 = data1 + chr(1)
+            data1 = data1 + pkt_str[0:n1]
+            data1 = data1 + (1438-n1)*chr(0xa)
+            payload1 = struct.pack('!H', 1 & 0xffff) + data1
+            if len(payload1) == 1442:
+                print "sending first feedback"
+            	send_pkt(payload1)
+            data2 = chr(fbmode)
+            data2 = data2 + chr(2)
+            data2 = data2 + pkt_str[n1:total_byte]
+            data2 = data2 + (1438+n1-total_byte)*chr(0xa)
+            payload2 = struct.pack('!H', 2 & 0xffff) + data2
+            if len(payload2) == 1442:
+                print "sending second feedback"
+                send_pkt(payload2)
+
     tb.wait()         # wait for it to finish
     
  

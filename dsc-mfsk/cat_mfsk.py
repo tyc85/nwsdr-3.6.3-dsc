@@ -109,7 +109,7 @@ class gmsk_cats_mod(gr.hier_block2):
 
         self.sqwave = (1,) * samples_per_symbol       # rectangular window
         self.taps = numpy.convolve(numpy.array(self.gaussian_taps),numpy.array(self.sqwave))
-        self.taps = [1,1]
+        #self.taps = [1,1]
         self.gaussian_filter = gr.interp_fir_filter_fff(samples_per_symbol, self.taps)
 
         # FM modulation
