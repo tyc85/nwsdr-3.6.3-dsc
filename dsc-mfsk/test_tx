@@ -1,1 +1,1 @@
-./txserver.py & ./dsc-code_tx_rt -f 700M -s 127.0.0.1 --tx-gain=15 --rx-gain=19
+./txserver.py & ./dsc-code_tx_rt -f 600M -s 127.0.0.1 --tx-gain=15 --rx-gain=19

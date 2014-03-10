@@ -37,6 +37,8 @@ from uhd_interface import uhd_transmitter
 
 import struct
 import sys, socket, math
+import numpy
+
 
 from gnuradio import analog
 from gnuradio.gr import firdes
@@ -46,6 +48,8 @@ from gnuradio.gr import firdes
 #raw_input('Attach and press enter: ')
 
 import threading # used for feedback
+
+global random_mask_vec8, random_mask_tuple
 
 class my_top_block(gr.top_block):
     def __init__(self, modulator, demodulator, rx_callback, options):
@@ -165,7 +169,7 @@ def main():
     tx_enabled = False
     fbmode=2
 
-    total_pkt = 1024
+    total_pkt = 1024*12
     total_byte = int(math.ceil(total_pkt / 8))
     n1 = int(math.ceil(total_byte / 2))
     pkt_str = total_byte*chr(0)
@@ -223,6 +227,7 @@ def main():
             time.sleep(.01)
 
     def whiten(s, o):
+        global random_mask_vec8, random_mask_tuple
         sa = numpy.fromstring(s, numpy.uint8)
         z = sa ^ random_mask_vec8[o:len(sa)+o]
         return z.tostring()
@@ -375,7 +380,7 @@ def main():
             payload1 = struct.pack('!H', 1 & 0xffff) + data1
 
             # whiten
-            payload1 = whiten(payload1, 0)
+            #payload1 = whiten(payload1, 0)
 
             if len(payload1) == 1442:
                 #print "sending first feedback"
@@ -386,8 +391,9 @@ def main():
             data2 = data2 + pkt_str[n1:total_byte]
             data2 = data2 + (1438+n1-total_byte)*chr(0xa)
             payload2 = struct.pack('!H', 2 & 0xffff) + data2
-
-            payload2 = whiten(payload2, 0)
+        
+            #whiten
+            #payload2 = whiten(payload2, 0)
 
 
             if len(payload2) == 1442:

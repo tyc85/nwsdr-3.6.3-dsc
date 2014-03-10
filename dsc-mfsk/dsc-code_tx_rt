@@ -35,6 +35,7 @@ from uhd_interface import uhd_transmitter
 from uhd_interface import uhd_receiver
 
 import time, struct, sys, socket, math
+import numpy
 
 from gnuradio import analog
 
@@ -43,6 +44,8 @@ from gnuradio import analog
 #raw_input('Attach and press enter')
 
 import threading # used for feedback
+
+global random_mask_vec8, random_mask_tuple
 
 class my_top_block(gr.top_block):
     def __init__(self, modulator, demodulator, rx_callback, options): # Xu: demodulator and rx_callback are used for demod feedback
@@ -171,7 +174,7 @@ shutdown_event = threading.Event()
 
 def main():
 
-    global  totaldata, first_run, n_rcvd, n_right, tx_enabled, fbpayload, tb, fbmode, pkt_tb, pkt_list, pkt_tb1, pkt_tb2, flag1, flag2
+    global  totaldata, first_run, n_rcvd, n_right, tx_enabled, fbpayload, tb, fbmode, pkt_tb, pkt_list, pkt_tb1, pkt_tb2, flag1, flag2, random_mask_vec8, random_mask_tuple
 
 
     totaldata = []
@@ -181,7 +184,8 @@ def main():
     tx_enabled = True
     fbmode = 3
     fbpayload = 1440* chr(fbmode)
-    total_pkt = 1024
+    total_pkt = 1024*12
+
     total_byte = int(math.ceil(total_pkt / 8))
     n1 = int(math.ceil(total_byte / 2))
     pkt_tb = total_byte*chr(0)
@@ -244,7 +248,7 @@ def main():
                     #time.sleep(0.75)                    
 
                     print "Source: Receiving feedback, fbmode ", fbmode
-               
+                '''
                 if flag1==1 and flag2==1:
                     pkt_list = []
                     pkt_tb = pkt_tb1+pkt_tb2
@@ -255,10 +259,11 @@ def main():
                     #print "current list is", pkt_list
                     flag1 +=1
                     flag2 +=1
-                
+                '''
             time.sleep(.01)
 
     def whiten(s, o):
+        global random_mask_vec8, random_mask_tuple
         sa = numpy.fromstring(s, numpy.uint8)
         z = sa ^ random_mask_vec8[o:len(sa)+o]
         return z.tostring()
@@ -276,7 +281,7 @@ def main():
         global n_rcvd, n_right, fbpayload, fbmode, pkt_tb1, pkt_tb2, flag1, flag2
 
         # dewhiten
-        payload = dewhiten(payload, 0)
+        #payload = dewhiten(payload, 0)
 
         (pktno,) = struct.unpack('!H', payload[0:2])
         n_rcvd += 1
