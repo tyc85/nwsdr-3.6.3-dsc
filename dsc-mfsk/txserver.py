@@ -12,7 +12,7 @@ serverSocket.bind(('',5123))
 serverSocket.listen(1)
 x = 0
 #f = open('onetwentyfourpackets.txt') 
-f = open("twelve.data")
+f = open("packets.data")
 outputdata = f.read()
 #Establish the connection 
 print 'Ready to serve...' 
