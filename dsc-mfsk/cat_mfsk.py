@@ -92,7 +92,7 @@ class gmsk_cats_mod(gr.hier_block2):
             raise TypeError, ("samples_per_symbol must be an integer >= 2, is %r" %(samples_per_symbol,))
 
         ntaps = 4 * samples_per_symbol  # up to 3 bits in filter at once
-        sensitivity = (pi/4) / samples_per_symbol	# phase change per bit = pi / 2
+        sensitivity = (pi) / samples_per_symbol	# phase change per bit = pi / 2
 
         # Turn it into NRZ data.
         self.nrz = gr.bytes_to_syms()
@@ -127,7 +127,7 @@ class gmsk_cats_mod(gr.hier_block2):
     def set_mfsk(self,m=2):
         _def_mfsk = m
         self.nrz.set_mfsk(m)
-        self.fmmod.set_sensitivity(pi/_def_samples_per_symbol/m)
+        self.fmmod.set_sensitivity(2*pi/_def_samples_per_symbol/m)
 
     def samples_per_symbol(self):
         return self._samples_per_symbol
@@ -238,7 +238,7 @@ class gmsk_cats_demod(gr.hier_block2):
         self._gain_omega = .25 * self._gain_mu * self._gain_mu        # critically damped
 
         # Demodulate FM
-        sensitivity = (pi/4) / samples_per_symbol
+        sensitivity = (pi) / samples_per_symbol
         self.fmdemod = gr.quadrature_demod_cf(1.0 / sensitivity)
 
         # the clock recovery block tracks the symbol clock and resamples as needed.
@@ -268,7 +268,7 @@ class gmsk_cats_demod(gr.hier_block2):
         _def_mfsk = m
         self.slicer.set_mfsk(m)
         self.clock_recovery.set_mfsk(m)
-        self.fmdemod.set_gain(1.0/(pi/_def_samples_per_symbol/m))
+        self.fmdemod.set_gain(1.0/(2*pi/_def_samples_per_symbol/m))
 
     def samples_per_symbol(self):
         return self._samples_per_symbol

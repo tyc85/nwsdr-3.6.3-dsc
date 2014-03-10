@@ -38,7 +38,7 @@ static const float constellation[4] = {-3, -1, 3, 1}; // DG
 void gr_bytes_to_syms::set_mfsk (int m)
 {
   mfsk = m;
-  std::cout << "mfsk set to " << mfsk;
+  //std::cout << "mfsk set to " << mfsk;
   if (mfsk==2)
     set_interpolation(BITS_PER_BYTE);	
   else
@@ -58,7 +58,7 @@ gr_bytes_to_syms::gr_bytes_to_syms ()
 			  BITS_PER_BYTE)
 {
   mfsk = 2;
-  std::cout << "mfsk set to " << mfsk;
+  //std::cout << "mfsk set to " << mfsk;
 }
 
 int
