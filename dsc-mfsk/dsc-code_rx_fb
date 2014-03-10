@@ -106,7 +106,8 @@ class my_top_block(gr.top_block):
 
         self.connect(self.txpath, self.txgate, self.sink)
 
-        self.setmode(2) # Xu: Set default mode =2
+        self.setmode(3) # Xu: Set default mode =3
+        self.txpath.packet_transmitter.mode = 3
 
         self.tx_enabled = False
        
@@ -114,21 +115,21 @@ class my_top_block(gr.top_block):
     def setmode(self, mode):
         ################################
         # mode = 1: bfsk + RS code 
-        # mode = 2: bfsk + RS code + 1/3 Conv Code + soft decoding
+        # mode = 2: bfsk + RS code + 1/2 Conv Code w/ soft decoding
+        # mode = 3: bfsk + RS code + 1/3 Conv Code w/ soft decoding
+        # mode = 4: 4fsk + RS code 
+        # mode = 5: 4fsk + RS code + 1/2 Conv Code w/ soft decoding
+        # mode = 6: 4fsk + RS code + 1/3 Conv Code w/ soft decoding
         #################################
 
         self.mode = mode
-        self.txpath.packet_transmitter.mode = mode
+
         self.rxpath.packet_receiver._watcher.mode = mode
         self.rxpath.packet_receiver.framer_sink.setmode(mode)
-        '''
-        if mode == 1:
-            self.rxpath.packet_receiver.framer_sink.setlen(1670)
-            self.rxpath.packet_receiver.framer_sink.setdec('h')
-        elif mode == 2:
-            self.rxpath.packet_receiver.framer_sink.setlen(5034)
-            self.rxpath.packet_receiver.framer_sink.setdec('s')
-        '''
+        if mode <=3:
+            self.rxpath.demodulator.set_mfsk(2)
+        else:
+            self.rxpath.demodulator.set_mfsk(4)
 
 
 
@@ -169,7 +170,7 @@ def main():
     
     # Used for feedback
     def dowork():
-        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, fbpktno
+        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, n_rcvd, n_right, fbpktno
         
         flag=0
         while not shutdown_event.is_set():
@@ -180,41 +181,29 @@ def main():
                         pre_rcvd = n_rcvd
                         pre_right = n_right
                         flag = 1
-                    # Reset code rate mode according to fbmode
-                    
-                    if fbmode == 1 and tb.mode != fbmode:
-                        tb.setmode(fbmode)
 
-                        
-                        #print "L->H"
-                    elif fbmode == 2 and tb.mode != fbmode:
+                    
+                    if fbmode <1 or fbmode >6:
+                        fbmode = 3
+ 
+                    if tb.mode != fbmode:
                         tb.setmode(fbmode)
                     
-
-                    # IMPORTANT: fbmode can only be 0 or 1
 
                     tx_enabled = False
                     tb.txgate.set_enabled(False)
                     tb.rxgate.set_enabled(True)
                     
-                    print "Rx side: receiving forward signal"
-                    print "2- conv, 1-rs: rx tb.mode is ", tb.mode
+                    print "Dest: receiving, tb.mode=", tb.mode
                 
 
             else :
                 if tx_enabled==False:
-                    #print "tx bandwidth1", tb.sig1.get_sampling_rate(), "tx bandwidth2", tb.sig2.get_sampeling_rate()
+                   
                     # Define feedback state here
-                    tb.setmode(2)
-                    print pre_rcvd, pre_right
-                    if (n_rcvd > pre_rcvd ) and float(n_right - pre_right)/float(n_rcvd - pre_rcvd) > 0.8:
-                        # High rate
-                        fbmode = 1
-                    else:
-                        # Low Rate
-                        fbmode = 2
                     
-                    #fbmode = 3 - fbmode  
+                    fbmode = next_mode()
+
                     flag = 0
                     
                     fbpktno += 1                
@@ -225,10 +214,47 @@ def main():
                     
                     tb.txgate.set_enabled(True)
 
-                    print "Rx side: sending feedback signal, fbmode is", fbmode
+                    print "Dest: sending feedback, fbmode=", fbmode
                 
 
             time.sleep(.01)
+
+    def rank_to_mode(rank):
+        # rank =0 is the highest rate
+
+        if rank<0:
+            return 4
+        if rank>4:
+            return 3
+        a = (4,1,6,2,3)
+        return a[rank]
+
+    def mode_to_rank(mode):
+        b = (1,3,4,0,1,2)
+        return b[mode-1]
+
+    def next_mode():
+        global tb, tx_enabled, fbmode, pre_rcvd, pre_right, n_rcvd, n_right, fbpktno
+
+        if n_right == pre_right: # switch to the lowest rate if nth is received
+            return 3
+
+
+        rank = mode_to_rank(tb.mode)
+        if n_rcvd==pre_rcvd:
+            return rank_to_mode(rank + 1)
+
+        throughput = float(n_right - pre_right)/float(n_rcvd - pre_rcvd)
+
+        if throughput > 0.95:
+            # Higher rate
+            return rank_to_mode(rank - 1)        
+        
+        if throughput < 0.4:
+            # Lower Rate
+            return rank_to_mode(rank + 1)
+        
+        return tb.mode
 
     
     def rx_callback(ok, payload):

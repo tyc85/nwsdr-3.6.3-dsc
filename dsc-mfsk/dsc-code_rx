@@ -74,11 +74,11 @@ class my_top_block(gr.top_block):
         self.connect(self.source, self.rxpath)
 
         # Set mode
-        self.mode = 2
+        self.mode = 1
         self.rxpath.packet_receiver._watcher.mode = self.mode
         self.rxpath.packet_receiver.framer_sink.setmode(self.mode)
     
-    # Xu: Add the function to set mode
+        # Xu: Add the function to set mode
         ################################
         # mode = 1: bfsk + RS code 
         # mode = 2: bfsk + RS code + 1/2 Conv Code w/ soft decoding
@@ -197,7 +197,7 @@ def main():
 
     # build the graph
     tb = my_top_block(demods[options.modulation], rx_callback, options)
-    tb.set_mfsk(2)
+    tb.set_mfsk(4)
 
     r = gr.enable_realtime_scheduling()
     if r != gr.RT_OK:

@@ -29,6 +29,9 @@
 #include <gr_math.h>
 #include <stdexcept>
 #include <cstdio>
+#include <gr_sync_interpolator.h>
+
+#define BITS_PER_SAMPLE (1)
 
 digital_binary_slicer_fb_sptr
 digital_make_binary_slicer_fb ()
@@ -42,12 +45,33 @@ static std::vector<int> osig(os, os+sizeof(os)/sizeof(int));
 
 
 digital_binary_slicer_fb::digital_binary_slicer_fb ()
-  : gr_sync_block ("binary_slicer_fb",
+  : gr_sync_interpolator ("binary_slicer_fb",
 		   gr_make_io_signature (1, 1, sizeof (float)), 
 		   //gr_make_io_signature (1, 1, sizeof (unsigned char))) // Commented by Xu		
-		   gr_make_io_signaturev (1, 2, osig))
+		   gr_make_io_signaturev (1, 2, osig),
+                   BITS_PER_SAMPLE )
 {
+  th1=2; //1.57079;   // pi over 2
+  th2=-th1;
+  mfsk=2;
 }
+
+void digital_binary_slicer_fb::set_mfsk (int m)
+{
+  mfsk = m;
+  if (mfsk==2)
+    set_interpolation(1);
+  else
+    set_interpolation(2);
+  // std::cout << "fsk4=1; interp=2\n";
+}
+
+void digital_binary_slicer_fb::set_th1 (float th)
+{
+  th1=th;
+  th2=-th1;
+}
+
 
 int
 digital_binary_slicer_fb::work (int noutput_items,
@@ -56,13 +80,17 @@ digital_binary_slicer_fb::work (int noutput_items,
 {
   const float *in = (const float *) input_items[0];
   unsigned char *out = (unsigned char *) output_items[0];
+  float inval;  
 
   // Xu: The second output port passes the soft values
   float * out_symbol;
+
   if (output_items.size() ==2){
     out_symbol = (float *) output_items[1];  // float point
   }
 
+if (mfsk==2)
+{
   for (int i = 0; i < noutput_items; i++){
     out[i] = gr_binary_slicer(in[i]);
   
@@ -71,6 +99,35 @@ digital_binary_slicer_fb::work (int noutput_items,
 	out_symbol[i] = in[i];
 	//printf("soft symbol from slicer is %f \n", out_symbol[i]);
   }
-  
+} 
+else
+{
+  assert (noutput_items % 2 == 0);
+  assert (output_items.size() == 2);
+  for (int i = 0; i < noutput_items/2; i++){
+    inval =in[i];
+    if (inval >=0.0)
+    {
+      *out++=1;
+      *out_symbol++=1;
+    }
+    else
+    {
+     *out++=0; 
+     *out_symbol++=-1; 
+    }
+    if ((inval>th2) && (inval < th1))
+    {
+      *out++=1;
+      *out_symbol++=1;
+    }
+    else
+    {
+     *out++=0; 
+     *out_symbol++=-1; 
+    }
+
+  } // i loop
+} // 4fsk
   return noutput_items;
 }

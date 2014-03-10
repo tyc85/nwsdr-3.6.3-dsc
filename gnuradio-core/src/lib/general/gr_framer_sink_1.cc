@@ -53,15 +53,17 @@ void gr_framer_sink_1::setdec(char dec)
 void gr_framer_sink_1::setmode(int mode)
 {
   d_mode = mode;
-  if (mode ==1 ){
+  assert(mode>=1 && mode<=6);
+  if (mode ==1 || mode ==4 ){ // RS code
      setlen(1670);
      setdec('h');
   }
-  else if(mode == 2)
-  {
+  else if(mode == 2 || mode ==5)
+  {  // 1/2 Conv code
      setlen(3352);
      setdec('s');
-  }else if(mode == 3){
+  }else if(mode == 3 || mode ==6){
+     // 1/3 Conv code
      setlen(5034);
      setdec('s');
   }

@@ -108,7 +108,11 @@ class my_top_block(gr.top_block):
         self.connect(self.txpath, self.txgate, self.sink)
         self.connect(self.source, self.rxgate, self.rxpath)
 
-        self.setmode(2)  # Xu: Set default mode =2
+        self.setmode(3)  # Xu: Set default mode =2
+        # Feedback link is lowest rate
+        self.rxpath.demodulator.set_mfsk(2)  
+        self.rxpath.packet_receiver._watcher.mode = 3
+        self.rxpath.packet_receiver.framer_sink.setmode(3)
 
         self.tx_enabled = True
 
@@ -116,13 +120,20 @@ class my_top_block(gr.top_block):
     def setmode(self, mode):
         ################################
         # mode = 1: bfsk + RS code 
-        # mode = 2: bfsk + RS code + 1/3 Conv Code + soft decoding
+        # mode = 2: bfsk + RS code + 1/2 Conv Code w/ soft decoding
+        # mode = 3: bfsk + RS code + 1/3 Conv Code w/ soft decoding
+        # mode = 4: 4fsk + RS code 
+        # mode = 5: 4fsk + RS code + 1/2 Conv Code w/ soft decoding
+        # mode = 6: 4fsk + RS code + 1/3 Conv Code w/ soft decoding
         #################################
 
         self.mode = mode
-        self.txpath.packet_transmitter.mode = mode
-        self.rxpath.packet_receiver._watcher.mode = mode
-        self.rxpath.packet_receiver.framer_sink.setmode(mode)
+        self.txpath.packet_transmitter.mode = mode        
+
+        if mode <=3:
+            self.txpath.modulator.set_mfsk(2)
+        else:
+            self.txpath.modulator.set_mfsk(4)
         '''
         if mode == 1:
             self.rxpath.packet_receiver.framer_sink.setlen(1670)
@@ -168,7 +179,7 @@ def main():
     n_right = 0
     first_run = True
     tx_enabled = True
-    fbmode = 2
+    fbmode = 3
     fbpayload = 1440* chr(fbmode)
 
 
@@ -180,41 +191,41 @@ def main():
             if time.time() % 10 <= 5: 
                 if tx_enabled == False:
 
-                    ########################################
-                    # Feedback message
-                    # fbmode = 1: High rate 
-                    # fbmode = 2: Low rate
-                    ##########################################
-                    
-                    if fbmode == 1 and tb.mode != fbmode: # High-rate
-                        tb.setmode(fbmode)
-                    elif fbmode == 2 and tb.mode != fbmode: # Low-rate
-                        tb.setmode(fbmode)
-                    elif fbmode !=1 and fbmode !=2 and tb.mode != 2:
-                        tb.setmode(2)
+                    ################################
+                    # mode = 1: bfsk + RS code 
+                    # mode = 2: bfsk + RS code + 1/2 Conv Code w/ soft decoding
+                    # mode = 3: bfsk + RS code + 1/3 Conv Code w/ soft decoding
+                    # mode = 4: 4fsk + RS code 
+                    # mode = 5: 4fsk + RS code + 1/2 Conv Code w/ soft decoding
+                    # mode = 6: 4fsk + RS code + 1/3 Conv Code w/ soft decoding
+                    #################################
+                                
+                    if  1>fbmode or fbmode>6: 
+                        fbmode = 3
 
+                    if tb.mode != fbmode:
+                        tb.setmode(fbmode)
+                    
                     tx_enabled = True            
                     tb.txgate.set_enabled(True)
                     tb.rxgate.set_enabled(False)
                     #sys.stderr.write("TX")
                     
-                    print "Tx side: Transmitting at the forward link"
+                    print "Source: Transmitting at the forward link"
 
             else:
                 if tx_enabled == True:
-                    tb.setmode(2)
-                    fbmode = 2 
+                    
+                    fbmode = 3 
 
                     tx_enabled = False
                     tb.txgate.set_enabled(False)
                     time.sleep(0.01)
                     tb.rxgate.set_enabled(True)
                       
-                    time.sleep(0.75)
-                    #fbmode = ord(fbpayload[0])
-                    
+                    time.sleep(0.75)                    
 
-                    print "Tx side: Receiving feedback, fbmode ", fbmode
+                    print "Source: Receiving feedback, fbmode ", fbmode
                 
                     
                 
@@ -236,7 +247,7 @@ def main():
             fbmode = ord(fbpayload[0])
         
         #print "2- conv, 1-rs: rx fbmode is ", ord(fbpayload[0])
-        print "2- conv, 1-rs: tb mode is ", tb.mode
+        #print "2- conv, 1-rs: tb mode is ", tb.mode
         print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
             ok, pktno, n_rcvd, n_right)
 

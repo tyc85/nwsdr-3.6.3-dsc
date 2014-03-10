@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /*
- * Copyright 2004,2006 Free Software Foundation, Inc.
+ * Copyright 2004 Free Software Foundation, Inc.
  *
  * This file is part of GNU Radio
  *
@@ -20,20 +20,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-GR_SWIG_BLOCK_MAGIC(gr,framer_sink_1);
+GR_SWIG_BLOCK_MAGIC(gr,bytes_to_syms);
 
-gr_framer_sink_1_sptr
-gr_make_framer_sink_1(gr_msg_queue_sptr target_queue); 
+gr_bytes_to_syms_sptr gr_make_bytes_to_syms ();
 
-class gr_framer_sink_1 : public gr_sync_block
+class gr_bytes_to_syms : public gr_sync_interpolator
 {
- protected:
-  gr_framer_sink_1(gr_msg_queue_sptr target_queue); 
+public:
+  gr_bytes_to_syms ();
 
  public:
- void setlen(int len); // Xu: set d_len
- void setdec(char dec); // // Xu: set hard decoding or soft decoding
- void setmode(int mode);
-
-  ~gr_framer_sink_1();
+ void set_mfsk(int m); // DG
 };
