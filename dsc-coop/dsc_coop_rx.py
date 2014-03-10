@@ -75,9 +75,9 @@ class my_top_block(gr.top_block):
 
         #self.connect(self.source, self.rxpath)
 
-	self.rxpath2 = receive_path(demodulator, rx_callback, options) 
-	self.rxpath1 = receive_path(demodulator, rx_callback, options) 
-	self.rxpath0 = receive_path(demodulator, rx_callback, options) 
+	    self.rxpath2 = receive_path(demodulator, rx_callback, options) 
+	    self.rxpath1 = receive_path(demodulator, rx_callback, options) 
+	    self.rxpath0 = receive_path(demodulator, rx_callback, options) 
 
 	
         #self.connect(self.source, self.rxpath)
@@ -129,12 +129,45 @@ class my_top_block(gr.top_block):
 	self.connect(self.low_pass_filter_0, self.rxpath0)
 	self.connect(self.low_pass_filter_1, self.rxpath1)
 	self.connect(self.low_pass_filter_2, self.rxpath2)
+	
+	
+	
+	
+	
+##################################################### analog feedback
+
+        if(options.tx_freq is not None):
+            self.sink = uhd_transmitter(options.args,
+                                        options.bandwidth,
+                                        options.tx_freq, options.tx_gain,
+                                        options.spec, options.antenna,
+                                        options.verbose)
+        elif(options.to_file is not None):
+            self.sink = gr.file_sink(gr.sizeof_gr_complex, options.to_file)
+        else:
+            self.sink = gr.null_sink(gr.sizeof_gr_complex)
+
+        # do this after for any adjustments to the options that may
+        # occur in the sinks (specifically the UHD sink)
+        self.sig1 = gr.sig_source_c(options.bandwidth, gr.GR_SIN_WAVE, 0, 0.5, 0)
+        self.sig2 = gr.sig_source_c(options.bandwidth, gr.GR_SIN_WAVE, 0, 0.5, 0)
+        self.adder = gr.add_cc()
+        self.connect((self.sig1,0), (self.adder,0))
+        self.connect((self.sig2,0), (self.adder,1))  
+        
+        self.txgate = gr.copy(gr.sizeof_gr_complex)	
+        self.connect(self.adder, self.txgate, self.sink)
+
+        self.tx_enabled = False      
+	
 
 # /////////////////////////////////////////////////////////////////////////////
 #                                   main
 # /////////////////////////////////////////////////////////////////////////////
 
 global n_rcvd, n_right
+
+shutdown_event = threading.Event()
 
 def main():
     global n_rcvd, n_right

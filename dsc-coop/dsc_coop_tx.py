@@ -233,6 +233,10 @@ def main():
 
     parser.add_option("-t", "--thr-sense", type="eng_float", default=15,
                       help="Threshold for sensing dif[default=%default]")
+                      
+                      
+    parser.add_option("", "--count-packet", type="eng_float", default=512,
+                      help="Count every sensing[default=%default]")                      
 
     parser.add_option("-M", "--megabytes", type="eng_float", default=1000,
                       help="set megabytes to transmit [default=%default]")
@@ -289,14 +293,14 @@ def main():
     time_resource=0;
     thr_give=3;
     thr_break=8;
-    
+    DONE=0;
     while n < nbytes:
-        if (count_pkt%500 == 0 and sense_n==1) or non_available==1: #sence once
+        if (count_pkt%options.count_packet == 0 and sense_n==1) or non_available==1: #sence once
             tb.txgate.set_enabled(True)
             time.sleep(.6)
             tb.sensegate.set_enabled(True) #t
             previous_sense_result = temp_sense_result
-            sense_result = tb.sensepath.GetAvailableSpectrum()
+            [sense_result, DONE] = tb.sensepath.GetAvailableSpectrum()
             temp_sense_result = sense_result                            
             sumsense_result=sum(sense_result)
             #avoid sensing others' sensing period but if it is the start time, using the 3 subchannels   

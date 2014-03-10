@@ -31,7 +31,7 @@ import numpy, struct
 
 
 # linklab, define constants
-FFT_SIZE      = 64       # fft size for sensing  
+FFT_SIZE      = 512      # fft size for sensing  
 LOW_THRES     = -45        # low power threshold in dB to identify free freq blocks
 HIGH_THRES    = -25        # high power threshold in dB to identify busy freq blocks
 SMOOTH_LENGTH = 10       # smooth length
@@ -276,6 +276,51 @@ class sensing_path(gr.hier_block2):
         print SENSE_ALLTHR_MIN        
         print sense_thread
         print result    
-        return result
+        
+        
+        
+        mask=[1, 2, 63]  #starting from 0
+        temp_psd_max=max(psd)
+        temp_psd_min=min(psd)
+        temp_psd_diff=temp_psd_max- temp_psd_min
+        print psd
+        psd_max=max(psd)
+        print psd_max
+        psd_desired_index=psd[mask]
+        print psd_desired_index
+        psd[mask]=-200
+        
+        max_rest=max(psd)
+        min_desired=min(psd_desired_index)
+
+        #print max_rest
+        #print min_desired
+        if min_desired> max_rest:
+            DONE = 1
+        else:
+            DONE = 0
+        
+        
+      
+        
+        
+        print 0
+#        print "test"
+#        print psd[1]
+#        print "test"
+ 
+#        if PATTERN       
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        return result, DONE  #, PATTERN
         #return avail_subc_bin
 
