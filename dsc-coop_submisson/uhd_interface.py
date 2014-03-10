@@ -149,11 +149,11 @@ class uhd_transmitter(uhd_interface, gr.hier_block2):
                           help="Subdevice of UHD device where appropriate")
         parser.add_option("-A", "--antenna", type="string", default=None,
                           help="select Rx Antenna where appropriate")
-        parser.add_option("", "--tx-freq", type="eng_float", default=None,
+        parser.add_option("", "--tx-freq", type="eng_float", default=600e6,
                           help="set transmit frequency to FREQ [default=%default]",
                           metavar="FREQ")
-        parser.add_option("", "--tx-gain", type="eng_float", default=None,
-                          help="set transmit gain in dB (default is midpoint)")
+        parser.add_option("", "--tx-gain", type="eng_float", default=30,
+                          help="set transmit gain in dB [default=%default]")
         parser.add_option("-v", "--verbose", action="store_true", default=False)
 
     # Make a static method to call before instantiation
@@ -201,11 +201,11 @@ class uhd_receiver(uhd_interface, gr.hier_block2):
                           help="Subdevice of UHD device where appropriate")
         parser.add_option("-A", "--antenna", type="string", default=None,
                           help="select Rx Antenna where appropriate")
-        parser.add_option("", "--rx-freq", type="eng_float", default=None,
+        parser.add_option("", "--rx-freq", type="eng_float", default=600e6,
                           help="set receive frequency to FREQ [default=%default]",
                           metavar="FREQ")
-        parser.add_option("", "--rx-gain", type="eng_float", default=None,
-                          help="set receive gain in dB (default is midpoint)")
+        parser.add_option("", "--rx-gain", type="eng_float", default=20,
+                          help="set receive gain in dB [default=%default]")
         if not parser.has_option("--verbose"):
             parser.add_option("-v", "--verbose", action="store_true", default=False)
 

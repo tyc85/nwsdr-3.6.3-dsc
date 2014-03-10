@@ -100,7 +100,7 @@ class transmit_path(gr.hier_block2):
         """
         if not normal.has_option('--bitrate'):
             normal.add_option("-r", "--bitrate", type="eng_float",
-                              default=25e5,
+                              default=125e4,
                               help="specify bitrate [default=%default].")
         normal.add_option("", "--tx-amplitude", type="eng_float",
                           default=1, metavar="AMPL",
@@ -109,7 +109,7 @@ class transmit_path(gr.hier_block2):
                           default=False)
 
         expert.add_option("-S", "--samples-per-symbol", type="float",
-                          default=2,
+                          default=4,
                           help="set samples/symbol [default=%default]")
         expert.add_option("", "--log", action="store_true",
                           default=False,

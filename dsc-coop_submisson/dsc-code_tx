@@ -250,7 +250,7 @@ def main():
                             % (', '.join(mods.keys()),))
     parser.add_option("-z", "--size", type="eng_float", default=1442,
                       help="set packet size [default=%default]")
-    parser.add_option("-t", "--thr-sense", type="eng_float", default=15,
+    parser.add_option("-t", "--thr-sense", type="eng_float", default=20,
                       help="Threshold for sensing dif[default=%default]")
     parser.add_option("","--mode", default="COOP",
                       help="set match style [default=%default]")
