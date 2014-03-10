@@ -1,0 +1,13 @@
+swig -python cauchy.i
+
+ gcc -c $1.c $1_wrap.c cat_codec.c -I/usr/include/python2.7
+ ld -shared $1.o cat_codec.o $1_wrap.o -o $1.so 
+
+
+
+
+gcc -c `python-config --cflags` cauchy.c cauchy_wrap.c
+
+
+
+gcc -bundle `python-config --ldflags` cauchy.o cauchy_wrap.o encode.o decode.o init_field.o lose_packets.o get_msg.o -o _cauchy.so
