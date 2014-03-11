@@ -372,7 +372,7 @@ class my_top_block(gr.top_block):
 
         self.connect(self.txpath, self.txgate, self.sink)
 
-        self.setmode(6) # Xu: Set default mode =3
+        self.setmode(3) # Xu: Set default mode =3
         self.txpath.packet_transmitter.mode = 3 # Default for feedback
 
         self.tx_enabled = False

@@ -373,7 +373,7 @@ class my_top_block(gr.top_block):
         self.connect(self.txpath, self.txgate, self.sink)
         self.connect(self.source, self.rxgate, self.rxpath)
 
-        self.setmode(6)  # Xu: Set default mode =2
+        self.setmode(3)  # Xu: Set default mode =2
         # Feedback link is lowest rate
         self.rxpath.demodulator.set_mfsk(2)  
         self.rxpath.packet_receiver._watcher.mode = 3
