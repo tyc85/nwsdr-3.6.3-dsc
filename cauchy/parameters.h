@@ -58,15 +58,15 @@ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 /* Nsegs is the number of segments in packet. */
 /* Length of packet in bytes is 4*Nsegs*Lfield */
 
-#define	Nsegs 25
+#define	Nsegs 36
 
 /* Mpackets is the number of message packets */
 
-#define	Mpackets 200
+#define	Mpackets 500
 
 /* Rpackets is the number of redundant packets */
 
-#define Rpackets 200
+#define Rpackets 500
 
 /* IMPORTANT: The max of Mpackets and Rpackets is at most 2^{Lfield-1} */
 /* Lfield must be set large enough to make this true else the encoding
