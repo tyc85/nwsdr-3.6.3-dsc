@@ -695,7 +695,7 @@ def main():
                             send_pkt(payload)
                             sys.stderr.write('.')
                             #print "tbmode is ", tb.mode
-                            print "pktno is ", pktno
+                            print "missing pktno is ", i
 
         
         
