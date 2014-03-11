@@ -373,7 +373,7 @@ class my_top_block(gr.top_block):
         self.connect(self.txpath, self.txgate, self.sink)
         self.connect(self.source, self.rxgate, self.rxpath)
 
-        self.setmode(3)  # Xu: Set default mode =2
+        self.setmode(6)  # Xu: Set default mode =2
         # Feedback link is lowest rate
         self.rxpath.demodulator.set_mfsk(2)  
         self.rxpath.packet_receiver._watcher.mode = 3
@@ -667,6 +667,7 @@ def main():
                     pktno += 1
                     totaldata.append(data)
                     #print "tbmode is ", tb.mode, "sending pkt", pktno
+                    print "pktno is ", pktno
                     
             else: # When first_run = False, pktno = len(total)
                 if pkt_list == []:
@@ -678,6 +679,7 @@ def main():
                         send_pkt(payload)
                         sys.stderr.write('.')
                         #print "tbmode is ", tb.mode
+                        print "pktno is ", pktno
 
                     #print "nothing in pk_list"
                     #payload = struct.pack('!H', 0 & 0xffff) + totaldata[0]
@@ -693,6 +695,7 @@ def main():
                             send_pkt(payload)
                             sys.stderr.write('.')
                             #print "tbmode is ", tb.mode
+                            print "pktno is ", pktno
 
         
         

@@ -286,11 +286,11 @@ gr_framer_sink_1::work (int noutput_items,
 	      int info_packetlen;
               float snr_data_based, sum_sig = 0, sum_noise = 0;  //Zhiyi : snr estimator based on data
 	
-	      if (d_mode == 2){
+	      if (d_mode == 2 || d_mode ==5){
 		*(void **)(&softdecode)= dlsym(handle, "cc2_softdecode");
 		info_packetlen = RSLEN* d_packetlen / CCLEN_R2;
 	      }
-	      else if (d_mode == 3){
+	      else if (d_mode == 3 || d_mode ==6){
 	     	 *(void **)(&softdecode)= dlsym(handle, "cc3_softdecode");
 		 info_packetlen = RSLEN* d_packetlen / CCLEN_R3;
 		}
@@ -334,9 +334,9 @@ gr_framer_sink_1::work (int noutput_items,
                         //printf("snr based on data =%f\n", snr_data_based);
 
 			// Decode here!
-		        if(d_mode == 2)
+		        if(d_mode == 2 || d_mode ==5)
 				(*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN_R2);
-			else if (d_mode ==3)
+			else if (d_mode ==3 || d_mode ==6)
 	      			(*softdecode)(pkt_symbol, out_symbol, d_packetlen, CCLEN_R3);
 
 			if ((error = dlerror()) != NULL)  {
