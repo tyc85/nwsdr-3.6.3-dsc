@@ -445,7 +445,7 @@ def main():
         
         flag=0
         while not shutdown_event.is_set():
-            if (time.time()+2) % 10 <= 5:
+            if (time.time()) % 10 <= 9:
                 if tx_enabled==True:
                     #tb.setmode(fbmode)
                     if flag==0:
@@ -465,7 +465,7 @@ def main():
                     tb.txgate.set_enabled(False)
                     tb.rxgate.set_enabled(True)
                     
-                    print "Dest: receiving, tb.mode=", tb.mode
+                    #print "Dest: receiving, tb.mode=", tb.mode
                 
 
             else :
@@ -483,7 +483,7 @@ def main():
                     
                     tb.txgate.set_enabled(True)
 
-                    print "Dest: sending feedback, fbmode=", fbmode
+                    #print "Dest: sending feedback, fbmode=", fbmode
                 
 
             time.sleep(.01)
@@ -548,6 +548,7 @@ def main():
                 idx = 0
 
             pkt_tb[idx] = chr(ord(pkt_tb[idx]) | (1 << int(pktno % 8)))
+
         print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
             ok, pktno, n_rcvd, n_right)
 
