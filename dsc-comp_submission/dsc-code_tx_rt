@@ -463,13 +463,7 @@ def main():
         while not shutdown_event.is_set():
             if time.time() % 10 <= 9: 
                 if tx_enabled == False:
-                    # collecting missing pkt number
-                    #pkt_list = []
-                    #pkt_tb = pkt_tb1+pkt_tb2
-                    #print "pkt_tb len", len(pkt_tb)
-                    #for i in range(0,total_pkt):
-                    #    if ((ord(pkt_tb[int(math.floor(i/8))]) >> int(i % 8)) & 1) == 0:
-                    #        pkt_list.append(i) 
+                    
                     ################################
                     # mode = 1: bfsk + RS code 
                     # mode = 2: bfsk + RS code + 1/2 Conv Code w/ soft decoding

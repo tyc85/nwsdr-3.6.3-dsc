@@ -153,7 +153,7 @@ class uhd_transmitter(uhd_interface, gr.hier_block2):
                           help="set transmit frequency to FREQ [default=%default]",
                           metavar="FREQ")
         parser.add_option("", "--tx-gain", type="eng_float", default=31.5,
-                          help="set transmit gain in dB (default is midpoint)")
+                          help="set transmit gain in dB (default is %default)")
         parser.add_option("-v", "--verbose", action="store_true", default=False)
 
     # Make a static method to call before instantiation
@@ -205,7 +205,7 @@ class uhd_receiver(uhd_interface, gr.hier_block2):
                           help="set receive frequency to FREQ [default=%default]",
                           metavar="FREQ")
         parser.add_option("", "--rx-gain", type="eng_float", default=25,
-                          help="set receive gain in dB (default is midpoint)")
+                          help="set receive gain in dB (default is %default)")
         if not parser.has_option("--verbose"):
             parser.add_option("-v", "--verbose", action="store_true", default=False)
 

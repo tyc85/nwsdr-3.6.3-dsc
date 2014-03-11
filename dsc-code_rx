@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+from gnuradio import eng_notation
+from gnuradio.eng_option import eng_option
+from optparse import OptionParser
+
+import os
+
+def main():
+
+    parser = OptionParser (option_class=eng_option, conflict_handler="resolve")
+
+    parser.add_option("-s", "--server", default="idb2",
+                      help="server host name [default=%default]")
+    parser.add_option("","--mode", default="COMP",
+                      help="set match style [default=%default]")
+    parser.add_option("-f","--freq", default="600M",
+                      help="set match style [default=%default]")
+
+    (options, args) = parser.parse_args ()
+
+    print options.freq
+
+    arglist = " -f " + options.freq + " -s " + options.server
+    if options.mode == "COMP":
+        Command = "./dsc-comp_submission/dsc-code_rx_rt " + arglist 
+    else:
+        Command = "./dsc-coop_submission/dsc-code_rx " + arglist 
+    os.system(Command)
+
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+
