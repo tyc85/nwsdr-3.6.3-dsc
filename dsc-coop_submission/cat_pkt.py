@@ -147,7 +147,7 @@ class cat_demod_pkts(gr.hier_block2):
 
 
         self.framer_sink = gr.framer_sink_1(self._rcvd_pktq)
-        #self.framer_sink.setlen(1670) # Xu: set d_packetlen 
+        self.framer_sink.setlen(1670) # Xu: set d_packetlen 
 
         self.connect(self, self._demodulator, self.correlator, self.framer_sink)
         

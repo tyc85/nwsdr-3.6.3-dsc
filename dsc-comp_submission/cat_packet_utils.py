@@ -169,10 +169,10 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
              
     payload_with_crc = whiten(payload_with_crc,0)
     '''
-    # !!! Important: make sure  1<= mode <= 2  
-    # Need to change the region here!   
-    #if mode<1 or mode >2:
-    #    mode = 2
+    # !!! Important: make sure  1<= mode <= 6  
+    if mode<1 or mode >6:
+        mode = 3
+
     #print "make pkt mode is ", mode
     ########################
     # Error control code here
@@ -182,7 +182,12 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
     codedpayload = payload_with_crc + payload_with_crc[0:cl-nb]
     Encoder.cat_encode(codedpayload,nb)
 
-    if mode == 2 or mode == 5: # Need 1/2 Conv Code
+    if mode ==1 or mode == 4:
+        L = len(codedpayload)
+        pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
+                           (codedpayload), '\x55'))
+
+    elif mode == 2 or mode == 5: # Need 1/2 Conv Code
         ccnb = len(codedpayload)
 
         cccl = ccEncoderR2.cc2_codelength(ccnb,RSLEN)
@@ -190,6 +195,11 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
         cccodedpayload = codedpayload + codedpayload[0: cccl-ccnb]
         cccodedpayload = codedpayload + ('x' * (cccl-ccnb))
         ccEncoderR2.cc2_encode(cccodedpayload, ccnb, RSLEN)
+
+        L = len(cccodedpayload)
+
+        pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
+                         (cccodedpayload), '\x55'))
 
     elif mode == 3 or mode == 6: # Need 1/3 Conv Code
         ccnb = len(codedpayload)
@@ -200,18 +210,23 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
         cccodedpayload = codedpayload + ('x' * (cccl-ccnb))
         ccEncoderR3.cc3_encode(cccodedpayload, ccnb, RSLEN)
 
+        L = len(cccodedpayload)
+        pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
+                         (cccodedpayload), '\x55'))
+
     ######################
 
     # uncoded
     #L = len(payload_with_crc)
 
+    '''
     if mode == 1 or mode == 4:
         # coded with RS only
         L = len(codedpayload)
     else :
         # Xu: When coded with RS + CC
         L = len(cccodedpayload)
-
+    '''
     #MAXLEN = len(random_mask_tuple)
 
     # Commented by Xu, 2014-2-9
@@ -227,6 +242,8 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
         pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
                        (payload_with_crc), '\x55'))
     '''
+
+    '''
     if mode == 1 or mode == 4:
         # RS coded
         pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
@@ -235,7 +252,7 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
         # RS + Conv Code
         pkt = ''.join((packed_preamble, packed_access_code, make_header(L, whitener_offset),
                          (cccodedpayload), '\x55'))
-
+    '''
     if pad_for_usrp:
         pkt = pkt + (_npadding_bytes(len(pkt), int(samples_per_symbol), bits_per_symbol) * '\x55')
 
