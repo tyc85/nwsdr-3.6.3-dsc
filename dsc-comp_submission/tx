@@ -510,7 +510,8 @@ def main():
                       
                     #time.sleep(0.75)                    
 
-                    print "Source: Receiving feedback, fbmode_prob= ", fbmode_prob, " fbmode_main= ",  fbmode_main
+                    if options.verbose:
+                        print "Source: Receiving feedback, fbmode_prob= ", fbmode_prob, " fbmode_main= ",  fbmode_main
                 
                 if flag1==1 and flag2==1:
                     pkt_list = []
@@ -563,8 +564,9 @@ def main():
                 pkt_tb2 = fbpayload[2+mode_num:2+mode_num+total_byte-n1]
                 flag2 = flag2 +1
         
-        print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
-            ok, pktno, n_rcvd, n_right)
+        if options.verbose:
+            print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
+                ok, pktno, n_rcvd, n_right)
 
     mods = digital.modulation_utils.type_1_mods()
 
