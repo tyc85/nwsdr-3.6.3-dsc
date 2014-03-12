@@ -301,6 +301,10 @@ def main():
             tb.sensegate.set_enabled(True) #t
             previous_sense_result = temp_sense_result
             [sense_result, DONE] = tb.sensepath.GetAvailableSpectrum()
+            
+            if DONE==1:
+                 print "first round is done"
+            
             temp_sense_result = sense_result                            
             sumsense_result=sum(sense_result)
             #avoid sensing others' sensing period but if it is the start time, using the 3 subchannels   

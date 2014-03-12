@@ -31,7 +31,7 @@ import numpy, struct
 
 
 # linklab, define constants
-FFT_SIZE      = 512      # fft size for sensing  
+FFT_SIZE      = 256     # fft size for sensing  
 LOW_THRES     = -45        # low power threshold in dB to identify free freq blocks
 HIGH_THRES    = -25        # high power threshold in dB to identify busy freq blocks
 SMOOTH_LENGTH = 10       # smooth length
@@ -261,66 +261,38 @@ class sensing_path(gr.hier_block2):
     	                	
     	
     	result=[1, 1, 1]
+    	result_worst = 1
+    	result_best =1
     	
     	if temp_result_1 >= sense_thread:
-    	    result[0]=0
-    	    
+    	    result[0]=0  
     	if temp_result_2 >= sense_thread:
-    	    result[1]=0    	    
+    	    result[1]=0   	    
     	if temp_result_3 >= sense_thread:
-    	    result[2]=0    	    
+    	    result[2]=0
     	    
-        #print SENSE_ALLTHR_MAX_COUNT
-        print SENSE_ALLTHR_MAX
-        #print SENSE_ALLTHR_MIN_COUNT
-        print SENSE_ALLTHR_MIN        
-        print sense_thread
-        print result    
-        
-        
-        
-        mask=[1, 2, 63]  #starting from 0
-        temp_psd_max=max(psd)
-        temp_psd_min=min(psd)
-        temp_psd_diff=temp_psd_max- temp_psd_min
-        print psd
-        psd_max=max(psd)
-        print psd_max
-        psd_desired_index=psd[mask]
-        print psd_desired_index
-        psd[mask]=-200
-        
-        max_rest=max(psd)
-        min_desired=min(psd_desired_index)
+        if temp_result_1 == temp_result_max: #the left channel is the worst one
+            result_worst = 0
+        if temp_result_1 == temp_result_min: #the left channel is the best one
+            result_best = 0    
+        if temp_result_2 == temp_result_max: #the mid channel is the worst one
+            result_worst = 1
+        if temp_result_2 == temp_result_min: #the mid channel is the best one
+            result_best = 1   
+        if temp_result_3 == temp_result_max: #the right channel is the worst one
+            result_worst = 2
+        if temp_result_3 == temp_result_min: #the right channel is the best one
+            result_best = 2                                   
+                    
+    	    
+    	    	    
 
-        #print max_rest
-        #print min_desired
-        if min_desired> max_rest:
-            DONE = 1
-        else:
-            DONE = 0
-        
-        
-      
-        
-        
-        print 0
-#        print "test"
-#        print psd[1]
-#        print "test"
- 
-#        if PATTERN       
+       
         
         
         
         
         
-        
-        
-        
-        
-        
-        
-        return result, DONE  #, PATTERN
+        return result, result_worst, result_best
         #return avail_subc_bin
 

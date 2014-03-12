@@ -321,7 +321,8 @@ def main():
             time.sleep(.6)
             tb.sensegate.set_enabled(True) #t
             previous_sense_result = temp_sense_result
-            sense_result = tb.sensepath.GetAvailableSpectrum()
+            [sense_result, sense_result_worst, sense_result_best] = tb.sensepath.GetAvailableSpectrum()
+            #sense_result = tb.sensepath.GetAvailableSpectrum()
             temp_sense_result = sense_result                            
             sumsense_result=sum(sense_result)
             #avoid sensing others' sensing period but if it is the start time, using the 3 subchannels   
@@ -333,7 +334,7 @@ def main():
                 non_available=1
                 non_available_count += 1
                 if non_available_count >= thr_break: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
-                    active_index=random.randint(0,2)
+                    active_index=sense_result_best #choose the best channel to occupy random.randint(0,2)
                     sense_result = [0, 0, 0]
                     sense_result[active_index] = 1
                     non_available = 0
@@ -345,17 +346,22 @@ def main():
             if sumsense_result >= 2: #if more than 1 sub-channels are available, count the number
                 all_available_count += 1
                 if all_available_count >= thr_give: # after 10 times using more than one sub-channels, shut down all sub-channels to give the chance to other teams to transmit
-                    inactive_index=random.randint(0,2)
+                    inactive_index=sense_result_worst #choose the worst channel to give up  random.randint(0,2)
                     if sense_result[inactive_index]==0: # if the selected sub-channel is inactive, change the index
                         inactive_index=(inactive_index+1)%3
+                    if inactive_index == sense_result_best: #if the changed index is the best channel,change it again
+                        inactive_index=(inactive_index+1)%3
                     sense_result[inactive_index] = 0 #inactive one sub-channel to other team
-                    all_available_count = 0                  
+                    all_available_count = 0
+                    print sense_result_worst
+                    print sense_result_best
+                    print inactive_index                  
             else:
                 all_available_count = 0
             sense_n=0 # this makes sure that after sensing, transmit continues
             #diff_sum_sense_result=sumsense_result-sumtemp_sense_result
             #if diff_sum_sense > 1
-            #sense_result=[1,0,1]
+            #sense_result=[1,1,1]
             #set amplitude
             sumsense_result=sum(sense_result)
             if sumsense_result ==3:
@@ -411,7 +417,7 @@ def main():
             data_waste=(pkt_size - 2) * chr(0xff)
 
             
-            if sense_result[0]==1:  # left
+            if sense_result[0]>=1:  # left
                 tb.const_source_x_11.set_amplitude(1)
                 if options.from_file is None:
                     #data = (pkt_size - 2) * chr(pktno & 0xff)
@@ -431,7 +437,7 @@ def main():
                 payload1 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt1(payload1)	            
 	            
-            if sense_result[1]==1:  #medium
+            if sense_result[1]>=1:  #medium
                 tb.const_source_x_00.set_amplitude(1)
                 if options.from_file is None:
                     data = (pkt_size - 2) * chr(pktno & 0xff) 
@@ -450,7 +456,7 @@ def main():
                 payload0 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt0(payload0)	     	
                 	            	        
-            if sense_result[2]==1:  #right
+            if sense_result[2]>=1:  #right
                 tb.const_source_x_22.set_amplitude(1)
                 if options.from_file is None:
                     data = (pkt_size - 2) * chr(pktno & 0xff) 
