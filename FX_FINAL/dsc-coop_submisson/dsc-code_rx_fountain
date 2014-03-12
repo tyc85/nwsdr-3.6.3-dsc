@@ -158,7 +158,7 @@ class dsc_pkt_sink(object):
 global n_rcvd, n_right
 
 def main():
-    global n_rcvd, n_right, group_pkt_count, pktno_r2, g_pkt
+    global n_rcvd, n_right, group_pkt_count, pktno_r2, decoded_msg
     pktno_r2 = 0
     fountain_pkt_tot = 500
     msg_length = 1440
@@ -166,14 +166,12 @@ def main():
     # an integer array of 30 elements
     group_pkt_count = 30*[0]
     group_pkt = 30*[0*chr(0)]
-    #global n_rcvd, n_right, start_time, stop_rcv
-    decoded_pkt = chr(0)*fountain_pkt_tot*2*pkt_length
-    #TIMEOUT = 600 # 600 sec for hurdle 3
+
+    decoded_msg = chr(0)*fountain_pkt_tot*msg_length
+
     n_rcvd = 0
     n_right = 0
-    #start_time = 0
-    #mstr_cnt = 0
-    #stop_rcv = 0
+
     
 
     
@@ -188,7 +186,7 @@ def main():
     
     def rx_callback(ok, payload):
         #global n_rcvd, n_right, start_time, stop_rcv
-        global n_rcvd, n_right, group_pkt_count, pktno_r2, g_pkt
+        global n_rcvd, n_right, group_pkt_count, pktno_r2, decoded_msg
 	
         (pktno,) = struct.unpack('!H', payload[0:2])
 
@@ -204,18 +202,22 @@ def main():
 		    serve.send(payload[2:])
 	elif pktno < 30000: # second round 
 	    ############################### second round
+	    if pktn0_r2 == 0:
+		if options.verbose:
+		    print "received count is ", group_pkt_count
 	    if ok:
 		# pack the pktno to an array
-		group_pkt[pktno_r2/500] += struct.pack('!I', pktno_r2 & 0xffffffff) + payload[2:]
-		group_pkt_count[pktno_r2/500] += 1
+		group_pkt[pktno_r2/fountain_pkt_tot] += struct.pack('!I', pktno_r2 & 0xffffffff) + payload[2:]
+		group_pkt_count[pktno_r2/fountain_pkt_tot] += 1
 		n_right += 1
             # need to handle the case where all pkts are received in the first round!!!!!!
-	    if(group_pkt_count[pktno_r2/500] >= 500):
-		"".join(group_pkt[pktno_r2/500])
-		cauchy.cat_decode_cauchy(group_pkt[pktno_r2/500], decoded_pkt, 500)
-                print "all pkts received in group ", pktno_r2/500 
-		for i in xrange(0, 500):
-		    serve.send(decoded_pkt[i*1440:(i+1)*1440])
+	    if(group_pkt_count[pktno_r2/fountain_pkt_tot] >= fountain_pkt_tot):
+		cauchy.cat_decode_cauchy(group_pkt[pktno_r2/fountain_pkt_tot], decoded_msg, fountain_pkt_tot)
+		#cauchy.cat_msg_compare(
+		if options.verbose:
+		    print "all pkts received in group ", pktno_r2/fountain_pkt_tot 
+		for i in xrange(0, fountain_pkt_tot):
+		    serve.send(decoded_msg[i*msg_length:(i+1)*msg_length])
 		    
 	    pktno_r2 += 1
 	    ###############################

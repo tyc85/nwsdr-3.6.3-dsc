@@ -46,8 +46,7 @@ void cat_encode_cauchy(unsigned char* in, unsigned char* out, int pkt_length)
 			out[i*4 + j] =  (packets[i] >> (8*(3-j))) & 0x000000ff;
 		}
 	}
-	//printf("packets[1] is %x\n", packets[1]);
-	//printf("in[4:7] is %x%x%x%x\n", out[4], out[5], out[6], out[7]);
+
 
 }
 int cat_msg_compare(unsigned char *in1, unsigned char *in2, int pkt_length)
