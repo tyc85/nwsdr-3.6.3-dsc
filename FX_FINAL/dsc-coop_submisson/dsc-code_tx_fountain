@@ -355,7 +355,8 @@ def main():
             ######## encode fountain code, should take around 0.7 sec
             if(first_run == False):
                 time.sleep(.6)
-                print "second round sense pktno =", pktno, f_indx
+                if  options.verbose:
+                    print "second round sense pktno =", pktno, f_indx
             if(pktno > 0 and first_run):
                 #msg = totaldata[fountain_blk_count*500:fountain_blk_count*500 + 500]
                 group_idx = pktno/fountain_pkt_tot
@@ -363,13 +364,14 @@ def main():
                 # TC: taking the redundancy part of the coded pkts
                 fountain_redundancy[fountain_blk_count] = coded_pkt[pkt_length*fountain_pkt_tot:]
                 if options.verbose:
-                    print "msg and coded pkt lengths are ", len(msg), len(coded_pkt)
+                    #print "msg and coded pkt lengths are ", len(msg), len(coded_pkt)
                     print "fininshed fountain encoding, fblk, group, pktno ", fountain_blk_count, group_idx, pktno
                     print "DEBUG: decoding the redundancy blk"
-                    offset = 0
-                    cauchy.cat_decode_cauchy(coded_pkt[offset:offset+fountain_pkt_tot*pkt_length], decoded_pkt, 500)
+                    offset = 1*pkt_length
+                    rec_pkt = coded_pkt[offset:offset+fountain_pkt_tot*pkt_length]
+                    #cauchy.cat_decode_cauchy(rec_pkt, decoded_pkt, 500)
                     #cauchy.cat_decode_cauchy(fountain_redundancy[fountain_pkt_tot*pkt_length:fountain_pkt_tot*pkt_length*2], decoded_pkt, 500)
-                    print "finished decoding"
+                    #print "finished decoding"
                     
                     ############ Comaring ############
                     #cauchy.cat_msg_compare(msg, decoded_pkt, 1440)
