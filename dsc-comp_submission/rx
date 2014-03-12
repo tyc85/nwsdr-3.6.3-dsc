@@ -372,7 +372,7 @@ class my_top_block(gr.top_block):
 
         self.connect(self.txpath, self.txgate, self.sink)
 
-        self.setmode(3) # Xu: Set default mode =3
+        self.setmode(2) # Xu: Set default mode =3
         self.txpath.packet_transmitter.mode = 3 # Default for feedback
 
         self.tx_enabled = False
@@ -433,8 +433,8 @@ def main():
     tx_enabled = False
 
     # fbmode_prob = mode of probing in the first 3 seconds, fbmode_main = mode in the rest 6 seconds
-    fbmode_prob = 3
-    fbmode_main = 3
+    fbmode_prob = 2
+    fbmode_main = 2
 
     mode_num = 1
 
@@ -451,11 +451,13 @@ def main():
     def dowork():
         global tb, tx_enabled, pre_rcvd, prob_rcvd, pre_right, prob_right, n_rcvd, n_right, pkt_tb, pkt_str, mode_num, fbmode_prob, fbmode_main
         
-        probe_time = 3
+        probe_time = 2
         flag1 = 0
         flag2 = 0
+        fwtime = 9
         while not shutdown_event.is_set():
-            if (time.time()) % 10 <= 9:
+            tt =  (time.time()) % 10
+            if tt <= fwtime:
                 if tx_enabled==True:
 
                     if flag1==0:
@@ -476,12 +478,11 @@ def main():
                     tb.rxgate.set_enabled(True)
                     
                     #print "Dest: receiving, tb.mode=", tb.mode
-
-                if time.time() >= probe_time:
-                    if flag2 ==0:
-                        prob_rcvd = n_rcvd
-                        prob_right = n_right
-                        flag2 = 1
+                
+                if tt >= probe_time and flag2 ==0:
+                    prob_rcvd = n_rcvd
+                    prob_right = n_right
+                    flag2 = 1
 
                     if fbmode_main <1 or fbmode_main >6:
                         fbmode_main = 3
@@ -497,6 +498,13 @@ def main():
                     # Define feedback state here
                     pkt_str = "".join(pkt_tb)  #change bytearray to string
 
+                    s = 255
+                    for i in range(0, total_byte):
+                        s = s & ord(pkt_str[i])
+                    if s== 255:
+                        # all packets are received
+                        fwtime = -1
+                        
                     # fbmode = next_mode()
                     (fbmode_prob, fbmode_main) = next_mode()
 
@@ -509,7 +517,8 @@ def main():
                     
                     tb.txgate.set_enabled(True)
 
-                    print "Dest: sending feedback, fbmode_prob=,", fbmode_prob, " fbmode_main =", fbmode_main
+                    if options.verbose:
+                        print "Dest: sending feedback, fbmode_prob=,", fbmode_prob, " fbmode_main =", fbmode_main
                 
 
             time.sleep(.01)
@@ -582,12 +591,13 @@ def main():
             throughput_prob = float(prob_right - pre_right)/float(prob_rcvd - pre_rcvd + 0.1) 
             throughput_main = float(n_right - prob_right)/float(n_rcvd - prob_rcvd)
 
+
             if throughput_prob * mode_to_rate(fbmode_prob) > throughput_main * mode_to_rate(fbmode_main): # Change to a higher rate
                 return (rank_to_mode(rank_prob - 1), rank_to_mode(rank_main - 1))
                 
             if throughput_main < 0.7:
                 return ( rank_to_mode(rank_main + 1), rank_to_mode(rank_main + 1) )
-
+            #return (rank_to_mode(rank_prob - 1), rank_to_mode(rank_main - 1))
             return ( rank_to_mode(rank_main ), rank_to_mode(rank_main ) )
             
         else:
@@ -609,8 +619,9 @@ def main():
 
             pkt_tb[idx] = chr(ord(pkt_tb[idx]) | (1 << int(pktno % 8)))
 
-        print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
-            ok, pktno, n_rcvd, n_right)
+        if options.verbose:
+            print "mode=[%1d,%1d]  ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
+                fbmode_prob, fbmode_main, ok, pktno, n_rcvd, n_right)
 
 
     # Used for transmitting feedback
@@ -711,7 +722,9 @@ def main():
             if len(payload1) == 1442:
                 #print "sending first feedback"
             	send_pkt(payload1)
-                sys.stderr.write('.')
+
+                if options.verbose:
+                    sys.stderr.write('.')
             data2 = chr(fbmode_prob)
             data2 = data2 + chr(2) + chr(fbmode_main)
             data2 = data2 + pkt_str[n1:total_byte]
@@ -725,7 +738,8 @@ def main():
             if len(payload2) == 1442:
                 #print "sending second feedback"
                 send_pkt(payload2)
-                sys.stderr.write('.')
+                if options.verbose:
+                    sys.stderr.write('.')
 
     tb.wait()         # wait for it to finish
 

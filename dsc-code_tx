@@ -23,9 +23,9 @@ def main():
 
     arglist = " -f " + options.freq + " -s " + options.server
     if options.mode == "COMP":
-        Command = "./dsc-comp_submission/dsc-code_tx_rt " + arglist 
+        Command = "/root/dsc-comp_submission/tx " + arglist 
     else:
-        Command = "./dsc-coop_submission/dsc-code_tx " + arglist 
+        Command = "/root/dsc-coop_submission/dsc-code_tx " + arglist 
     os.system(Command)
 
 

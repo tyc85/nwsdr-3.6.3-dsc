@@ -373,7 +373,7 @@ class my_top_block(gr.top_block):
         self.connect(self.txpath, self.txgate, self.sink)
         self.connect(self.source, self.rxgate, self.rxpath)
 
-        self.setmode(3)  # Xu: Set default mode =2
+        self.setmode(2)  # Xu: Set default mode =2
         # Feedback link is lowest rate
         self.rxpath.demodulator.set_mfsk(2)  
         self.rxpath.packet_receiver._watcher.mode = 3
@@ -446,8 +446,8 @@ def main():
     n_right = 0
     first_run = True
     tx_enabled = True
-    fbmode_prob = 3
-    fbmode_main = 3
+    fbmode_prob = 2
+    fbmode_main = 2
     fbpayload = 1440* chr(fbmode_main)
     total_pkt = 15000
 
@@ -464,9 +464,10 @@ def main():
     def dowork():
         global n_rcvd, n_right, tx_enabled, tb, fbmode_prob, fbmode_main,  fbpayload, pkt_tb, pkt_list, first_run, pkt_tb1, pkt_tb2, flag1, flag2,mode_num
 
-        probe_time = 3
+        probe_time = 2
         while not shutdown_event.is_set():
-            if time.time() % 10 <= 9: 
+            tt = time.time() % 10
+            if  tt <= 9: 
                 if tx_enabled == False:
                     
                     ################################
@@ -493,7 +494,7 @@ def main():
                     flag1 = 0
                     flag2 = 0                    
                  
-                if time.time()%10 >= probe_time and tb.mode != fbmode_main:
+                if tt >= probe_time and tb.mode != fbmode_main:
                     tb.setmode(fbmode_main)      
 
             else:
@@ -509,7 +510,7 @@ def main():
                       
                     #time.sleep(0.75)                    
 
-                    print "Source: Receiving feedback, fbmode_prob= " fbmode_prob, " fbmode_main= ",  fbmode_main
+                    print "Source: Receiving feedback, fbmode_prob= ", fbmode_prob, " fbmode_main= ",  fbmode_main
                 
                 if flag1==1 and flag2==1:
                     pkt_list = []
@@ -667,23 +668,29 @@ def main():
                 else:
                     payload = struct.pack('!H', pktno & 0xffff) + data
                     send_pkt(payload)
-                    sys.stderr.write('.')
+                    if options.verbose:
+                        sys.stderr.write('.')
+                        print "mode = ", fbmode_prob, fbmode_main
+
                     pktno += 1
                     totaldata.append(data)
-                    #print "tbmode is ", tb.mode, "sending pkt", pktno
-                    print "pktno is ", pktno
+                    
                     
             else: # When first_run = False, pktno = len(total)
                 if pkt_list == []:
-                    print "all pkts finished"
+
+                    if options.verbose:
+                        print "all pkts finished"
 
                     pktno = (pktno + 1) % len(totaldata)
                     payload = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
                     if len(payload) == 1442: # Make sure payload is 1442 bytes for decoder to work
                         send_pkt(payload)
-                        sys.stderr.write('.')
-                        #print "tbmode is ", tb.mode
-                        print "pktno is ", pktno
+
+                        if options.verbose:
+                            sys.stderr.write('.')
+                            #print "tbmode is ", tb.mode
+                            print "mode is ", fbmode_prob, fbmode_main
 
                     #print "nothing in pk_list"
                     #payload = struct.pack('!H', 0 & 0xffff) + totaldata[0]
@@ -691,15 +698,18 @@ def main():
                     #    send_pkt(payload)
                         #sys.stderr.write('.')
                 else:
-                    print "current missing total No ", len(pkt_list)
+                    if options.verbose:
+                        print "current missing total No ", len(pkt_list)
+
                     for i in pkt_list:
                         payload = struct.pack('!H', i & 0xffff) + totaldata[i]
                         if len(payload) == 1442:
                             #print "sending pkt", i
                             send_pkt(payload)
-                            sys.stderr.write('.')
-                            #print "tbmode is ", tb.mode
-                            print "missing pktno is ", i
+
+                            if options.verbose:
+                                sys.stderr.write('.')                            
+                                print "mode = ", fbmode_prob, fbmode_main
 
         
         

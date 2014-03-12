@@ -29,7 +29,7 @@ import gnuradio.digital.crc as crc
 
 from ctypes import *
 #lib = "/root/libfec.so" # when submitted to grid
-lib = "/lib/libfec.so"
+lib = "./libfec.so"
 Decoder = cdll.LoadLibrary(lib)
 Encoder = cdll.LoadLibrary(lib)
 

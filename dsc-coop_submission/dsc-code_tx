@@ -221,6 +221,14 @@ shutdown_event = threading.Event()
 
 def main():
 
+
+    global  totaldata, first_run
+
+
+    totaldata = []
+    first_run = True
+
+
     def send_pkt(payload='', eof=False):
         return tb.txpath.send_pkt(payload, eof)
 
@@ -271,7 +279,7 @@ def main():
 
     for mod in mods.values():
         mod.add_options(expert_grp)
-
+    
     (options, args) = parser.parse_args ()
 
     if len(args) != 0:
@@ -315,13 +323,14 @@ def main():
     thr_give=3;
     thr_break=8;
     
-    while n < nbytes:
+    while True:
         if (count_pkt%500 == 0 and sense_n==1) or non_available==1: #sence once
             tb.txgate.set_enabled(True)
             time.sleep(.6)
             tb.sensegate.set_enabled(True) #t
             previous_sense_result = temp_sense_result
-            sense_result = tb.sensepath.GetAvailableSpectrum()
+            [sense_result, sense_result_worst, sense_result_best] = tb.sensepath.GetAvailableSpectrum()
+            #sense_result = tb.sensepath.GetAvailableSpectrum()
             temp_sense_result = sense_result                            
             sumsense_result=sum(sense_result)
             #avoid sensing others' sensing period but if it is the start time, using the 3 subchannels   
@@ -333,7 +342,7 @@ def main():
                 non_available=1
                 non_available_count += 1
                 if non_available_count >= thr_break: # after 10 seconds, if the channel keeps unavailable, force to transmit at a random subchannel
-                    active_index=random.randint(0,2)
+                    active_index=sense_result_best #choose the best channel to occupy random.randint(0,2)
                     sense_result = [0, 0, 0]
                     sense_result[active_index] = 1
                     non_available = 0
@@ -345,17 +354,22 @@ def main():
             if sumsense_result >= 2: #if more than 1 sub-channels are available, count the number
                 all_available_count += 1
                 if all_available_count >= thr_give: # after 10 times using more than one sub-channels, shut down all sub-channels to give the chance to other teams to transmit
-                    inactive_index=random.randint(0,2)
+                    inactive_index=sense_result_worst #choose the worst channel to give up  random.randint(0,2)
                     if sense_result[inactive_index]==0: # if the selected sub-channel is inactive, change the index
                         inactive_index=(inactive_index+1)%3
+                    if inactive_index == sense_result_best: #if the changed index is the best channel,change it again
+                        inactive_index=(inactive_index+1)%3
                     sense_result[inactive_index] = 0 #inactive one sub-channel to other team
-                    all_available_count = 0                  
+                    all_available_count = 0
+                    print sense_result_worst
+                    print sense_result_best
+                    print inactive_index                  
             else:
                 all_available_count = 0
             sense_n=0 # this makes sure that after sensing, transmit continues
             #diff_sum_sense_result=sumsense_result-sumtemp_sense_result
             #if diff_sum_sense > 1
-            #sense_result=[1,0,1]
+            #sense_result=[1,1,1]
             #set amplitude
             sumsense_result=sum(sense_result)
             if sumsense_result ==3:
@@ -383,19 +397,13 @@ def main():
             if current_time > 100 and percentage < 0.25:
                 print "Here "
                 thr_give=100
-                thr_break=1
+                thr_break=3
             else:
                 thr_give=3
                 thr_break=8
-                #if percentage < 1/4:
-                
-                #    print "Here "
-                #    thr_give=100
-                #    thr_break=1
-                #else: 
-                #    thr_give=3
-                #    thr_break=8
+
                         
+            
             
             
             
@@ -412,58 +420,126 @@ def main():
 
             
             if sense_result[0]==1:  # left
-                tb.const_source_x_11.set_amplitude(1)
-                if options.from_file is None:
-                    #data = (pkt_size - 2) * chr(pktno & 0xff)
-                    data = serve.read() 
-                else:
-                    data = source_file.read(pkt_size - 2)
-                    if data == '':
-                        break;
-                payload1 = struct.pack('!H', pktno & 0xffff) + data
-                send_pkt1(payload1)
-                pktno += 1    
-                n += len(payload1)
-                if  options.verbose:
-                    sys.stderr.write('.')
+                tb.const_source_x_11.set_amplitude(1)                 
+                if first_run:
+
+                    data = serve.read()
+                    #data = (pkt_size ) * chr(pktno & 0xff) 
+                    if len(data) != 1440: # End of file or Cannot fetch data
+                        # print "No More"
+
+                        if len(totaldata) == 0: # cannot fetch data from server
+                            pass
+                        else: # End of file
+                            first_run = False
+                    else:
+                        payload1 = struct.pack('!H', pktno & 0xffff) + data
+                        send_pkt1(payload1)
+                        if  options.verbose:
+                             sys.stderr.write('.')
+                        pktno += 1
+                        totaldata.append(data)
+                
+                
+                else: # repeat sending the data from the begining
+                    # Iterate over the totaldata in the following
+                    #print first_run 
+                    if len(totaldata) > pktno:
+                        payload1 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
+                
+                    else:
+                        pktno = 0
+                        payload1 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
+
+                    if len(payload1) == 1442: # Make sure payload is 1442 bytes for decoder to work
+                        send_pkt1(payload1)
+                        if  options.verbose:
+                             sys.stderr.write('.')
+                        pktno = (pktno + 1) % len(totaldata)                        
             else:
                 tb.const_source_x_11.set_amplitude(0)
                 payload1 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt1(payload1)	            
 	            
             if sense_result[1]==1:  #medium
-                tb.const_source_x_00.set_amplitude(1)
-                if options.from_file is None:
-                    data = (pkt_size - 2) * chr(pktno & 0xff) 
-                else:
-                    data = source_file.read(pkt_size - 2)
-                    if data == '':
-                        break;
-                payload0 = struct.pack('!H', pktno & 0xffff) + data
-                send_pkt0(payload0)
-                pktno += 1    
-                n += len(payload0)
-                if  options.verbose:
-                    sys.stderr.write('.')
+                tb.const_source_x_00.set_amplitude(1)            
+                if first_run:
+
+                    data = serve.read()
+                    #data = (pkt_size ) * chr(pktno & 0xff) 
+                    if len(data) != 1440: # End of file or Cannot fetch data
+                        # print "No More"
+
+                        if len(totaldata) == 0: # cannot fetch data from server
+                            pass
+                        else: # End of file
+                            first_run = False
+                    else:
+                        payload0 = struct.pack('!H', pktno & 0xffff) + data
+                        send_pkt0(payload0)
+                        if  options.verbose:
+                             sys.stderr.write('.')
+                        pktno += 1
+                        totaldata.append(data)
+                
+                
+                else: # repeat sending the data from the begining
+                    # Iterate over the totaldata in the following
+                    #print first_run           
+                    if len(totaldata) > pktno:
+                        payload0 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
+                
+                    else:
+                        pktno = 0
+                        payload0 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
+
+                    if len(payload0) == 1442: # Make sure payload is 1442 bytes for decoder to work
+                        send_pkt0(payload0)
+                        if  options.verbose:
+                             sys.stderr.write('.')
+                        pktno = (pktno + 1) % len(totaldata)
             else:
                 tb.const_source_x_00.set_amplitude(0)
                 payload0 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt0(payload0)	     	
                 	            	        
             if sense_result[2]==1:  #right
-                tb.const_source_x_22.set_amplitude(1)
-                if options.from_file is None:
-                    data = (pkt_size - 2) * chr(pktno & 0xff) 
-                else:
-                    data = source_file.read(pkt_size - 2)
-                    if data == '':
-                        break;
-                payload2 = struct.pack('!H', pktno & 0xffff) + data
-                send_pkt2(payload2)
-                pktno += 1    
-                n += len(payload2)
-                if  options.verbose:
-                    sys.stderr.write('.')	
+                tb.const_source_x_22.set_amplitude(1)            
+                if first_run:
+
+                    data = serve.read()
+                    #data = (pkt_size ) * chr(pktno & 0xff) 
+                    if len(data) != 1440: # End of file or Cannot fetch data
+                        # print "No More"
+
+                        if len(totaldata) == 0: # cannot fetch data from server
+                            pass
+                        else: # End of file
+                            first_run = False
+                    else:
+                        payload2 = struct.pack('!H', pktno & 0xffff) + data
+                        send_pkt2(payload2)
+                        if  options.verbose:
+                             sys.stderr.write('.')
+                        pktno += 1
+                        totaldata.append(data)
+                
+                
+                else: # repeat sending the data from the begining
+                    # Iterate over the totaldata in the following
+                    #print first_run            
+                    if len(totaldata) > pktno:
+                        payload2 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
+                
+                    else:
+                        pktno = 0
+                        payload2 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
+
+                    if len(payload2) == 1442: # Make sure payload is 1442 bytes for decoder to work
+                        send_pkt2(payload2)
+                        if  options.verbose:
+                             sys.stderr.write('.')
+                        pktno = (pktno + 1) % len(totaldata)    
             else:
                 tb.const_source_x_22.set_amplitude(0)
                 payload2 = struct.pack('!H', pktno & 0xffff) + data_waste
