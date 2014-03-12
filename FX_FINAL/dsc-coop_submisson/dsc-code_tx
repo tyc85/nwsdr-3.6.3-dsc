@@ -346,7 +346,15 @@ def main():
         ################ sensing part, sense every 500 packets  
         if (count_pkt%500 == 0 and sense_n==1) or non_available==1: #sence once
             tb.txgate.set_enabled(True)
-            time.sleep(.6)
+            #time.sleep(.6) # replacing the sleeping to fountain encoding
+            ##################################################
+            ######## encode fountain code, should take around 0.7 sec
+            msg = totaldata[fountain_blk_count*500:fountain_blk_count*500 + 500]
+            cauchy.cat_encode(msg, coded_pkt, msg_length)
+            # TC: taking the redundancy part of the coded pkts
+            fountain_redundancy.append(coded_pkt[coded_pkt_len/2:coded_pkt_len])
+            fountain_blk_count++
+            ##################################################
             tb.sensegate.set_enabled(True) #t
             previous_sense_result = temp_sense_result
             [sense_result, sense_result_worst, sense_result_best] = tb.sensepath.GetAvailableSpectrum()
@@ -435,9 +443,9 @@ def main():
             tb.txgate.set_enabled(True) #t
             tb.sensegate.set_enabled(False)                      
             data_waste=(pkt_size - 2) * chr(0xff)
-
-            
-            if sense_result[0]==1:  # left
+            #####################################
+            # left spectrum
+            if sense_result[0]==1:  
                 tb.const_source_x_11.set_amplitude(1)                 
                 if first_run:
 
@@ -450,8 +458,9 @@ def main():
                             pass
                         else: # End of file
                             first_run = False
-                            fountain_blk_count = 0
-                            pktno = 0
+                            print "first round done, fountain blk count: ", fountain_blk_count
+                            #fountain_blk_count = 0
+                            #pktno = 0# continue to increase the pktno
                     else:
                         payload1 = struct.pack('!H', pktno & 0xffff) + data
                         send_pkt1(payload1)
@@ -477,7 +486,7 @@ def main():
                         # TC: strip the 4-byte pkt number from the fountain data
                         # and add in 2 bytes of pktno for USRP to transmit
                         # need to do this reversely at the receiver
-                        payload1 = struct.pack('!H', (pktno%500 + 500) & 0xffff) + fountain_data[4:4+msg_length]
+                        payload1 = struct.pack('!H', pktno & 0xffff) + fountain_data[4:4+msg_length]
                     else: ## second round finished? => later change to send more redundany data
                         pktno = 0
                         payload1 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
@@ -497,8 +506,9 @@ def main():
                 tb.const_source_x_11.set_amplitude(0)
                 payload1 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt1(payload1)	            
-	            
-            if sense_result[1]==1:  #medium
+	        #####################################
+            # medium spectrum    
+            if sense_result[1]==1:  
                 tb.const_source_x_00.set_amplitude(1)            
                 if first_run:
 
@@ -511,6 +521,9 @@ def main():
                             pass
                         else: # End of file
                             first_run = False
+                            print "first round done, fountain blk count: ", fountain_blk_count
+                            #fountain_blk_count = 0
+                            #pktno = 0# continue to increase the pktno
                     else:
                         payload0 = struct.pack('!H', pktno & 0xffff) + data
                         send_pkt0(payload0)
@@ -524,7 +537,7 @@ def main():
                     # start transmitting fountain coded redundant packet 
                     if pktno < len(totaldata):
                         fountain_data = fountain_redundancy[pktno]
-                        payload1 = struct.pack('!H', (pktno%500 + 500) & 0xffff) + fountain_data[4:4+msg_length]
+                        payload1 = struct.pack('!H', pktno & 0xffff) + fountain_data[4:4+msg_length]
                     else: ## second round finished? => later change to send more redundany data
                         pktno = 0
                         payload1 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
@@ -541,11 +554,12 @@ def main():
                 tb.const_source_x_00.set_amplitude(0)
                 payload0 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt0(payload0)	     	
-                	            	        
-            if sense_result[2]==1:  #right
+            
+            #####################################
+            # right spectrum     	            	        
+            if sense_result[2]==1:  
                 tb.const_source_x_22.set_amplitude(1)            
                 if first_run:
-
                     data = serve.read()
                     #data = (pkt_size ) * chr(pktno & 0xff) 
                     if len(data) != 1440: # End of file or Cannot fetch data
@@ -555,6 +569,9 @@ def main():
                             pass
                         else: # End of file
                             first_run = False
+                            print "first round done, fountain blk count: ", fountain_blk_count
+                            #fountain_blk_count = 0
+                            #pktno = 0# continue to increase the pktno
                     else:
                         payload2 = struct.pack('!H', pktno & 0xffff) + data
                         send_pkt2(payload2)
@@ -568,7 +585,7 @@ def main():
                     # start transmitting fountain coded redundant packet 
                     if pktno < len(totaldata):
                         fountain_data = fountain_redundancy[pktno]
-                        payload1 = struct.pack('!H', (pktno%500 + 500) & 0xffff) + fountain_data[4:4+msg_length]
+                        payload1 = struct.pack('!H', pktno & 0xffff) + fountain_data[4:4+msg_length]
                     else: ## second round finished? => later change to send more redundany data
                         pktno = 0
                         payload1 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno]
