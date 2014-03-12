@@ -47,7 +47,7 @@ cauchy = cdll.LoadLibrary(fountain_libpath)
 #########################################################
 
 FA_RATIO      = 1.25       # fft size for sensing
-
+Done_flag     = 30*[0]
 #import os
 #print os.getpid()
 #raw_input('Attach and press enter: ')
@@ -146,7 +146,10 @@ class dsc_pkt_sink(object):
       def send(self, payload):
           try:
              self.pkt_sink_socket.recv(4)
-             self.pkt_sink_socket.send(payload)
+             if len(payload)==1440:
+                 self.pkt_sink_socket.send(payload)
+             else:
+                 print "in send(), wrong packet length"
           except socket.error:
              print "Connection to packet sink closed"
 
@@ -158,7 +161,7 @@ class dsc_pkt_sink(object):
 global n_rcvd, n_right
 
 def main():
-    global n_rcvd, n_right, group_pkt_count, pktno_r2, decoded_msg
+    global n_rcvd, n_right, group_pkt_count, pktno_r2, decoded_msg, pktno
     pktno_r2 = 0
     fountain_pkt_tot = 500
     msg_length = 1440
@@ -186,70 +189,77 @@ def main():
     
     def rx_callback(ok, payload):
         #global n_rcvd, n_right, start_time, stop_rcv
-        global n_rcvd, n_right, group_pkt_count, pktno_r2, decoded_msg
-	
+        global n_rcvd, n_right, group_pkt_count, pktno_r2, decoded_msg, Done_flag
+
         (pktno,) = struct.unpack('!H', payload[0:2])
 
-	if pktno < 15000:   
-	    n_rcvd += 1
-	    if ok:
-		# pack the pktno to an array
-		group_pkt[pktno/500] += struct.pack('!I', pktno & 0xffffffff) + payload[2:]
-                #g_pkt += struct.pack('!I', pktno & 0xffffffff) + payload[2:]
-		group_pkt_count[pktno/500] += 1
-		n_right += 1
+        if pktno < 15000:   
+            n_rcvd += 1
+            if ok:
+            # pack the pktno to an array
+                f_pktno = (pktno)% 500
+                group_pkt[pktno/500] += struct.pack('!I', f_pktno & 0xffffffff) + payload[2:]
+                    #g_pkt += struct.pack('!I', pktno & 0xffffffff) + payload[2:]
+                #print pktno, pktno/500
+                group_pkt_count[pktno/500] += 1
+                if(group_pkt_count[pktno/500]>=500):#once all packages are received at the fisrt round
+                    Done_flag[pktno/500]=1
+                n_right += 1
                 if(len(payload) == 1442):
-		    serve.send(payload[2:])
-	elif pktno < 30000: # second round 
-	    ############################### second round
-	    if pktn0_r2 == 0:
-		if options.verbose:
-		    print "received count is ", group_pkt_count
-	    if ok:
-		# pack the pktno to an array
-		group_pkt[pktno_r2/fountain_pkt_tot] += struct.pack('!I', pktno_r2 & 0xffffffff) + payload[2:]
-		group_pkt_count[pktno_r2/fountain_pkt_tot] += 1
-		n_right += 1
-            # need to handle the case where all pkts are received in the first round!!!!!!
-	    if(group_pkt_count[pktno_r2/fountain_pkt_tot] >= fountain_pkt_tot):
-		cauchy.cat_decode_cauchy(group_pkt[pktno_r2/fountain_pkt_tot], decoded_msg, fountain_pkt_tot)
-		#cauchy.cat_msg_compare(
-		if options.verbose:
-		    print "all pkts received in group ", pktno_r2/fountain_pkt_tot 
-		for i in xrange(0, fountain_pkt_tot):
-		    serve.send(decoded_msg[i*msg_length:(i+1)*msg_length])
-		    
-	    pktno_r2 += 1
-	    ###############################
-	else:
-	    n_rcvd += 1
-	    if ok:
-		n_right += 1
-		serve.send(payload[2:])
-        #print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d\n" %( ok, pktno, n_rcvd, n_right)
-            #try:            
-            #   data = s.recv(4) # if a ready packet is received
-            #   s.send(payload[2:])
-            #except socket.error as e:
-            #   print "Socket error: %s" %e.strerror
-            #   stop_rcv = 1
-            #   return
-            #if data.__len__() == 0:
-            #   print "Connection closed"
-            #   stop_rcv = 1
-            #   return
-            #if n_right == 1:
-            #   start_time = time.time()
-            #if n_right == 2000:
-            #   t = time.time() - start_time              
-            #   print"Mod : %5s, Rate : %8d, Time for 2000 pkts : %f sec\n" %(options.modulation, options.bitrate, t)
-            #   stop_rcv = 1;
-              
+                    serve.send(payload[2:])
+        elif pktno < 30000: # second round 
+            ############################### second round
+            if options.verbose:
+                print "received count is ", group_pkt_count
+            if ok:
+            # pack the pktno to an array
+                f_pktno = 500 + (pktno - 15000)% 500
+                group_indx = (pktno%15000)/fountain_pkt_tot
+                group_pkt[group_indx] += struct.pack('!I', f_pktno & 0xffffffff) + payload[2:]
+                group_pkt_count[group_indx] += 1
+                n_right += 1
+                # need to handle the case where all pkts are received in the first round!!!!!!
+                #if(group_pkt_count[group_indx] >= fountain_pkt_tot and Done_flag[group_indx]==0):
+                if(len(group_pkt[group_indx]) >= 1444*500 and Done_flag[group_indx]==0):
+                    Done_flag[group_indx]=1
+                    print "decoding", group_indx, "len group_pkt=", len(group_pkt[group_indx])
+                    cauchy.cat_decode_cauchy(group_pkt[group_indx], decoded_msg, fountain_pkt_tot)
+            #cauchy.cat_msg_compare(
+                    if options.verbose:
+                        print "all pkts received in group ", (pktno%15000)/fountain_pkt_tot 
+                    for i in xrange(0, fountain_pkt_tot):
+                        serve.send(decoded_msg[i*msg_length:(i+1)*msg_length])
+                
+            ###############################
+        else:
+            n_rcvd += 1
+            if ok:
+                n_right += 1
+                serve.send(payload[2:])
+            #print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d\n" %( ok, pktno, n_rcvd, n_right)
+                #try:            
+                #   data = s.recv(4) # if a ready packet is received
+                #   s.send(payload[2:])
+                #except socket.error as e:
+                #   print "Socket error: %s" %e.strerror
+                #   stop_rcv = 1
+                #   return
+                #if data.__len__() == 0:
+                #   print "Connection closed"
+                #   stop_rcv = 1
+                #   return
+                #if n_right == 1:
+                #   start_time = time.time()
+                #if n_right == 2000:
+                #   t = time.time() - start_time              
+                #   print"Mod : %5s, Rate : %8d, Time for 2000 pkts : %f sec\n" %(options.modulation, options.bitrate, t)
+                #   stop_rcv = 1;
+                  
 
-            
-        if options.verbose:
-            print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
-              ok, pktno, n_rcvd, n_right)
+                
+            if options.verbose:
+                print "ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
+                  ok, pktno, n_rcvd, n_right)
 
     demods = digital.modulation_utils.type_1_demods()
 
