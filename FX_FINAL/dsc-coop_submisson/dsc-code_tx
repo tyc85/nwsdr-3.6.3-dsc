@@ -353,7 +353,7 @@ def main():
             cauchy.cat_encode(msg, coded_pkt, msg_length)
             # TC: taking the redundancy part of the coded pkts
             fountain_redundancy.append(coded_pkt[coded_pkt_len/2:coded_pkt_len])
-            fountain_blk_count++
+            fountain_blk_count = fountain_blk_count
             ##################################################
             tb.sensegate.set_enabled(True) #t
             previous_sense_result = temp_sense_result
