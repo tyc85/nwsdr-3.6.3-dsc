@@ -64,6 +64,7 @@ class sensing_path(gr.hier_block2):
         self.fft_size = FFT_SIZE
 
 	self._thr_sense=options.thr_sense
+	print self._thr_sense
 
         # interpolation rate: sensing fft size / ofdm fft size
         self.interp_rate = self.fft_size/FFT_SIZE #options.fft_length
@@ -259,26 +260,6 @@ class sensing_path(gr.hier_block2):
     	        SENSE_ALLTHR_MIN = (SENSE_ALLTHR_MIN*SENSE_ALLTHR_MIN_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MIN_COUNT+1);    	        
     	                	
     	
-    	temp_result=[temp_result_1, temp_result_2, temp_result_3];
-    	temp_result_max=max(temp_result);
-    	temp_result_min=min(temp_result);
-    	temp_result_dif=temp_result_max-temp_result_min;
-    	
-    	if temp_result_dif >= self._thr_sense: #some channel is available, some is non-available, the default value of _thr_sense=15dB
-    	    sense_thread=(temp_result_max+temp_result_min)/2;
-        else:  #all channels are availalbe or non-available  	    
-    	    sense_thread=(SENSE_ALLTHR_MAX+SENSE_ALLTHR_MIN)/2;
-    	    temp_result_ave=sum(temp_result)/3;
-    	    #if all channels are available, the gain should be less than -130dB
-    	    #if all channels are non-available, the gain should be larger than -130dB
-    	    if temp_result_ave>=sense_thread: # all channels are non-available, update the sense_allthr_max
-    	        SENSE_ALLTHR_MAX_COUNT += 1;
-    	        SENSE_ALLTHR_MAX = (SENSE_ALLTHR_MAX*SENSE_ALLTHR_MAX_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MAX_COUNT+1);
-    	    else: #all channels are available, update the sense_allthr_min
-    	        SENSE_ALLTHR_MIN_COUNT += 1;
-    	        SENSE_ALLTHR_MIN = (SENSE_ALLTHR_MIN*SENSE_ALLTHR_MIN_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MIN_COUNT+1);    	        
-    	                	
-    	
     	result=[1, 1, 1]
     	result_worst = 1
     	result_best =1
@@ -302,6 +283,180 @@ class sensing_path(gr.hier_block2):
             result_worst = 2
         if temp_result_3 == temp_result_min: #the right channel is the best one
             result_best = 2                                   
+                    
+    	    
+    	    
+    	    
+    	#print psd    
+    	max_ind1=-1
+    	max_ind2=-1    
+    	max_rest=-200
+        FFT_SIZE_Half= FFT_SIZE/2
+        for i in range(1, FFT_SIZE_Half-2):
+             temp= min(psd[i], psd[FFT_SIZE-i])
+             if temp>max_rest:
+                 max_rest=temp
+                 max_ind1=i
+                 max_value1=temp
+                 
+        #print psd[max_ind1]
+        #print psd[FFT_SIZE-max_ind1]         
+
+        max_rest=-200
+        #psd[max_ind1]=-200
+        #psd[FFT_SIZE-max_ind1]=-200
+        for i in range(1, FFT_SIZE_Half-2):
+             temp= min(psd[i], psd[FFT_SIZE-i])
+             if temp>max_rest:
+                 max_rest=temp
+                 max_ind2=i
+                 
+      	          
+        #print "test"          
+        #print max_ind1
+        #print max_ind2
+        #print (FFT_SIZE-max_ind1)
+        #print (FFT_SIZE-max_ind2)
+        ##print psd[max_ind2]
+        ##print psd[FFT_SIZE-max_ind2]
+        #print "test"     
+    	    
+    	    
+    	    
+    	    
+    	    
+    	    
+    	    
+    	    	    
+        index_peak=-1
+        peak_max=-200
+        peak= 30*[0]
+        narrow_diff=10
+        mask=[7,8,11,12,15,16,19,20,23,24,27,28,31,32,35,36,39,40,43,44,47,48,51,52,55,56, 59,60,63,64,67,68,71,72,75,76,79,80,83,84,87,88,91,92,95,96,99,100,103,104,107,108,111,112,115,116,119,120,123,124]#range(10,70) # 60 numbers, 2 for each 
+
+        for i in range(0, 30):
+            #print mask[2*i]
+            #print psd(mask[2*i])
+            #i=16
+            ind_d1=mask[2*i]
+            #print ind_d1
+            ind_d2=mask[2*i+1]
+            
+            ind_n1=mask[2*i]-4
+            ind_n2=mask[2*i]-3
+            ind_n3=mask[2*i]+4
+            ind_n4=mask[2*i]+5
+            
+            #ind_n1=mask[2*i]-3
+            #ind_n2=mask[2*i]-2
+            #ind_n3=mask[2*i]+3
+            #ind_n4=mask[2*i]+4
+            
+            #print ind_n4
+            psd_point=(psd[ind_d1]+psd[ind_d2])/2
+            #print psd[67],
+            #print psd[68],
+            #print psd[71]
+            #print psd[72]
+            #print psd[75]
+            #print psd[76]
+            #print psd_point
+            psd_nearby=(psd[ind_n1]+psd[ind_n2]+ psd[ind_n3]+psd[ind_n4])/4
+            #print psd_nearby
+            
+            
+            ind_d1_c=256-mask[2*i]
+            ind_d2_c=256-(mask[2*i+1])
+            
+            ind_n1_c=256-(mask[2*i]-4)
+            ind_n2_c=256-(mask[2*i]-3)
+            ind_n3_c=256-(mask[2*i]+4)
+            ind_n4_c=256-(mask[2*i]+5)
+            
+            #ind_n1_c=256-(mask[2*i]-3)
+            #ind_n2_c=256-(mask[2*i]-2)
+            #ind_n3_c=256-(mask[2*i]+3)
+            #ind_n4_c=256-(mask[2*i]+4)
+            
+            psd_point_c=(psd[ind_d1_c]+psd[ind_d2_c])/2
+            psd_nearby_c=(psd[ind_n1_c]+psd[ind_n2_c]+ psd[ind_n3_c]+psd[ind_n4_c])/4
+            
+ 
+            print "test Peak"
+            print psd_point-psd_nearby
+            print psd_point_c-psd_nearby_c
+            
+            tmp_max=min(psd_point_c, psd_point)
+
+            if (psd_point> psd_nearby + narrow_diff) & (psd_point_c> psd_nearby_c + narrow_diff):
+               peak[i]=1 
+               
+               if tmp_max>peak_max:
+                   peak_max=tmp_max
+                   index_peak=i
+            #if sum(peak)>1:
+            #   index_peak=-1       
+        print peak
+        print index_peak
         
-        return result, result_worst, result_best
+        
+  
+
+#######################################################        
+        
+        #mask=[10,11,21,22,42,43,53,54]  #starting from 0
+        #mask_ext=[9,10,11,12,20,21,22,23,41,42,43,44, 52,53,54,55]  #starting from 0
+        
+        #temp_psd_max=max(psd)
+        #temp_psd_min=min(psd)
+        #temp_psd_diff=temp_psd_max- temp_psd_min
+        ##print psd
+        #psd_max=max(psd)
+        ##print psd_max
+        #psd_desired_index=psd[mask]
+        ##print psd_desired_index
+        #psd[mask_ext]=-200
+        
+        #max_rest=max(psd)
+        #min_desired=min(psd_desired_index)
+        
+        
+        #max_rest=-200
+        #FFT_SIZE_Half= FFT_SIZE/2
+        #for i in range(0, FFT_SIZE_Half-2):
+        #     temp= min(psd[i], psd[FFT_SIZE-1-i])
+        #     if temp>max_rest:
+        #         max_rest=temp
+        #print "test"        
+        #print min_desired
+        #print max_rest
+        #print "test"         
+                 
+ 
+
+        #if min_desired> (max_rest + 2.5):
+        #    DONE2 = 1
+        #else:
+        #    DONE2 = 0
+        
+      
+        #DONE = DONE2
+        
+        #print 0
+#       # print "test"
+#       # print psd[1]
+#        print "test"
+ 
+#       # if PATTERN       
+        
+        
+        
+       
+        
+        
+        
+        
+        
+        return result, result_worst, result_best  #DONE  #, PATTERN
+        #return avail_subc_bin
 
