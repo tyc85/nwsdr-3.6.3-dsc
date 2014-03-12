@@ -67,10 +67,10 @@ def main():
         rec_pkt_array[j] = coded_pkt_array[j][offset:offset+(totalpkt+extra)*pkt_length]
 
         ############ Decoding ############
-        cauchy.cat_decode_cauchy(coded_pkt_array[j], decoded_pkt_array[j], 500)
+        cauchy.cat_decode_cauchy(coded_pkt_array[j], rec_pkt_array[j], 500)
 
         ############ Comaring ############
-        cauchy.cat_msg_compare(msg_array[j], decoded_pkt_array[j], 1440)
+        cauchy.cat_msg_compare(msg_array[j], rec_pkt_array[j], 1440)
     
         coded_pkt = chr(0)*totalpkt*2*pkt_length
 
