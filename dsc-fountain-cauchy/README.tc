@@ -1,0 +1,2 @@
+1. run ./catmake.sh => compile and copy the so file to /lib/
+2. read the tc_cauchy_test.py file to see how to run the functions

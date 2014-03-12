@@ -25,7 +25,7 @@ def main():
     if options.mode == "COMP":
         Command = "/root/dsc-comp_submission/tx2 " + arglist 
     else:
-        Command = "/root/dsc-coop_submission/dsc-code_tx " + arglist 
+        Command = "/root/dsc-coop_submission/dsc-code_tx_fountain " + arglist 
     os.system(Command)
 
 
