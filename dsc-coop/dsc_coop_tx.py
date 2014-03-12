@@ -234,7 +234,6 @@ def main():
     parser.add_option("-t", "--thr-sense", type="eng_float", default=15,
                       help="Threshold for sensing dif[default=%default]")
                       
-                      
     parser.add_option("", "--count-packet", type="eng_float", default=512,
                       help="Count every sensing[default=%default]")                      
 

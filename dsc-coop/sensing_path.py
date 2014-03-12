@@ -64,7 +64,6 @@ class sensing_path(gr.hier_block2):
         self.fft_size = FFT_SIZE
 
 	self._thr_sense=options.thr_sense
-	print self._thr_sense
 
         # interpolation rate: sensing fft size / ofdm fft size
         self.interp_rate = self.fft_size/FFT_SIZE #options.fft_length
@@ -260,6 +259,26 @@ class sensing_path(gr.hier_block2):
     	        SENSE_ALLTHR_MIN = (SENSE_ALLTHR_MIN*SENSE_ALLTHR_MIN_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MIN_COUNT+1);    	        
     	                	
     	
+    	temp_result=[temp_result_1, temp_result_2, temp_result_3];
+    	temp_result_max=max(temp_result);
+    	temp_result_min=min(temp_result);
+    	temp_result_dif=temp_result_max-temp_result_min;
+    	
+    	if temp_result_dif >= self._thr_sense: #some channel is available, some is non-available, the default value of _thr_sense=15dB
+    	    sense_thread=(temp_result_max+temp_result_min)/2;
+        else:  #all channels are availalbe or non-available  	    
+    	    sense_thread=(SENSE_ALLTHR_MAX+SENSE_ALLTHR_MIN)/2;
+    	    temp_result_ave=sum(temp_result)/3;
+    	    #if all channels are available, the gain should be less than -130dB
+    	    #if all channels are non-available, the gain should be larger than -130dB
+    	    if temp_result_ave>=sense_thread: # all channels are non-available, update the sense_allthr_max
+    	        SENSE_ALLTHR_MAX_COUNT += 1;
+    	        SENSE_ALLTHR_MAX = (SENSE_ALLTHR_MAX*SENSE_ALLTHR_MAX_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MAX_COUNT+1);
+    	    else: #all channels are available, update the sense_allthr_min
+    	        SENSE_ALLTHR_MIN_COUNT += 1;
+    	        SENSE_ALLTHR_MIN = (SENSE_ALLTHR_MIN*SENSE_ALLTHR_MIN_COUNT+ temp_result_ave)/(SENSE_ALLTHR_MIN_COUNT+1);    	        
+    	                	
+    	
     	result=[1, 1, 1]
     	result_worst = 1
     	result_best =1
@@ -283,16 +302,6 @@ class sensing_path(gr.hier_block2):
             result_worst = 2
         if temp_result_3 == temp_result_min: #the right channel is the best one
             result_best = 2                                   
-                    
-    	    
-    	    	    
-
-       
-        
-        
-        
-        
         
         return result, result_worst, result_best
-        #return avail_subc_bin
 
