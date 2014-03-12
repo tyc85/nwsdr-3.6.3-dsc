@@ -439,9 +439,9 @@ def main():
     mode_num = 1
 
     mode_dec_num = 6*[0]
-    mode_dec_max = 4
+    mode_dec_max = 3
     mode_try_num = 6*[0]
-    mode_try_max = 6*[3]
+    mode_try_max = 6*[2]
 
 
     total_pkt = 15000
@@ -570,7 +570,8 @@ def main():
         rank_prob = mode_to_rank(fbmode_prob)
         rank_main = mode_to_rank(fbmode_main)
 
-        
+        prob_h = rank_to_mode(rank_prob - 1)
+        main_h = rank_to_mode(rank_main - 1)
 
         if rank_prob == rank_main: # fbmode_prob = fbmode_main
             
@@ -580,19 +581,19 @@ def main():
 
             if throughput > 0.9:
                 # May switch to Higher rate
-                if mode_dec_num[fbmode_prob-1] < mode_dec_max: 
+                if mode_dec_num[prob_h-1] < mode_dec_max: 
                     # switch to higher rate
-                    mode_try_num[fbmode_prob -1] = 0
-                    return (rank_to_mode(rank_main - 1) , fbmode_main) 
+                    mode_try_num[prob_h -1] = 0
+                    return (prob_h , fbmode_main) 
 
-                if mode_try_num[fbmode_prob -1] > mode_try_max[fbmode_prob-1]: 
+                if mode_try_num[prob_h -1] > mode_try_max[prob_h-1]: 
                     # switch to higher rate
-                    mode_try_num[fbmode_prob -1] = 0
-                    mode_try_max[fbmode_prob-1] += 1
-                    return (rank_to_mode(rank_main - 1) , fbmode_main)   
+                    mode_try_num[prob_h -1] = 0
+                    mode_try_max[prob_h-1] += 1
+                    return (prob_h , fbmode_main)   
     
                 # otherwise, stay at the same rate
-                mode_try_num[fbmode_prob - 1] + = 1
+                mode_try_num[prob_h - 1] += 1
                 return (fbmode_main, fbmode_main)
                   
             
@@ -618,19 +619,19 @@ def main():
 
             if throughput_prob * mode_to_rate(fbmode_prob) > throughput_main * mode_to_rate(fbmode_main): 
                 # Probe mode change to a higher rate
-                mode_try_num[fbmode_prob -1] = 0 
+                mode_try_num[prob_h -1] = 0 
 
-                if mode_dec_num[fbmode_main-1] < mode_dec_max : # Both change to higher rate
-                    mode_try_num[fbmode_main -1] = 0 
+                if mode_dec_num[main_h-1] < mode_dec_max : # Both change to higher rate
+                    mode_try_num[main_h -1] = 0 
                     return (rank_to_mode(rank_prob - 1), rank_to_mode(rank_main - 1))
 
-                if mode_try_num[fbmode_main-1] > mode_try_max[fbmode_main-1]: # Both change to higher rate
-                    mode_try_num[fbmode_main -1] = 0 
-                    mode_try_max[fbmode_main-1] += 1
+                if mode_try_num[main_h-1] > mode_try_max[main_h-1]: # Both change to higher rate
+                    mode_try_num[main_h -1] = 0 
+                    mode_try_max[main_h -1] += 1
                     return (rank_to_mode(rank_prob - 1), rank_to_mode(rank_main - 1))
 
                 # otherwise, main mode stays the same
-                mode_try_num[fbmode_main -1] += 1
+                mode_try_num[main_h -1] += 1
                 return (rank_to_mode(rank_prob - 1), fbmode_main)
     
                 
@@ -645,6 +646,8 @@ def main():
             return ( rank_to_mode(rank_main ), rank_to_mode(rank_main ) )
             
         else:
+            mode_dec_num[fbmode_prob -1] += 1
+            mode_dec_num[fbmode_main -1] += 1
             return (3,3)
             
 
@@ -664,6 +667,10 @@ def main():
             pkt_tb[idx] = chr(ord(pkt_tb[idx]) | (1 << int(pktno % 8)))
 
         if options.verbose:
+            print "mode_dec_num = ", mode_dec_num
+            print "mode_dec_max = ", mode_dec_max
+            print "mode_try_num = ", mode_try_num
+            print "mode_try_max = ", mode_try_max
             print "mode=[%1d,%1d]  ok = %5s  pktno = %4d  n_rcvd = %4d  n_right = %4d" %(
                 fbmode_prob, fbmode_main, ok, pktno, n_rcvd, n_right)
 
