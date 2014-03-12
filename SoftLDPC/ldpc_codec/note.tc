@@ -1,0 +1,2 @@
+lib1 = ctypes.CDLL("libraryX.so",modes=ctypes.RTLD_GLOBAL)
+lib2 = ctypes.CDLL("libraryY.so")
