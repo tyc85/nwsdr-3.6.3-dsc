@@ -16,37 +16,44 @@ void cat_encode_cauchy(unsigned char* in, unsigned char* out, int pkt_length)
   static UNSIGNED *ExptoFE, *FEtoExp;
   //pkt_length is in unit of byte, Nsegs*Lfield = 360
   static unsigned int message[Mlen]; //Nsegs*Lfield*4 bytes
+  unsigned int *msg;
   //Plentot = Plen + 1
   //include a 4-byte of pkt number in each packet (one unsigned integer)
   static unsigned int packets[Npackets*Plentot];
   unsigned int word;
   // need to pack unsigne char into unsigned int;
-  for(i = 0; i < Mlen; i ++)
-  {
+  	/*for(i = 0; i < Mlen; i ++)
+  	{
     word = 0;
     for(j = 0; j < 4; j ++)
     {
 	 	word = (word << 8) | in[i*4+j];
     }
     message[i] = word;
-  }
+  	}
+  	*/
+   //memcpy(
+	msg = (unsigned int *)in;
+
 	ExptoFE = (unsigned int *) calloc(TableLength+Lfield, sizeof(UNSIGNED));
 	if (!(ExptoFE)) {printf("\ndriver: ExptoFE malloc failed\n"); exit(434); }
 	FEtoExp = (unsigned int *) calloc(TableLength, sizeof(UNSIGNED));
 	if (!(FEtoExp)) {printf("\ndriver: FEtoExp malloc failed\n"); exit(434); }
   
 	Init_field(&COLBIT, BIT, ExptoFE, FEtoExp);
-	Encode(COLBIT, BIT, ExptoFE, FEtoExp, packets, message);
+	Encode(COLBIT, BIT, ExptoFE, FEtoExp, packets, msg);
   
   //pack packets into unsigned char now!!Plentot*Mpackets
-	for(i = 0; i < Plentot*Mpackets; i++)
+	/*for(i = 0; i < Plentot*Mpackets; i++)
 	{
 		for(j = 0; j < 4; j ++)
 		{
 			out[i*4 + j] =  (packets[i] >> (8*(3-j))) & 0x000000ff;
 		}
-	}
-
+	}*/
+	memcpy( out, packets, Plentot*Npackets*4 );
+	//printf("packets[1] is %x\n", packets[1]);
+	//printf("in[4:7] is %x%x%x%x\n", out[4], out[5], out[6], out[7]);
 
 }
 int cat_msg_compare(unsigned char *in1, unsigned char *in2, int pkt_length)
@@ -100,8 +107,9 @@ void cat_decode_cauchy(unsigned char* in, unsigned char* out, int num_rec)
 	if (!(FEtoExp)) {printf("\ndriver: FEtoExp malloc failed\n"); exit(434); }
 	
 	Init_field(&COLBIT, BIT, ExptoFE, FEtoExp);
+	memcpy( rec_packets, in, num_rec*Plentot*4 );
 	//total number
-	for(i = 0; i < num_rec*Plentot; i ++)
+	/*for(i = 0; i < num_rec*Plentot; i ++)
 	{
 		word = 0;
 		for(j = 0; j < 4; j ++)
@@ -109,10 +117,11 @@ void cat_decode_cauchy(unsigned char* in, unsigned char* out, int num_rec)
 			word = (word << 8) | in[i*4 + j]; 
 		}
 		rec_packets[i] = word;
-	}
+	}*/
 	// need to pack uchar in to uint rec_pack
 	return_code = Decode(COLBIT, BIT, ExptoFE, FEtoExp, rec_packets, &num_rec, rec_message);
-	for(i = 0; i < Mlen; i ++)
+	memcpy( out, rec_message, Mlen*4 );
+	/*for(i = 0; i < Mlen; i ++)
 	{
 		for(j = 0; j < 4; j ++)
 		{
@@ -120,7 +129,7 @@ void cat_decode_cauchy(unsigned char* in, unsigned char* out, int num_rec)
 			//printf("%x", (rec_message[i] >> (8*(3-j))) & 0x000000ff);
 			//printf("%x", out[i*4+j]);
 		}
-	}
+	}*/
 	i = 0;
 	//printf("\n%d th rec_message is %x\n in is %x\n%x\n%x\n%x\n", i, rec_message[i], out[0], out[1], out[2], out[3]);	
 	if (return_code == 0) 
