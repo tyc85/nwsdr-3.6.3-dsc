@@ -439,7 +439,7 @@ def main():
     mode_num = 1
 
     mode_dec_num = 6*[0]
-    mode_dec_max = 3
+    mode_dec_max = 1
     mode_try_num = 6*[0]
     mode_try_max = 6*[2]
 
@@ -586,10 +586,10 @@ def main():
                     mode_try_num[prob_h -1] = 0
                     return (prob_h , fbmode_main) 
 
-                if mode_try_num[prob_h -1] > mode_try_max[prob_h-1]: 
+                if mode_try_num[prob_h -1] >= mode_try_max[prob_h-1]: 
                     # switch to higher rate
                     mode_try_num[prob_h -1] = 0
-                    mode_try_max[prob_h-1] += 1
+                    #mode_try_max[prob_h-1] += 1
                     return (prob_h , fbmode_main)   
     
                 # otherwise, stay at the same rate
@@ -620,6 +620,9 @@ def main():
             if throughput_prob * mode_to_rate(fbmode_prob) > throughput_main * mode_to_rate(fbmode_main): 
                 # Probe mode change to a higher rate
                 mode_try_num[prob_h -1] = 0 
+                mode_try_num[main_h -1] = 0
+                return (rank_to_mode(rank_prob - 1), rank_to_mode(rank_main - 1))
+                '''
 
                 if mode_dec_num[main_h-1] < mode_dec_max : # Both change to higher rate
                     mode_try_num[main_h -1] = 0 
@@ -627,13 +630,13 @@ def main():
 
                 if mode_try_num[main_h-1] > mode_try_max[main_h-1]: # Both change to higher rate
                     mode_try_num[main_h -1] = 0 
-                    mode_try_max[main_h -1] += 1
+                    #mode_try_max[main_h -1] += 1
                     return (rank_to_mode(rank_prob - 1), rank_to_mode(rank_main - 1))
 
                 # otherwise, main mode stays the same
                 mode_try_num[main_h -1] += 1
                 return (rank_to_mode(rank_prob - 1), fbmode_main)
-    
+                '''
                 
                 
             if throughput_main * mode_to_rate(fbmode_main) < mode_to_rate(rank_to_mode(rank_main + 1)): # switch to lower rate
