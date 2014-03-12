@@ -368,7 +368,7 @@ def main():
                     print "fininshed fountain encoding, fblk, group, pktno ", fountain_blk_count, group_idx, pktno
                     print "DEBUG: decoding the redundancy blk"
                     offset = 1*pkt_length
-                    rec_pkt = coded_pkt[offset:offset+fountain_pkt_tot*pkt_length]
+                    #rec_pkt = coded_pkt[offset:offset+fountain_pkt_tot*pkt_length]
                     #cauchy.cat_decode_cauchy(rec_pkt, decoded_pkt, 500)
                     #cauchy.cat_decode_cauchy(fountain_redundancy[fountain_pkt_tot*pkt_length:fountain_pkt_tot*pkt_length*2], decoded_pkt, 500)
                     #print "finished decoding"
@@ -468,6 +468,7 @@ def main():
             time_circle_start=time.time();
             count_pkt += 1
             sense_n=1
+            max_redundancy = 200
             tb.txgate.set_enabled(True) #t
             tb.sensegate.set_enabled(False)                      
             data_waste=(pkt_size - 2) * chr(0xff)
@@ -523,7 +524,8 @@ def main():
                         # need to do this reversely at the receiver
                         payload1 = struct.pack('!H', pktno & 0xffff) + fountain_data[4:4+msg_length]
                     else: ## second round finished? => later change to send more redundany data
-                        payload1 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno%len(totaldata)]
+                        tb.stop() # stop the USRP
+                        #payload1 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno%len(totaldata)]
 
                     if len(payload1) == 1442: # Make sure payload is 1442 bytes for decoder to work
                         # send the redundancy
@@ -533,9 +535,14 @@ def main():
                         pktno += 1
                         transmit_count += 1
                         # if all 500 within a group are sent, reset
-                        if (f_indx == 500):
+                        if (f_indx == max_redundancy ):
                             f_indx = 0
                             fountain_blk_count += 1
+                            pktno += 500 - max_redundancy
+                            print "skipped pktno=", pktno
+
+                    if options.verbose:
+                            ##### if I send less 
                         if options.verbose:
                             print "left spectrum sending redundany: ", fountain_blk_count, f_indx, pktno
                             sys.stderr.write('.')          
@@ -547,7 +554,8 @@ def main():
             else:
             # if left channel is not available, send with zero amplitude
                 if(first_run == False):
-                    print "sending waste second round, trans_count, sense_result", transmit_count, sense_result
+                    if options.verbose:
+                        print "sending waste second round, trans_count, sense_result", pktno, transmit_count, sense_result
                 tb.const_source_x_11.set_amplitude(0)
                 payload1 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt1(payload1)	            
@@ -590,16 +598,19 @@ def main():
                         fountain_data = fountain_redundancy[fountain_blk_count][f_indx*pkt_length:(f_indx+1)*pkt_length]
                         payload0 = struct.pack('!H', pktno & 0xffff) + fountain_data[4:4+msg_length]
                     else:
-                        payload0 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno%len(totaldata)]
+                        tb.stop() # stop the USRP
+                        #payload0 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno%len(totaldata)]
                         
                     if len(payload0) == 1442:
                         send_pkt0(payload0)
                         f_indx += 1
                         pktno += 1
                         transmit_count += 1
-                        if (f_indx == 500):
+                        if (f_indx == max_redundancy ):
                             f_indx = 0
                             fountain_blk_count += 1
+                            pktno += 500 - max_redundancy
+                            print "skipped pktno=", pktno
                         if options.verbose:
                             print "med spectrum sending redundany: ", fountain_blk_count, f_indx,pktno 
                             sys.stderr.write('.')
@@ -609,7 +620,7 @@ def main():
 
             else:
                 if(first_run == False):
-                    print "sending waste second round, med, trans_count, sense_result", transmit_count, sense_result
+                    print "sending waste second round, med, trans_count, sense_result", pktno, transmit_count, sense_result
                 tb.const_source_x_00.set_amplitude(0)
                 payload0 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt0(payload0)	     	
@@ -652,16 +663,19 @@ def main():
                         fountain_data = fountain_redundancy[fountain_blk_count][f_indx*pkt_length:(f_indx+1)*pkt_length]
                         payload2 = struct.pack('!H', pktno & 0xffff) + fountain_data[4:4+msg_length]
                     else:
-                        payload2 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno%len(totaldata)]
+                        tb.stop() # stop the USRP
+                        #payload2 = struct.pack('!H', pktno & 0xffff) + totaldata[pktno%len(totaldata)]
                         
                     if len(payload2) == 1442:
                         send_pkt2(payload2)
                         f_indx += 1
                         pktno += 1
                         transmit_count += 1
-                        if (f_indx == 500):
+                        if (f_indx == max_redundancy ):
                             f_indx = 0
                             fountain_blk_count += 1
+                            pktno += 500 - max_redundancy
+                            print "skipped pktno=", pktno
                         if options.verbose:
                             print "right ispectrum sending redundany: ", fountain_blk_count, f_indx, pktno
                             sys.stderr.write('.')
@@ -671,7 +685,8 @@ def main():
                             print "right payload len is not 1442: "
             else:
                 if(first_run == False):
-                    print "sending waste second round, right, trans_count, sense_result", transmit_count, sense_result
+                    if options.verbose:
+                        print "sending waste second round, right, trans_count, sense_result", pktno, transmit_count, sense_result
                 tb.const_source_x_22.set_amplitude(0)
                 payload2 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt2(payload2)
