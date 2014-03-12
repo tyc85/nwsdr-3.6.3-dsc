@@ -331,6 +331,7 @@ def main():
     thr_break=8;
     #########################################
     #### fountian code data and parameters
+    transmit_count = 0
     fountain_count = 0
     fountain_blk_count = 0
     fountain_redundancy = 30*[0*chr(0)]
@@ -348,7 +349,7 @@ def main():
     while True:
         ##############################################################
         ################ sensing part, sense every 500 packets  maybe I should not use count_pkt for fountaint encode timing?
-        if (pktno%500 == 0 and sense_n==1) or non_available==1: #sence once
+        if (transmit_count % 500 == 0 and sense_n==1) or non_available==1: #sence once
             tb.txgate.set_enabled(True)
             # replacing the sleeping to fountain encoding
             ##################################################
@@ -447,9 +448,10 @@ def main():
             
             #percentage=0.1 
             current_time=time.time()-time_start;
-            print sense_result 
-            print percentage 
-            print current_time
+            if options.verbose:
+                print sense_result 
+                print percentage 
+                print current_time
             if current_time > 100 and percentage < 0.25:
                 print "Here "
                 thr_give=100
@@ -539,7 +541,7 @@ def main():
                             f_indx = 0
                             fountain_blk_count += 1
                             pktno += 500 - max_redundancy
-                            print "skipped pktno=", pktno
+                            #print "skipped pktno=", pktno
 
                     if options.verbose:
                             ##### if I send less 
@@ -610,7 +612,7 @@ def main():
                             f_indx = 0
                             fountain_blk_count += 1
                             pktno += 500 - max_redundancy
-                            print "skipped pktno=", pktno
+                            #print "skipped pktno=", pktno
                         if options.verbose:
                             print "med spectrum sending redundany: ", fountain_blk_count, f_indx,pktno 
                             sys.stderr.write('.')
@@ -620,7 +622,8 @@ def main():
 
             else:
                 if(first_run == False):
-                    print "sending waste second round, med, trans_count, sense_result", pktno, transmit_count, sense_result
+                    if options.verbose:
+                        print "sending waste second round, med, trans_count, sense_result", pktno, transmit_count, sense_result
                 tb.const_source_x_00.set_amplitude(0)
                 payload0 = struct.pack('!H', pktno & 0xffff) + data_waste
                 send_pkt0(payload0)	     	
@@ -644,7 +647,7 @@ def main():
                             pass
                         else: # End of file
                             first_run = False
-                            print "first round done, fountain blk count: ", fountain_blk_count
+                            #print "first round done, fountain blk count: ", fountain_blk_count
                             #fountain_blk_count = 0
                             #pktno = 0# continue to increase the pktno
                     else:
@@ -675,7 +678,7 @@ def main():
                             f_indx = 0
                             fountain_blk_count += 1
                             pktno += 500 - max_redundancy
-                            print "skipped pktno=", pktno
+                            #print "skipped pktno=", pktno
                         if options.verbose:
                             print "right ispectrum sending redundany: ", fountain_blk_count, f_indx, pktno
                             sys.stderr.write('.')
