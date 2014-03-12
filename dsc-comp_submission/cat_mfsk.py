@@ -109,7 +109,7 @@ class gmsk_cats_mod(gr.hier_block2):
 
         self.sqwave = (1,) * samples_per_symbol       # rectangular window
         self.taps = numpy.convolve(numpy.array(self.gaussian_taps),numpy.array(self.sqwave))
-        #self.taps = [1,1]
+        self.taps = [1,1]
         self.gaussian_filter = gr.interp_fir_filter_fff(samples_per_symbol, self.taps)
 
         # FM modulation
@@ -235,7 +235,7 @@ class gmsk_cats_demod(gr.hier_block2):
         if not self._gain_mu:
             self._gain_mu = 0.175
             
-        self._gain_omega = .25 * self._gain_mu * self._gain_mu        # critically damped
+        self._gain_omega = .25 * self._gain_mu * self._gain_mu    # critically damped
 
         # Demodulate FM
         sensitivity = (pi) / samples_per_symbol
@@ -269,6 +269,10 @@ class gmsk_cats_demod(gr.hier_block2):
         self.slicer.set_mfsk(m)
         self.clock_recovery.set_mfsk(m)
         self.fmdemod.set_gain(1.0/(2*pi/_def_samples_per_symbol/m))
+        #if m==2:
+        #    self._gain_mu = 0.05
+        #else:
+        #    self._gain_mu = 0.004
 
     def samples_per_symbol(self):
         return self._samples_per_symbol
