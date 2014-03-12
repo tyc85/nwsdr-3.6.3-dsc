@@ -156,15 +156,18 @@ def main():
     pkt_size = int(options.size)
     serve = dsc_pkt_src("127.0.0.1")
     totaldata = []
+    
+    first_run = True
+    #### fountian code data and parameters
     fountain_count = 0
     fountain_blk_count = 0
     fountain_redudancy = []
-    first_run = True
     fountain_pkt_tot = 500
     msg_length = 1440
     pkt_length = 1444
     coded_pkt = chr(0)*fountain_pkt_tot*2*pkt_length
     coded_pkt_len = len(coded_pkt)
+    #### fountian code data and parameters
 
     while True:
         if first_run:
