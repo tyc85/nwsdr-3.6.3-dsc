@@ -64,7 +64,7 @@ class sensing_path(gr.hier_block2):
         self.fft_size = FFT_SIZE
 
 	self._thr_sense=options.thr_sense
-	print self._thr_sense
+	#print self._thr_sense
 
         # interpolation rate: sensing fft size / ofdm fft size
         self.interp_rate = self.fft_size/FFT_SIZE #options.fft_length
@@ -119,7 +119,7 @@ class sensing_path(gr.hier_block2):
         psd[0:self.fft_size/2] = psd_temp[self.fft_size/2:self.fft_size]
 
         
-        print psd
+        #print psd
         return psd
 
     def GetPSD(self):
@@ -235,9 +235,9 @@ class sensing_path(gr.hier_block2):
     	temp_result_3=sum(psd[round(9*FFT_SIZE/12,0):round(11*FFT_SIZE/12,0)])/(round(11*FFT_SIZE/12,0)-round(9*FFT_SIZE/12,0))
     	#temp_result_2=sum(psd[round(FFT_SIZE/3,0):round(2*FFT_SIZE/3,0)])/(round(2*FFT_SIZE/3,0) - (round(FFT_SIZE/3,0)))
     	#temp_result_3=sum(psd[round(2*FFT_SIZE/3,0):round(FFT_SIZE,0)])/(round(FFT_SIZE,0) -  (round(2*FFT_SIZE/3,0)))
-    	print temp_result_1
-    	print temp_result_2
-    	print temp_result_3
+    	#print temp_result_1
+    	#print temp_result_2
+    	#print temp_result_3
     	
     	
     	temp_result=[temp_result_1, temp_result_2, temp_result_3];
