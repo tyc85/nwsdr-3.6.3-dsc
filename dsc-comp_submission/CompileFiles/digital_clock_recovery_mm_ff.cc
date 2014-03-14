@@ -140,8 +140,8 @@ if (mfsk==2){
 
     d_omega = d_omega + d_gain_omega * mm_val;
     d_omega = d_omega_mid + gr_branchless_clip(d_omega-d_omega_mid, d_omega_relative_limit);   // make sure we don't walk away
-    d_mu = d_mu + d_omega + d_gain_mu * mm_val;
-
+    // d_mu = d_mu + d_omega + d_gain_mu * mm_val;
+    d_mu = d_mu + d_omega + 0.05 * mm_val; // GUO
     ii += (int) floor(d_mu);
     d_mu = d_mu - floor(d_mu);
     oo++;
@@ -161,7 +161,8 @@ if (mfsk==2){
 
     d_omega = d_omega + d_gain_omega * mm_val;
     d_omega = d_omega_mid + gr_branchless_clip(d_omega-d_omega_mid, d_omega_relative_limit);   // make sure we don't walk away
-    d_mu = d_mu + d_omega + d_gain_mu * 0.05 * mm_val;
+	//    d_mu = d_mu + d_omega + d_gain_mu * mm_val;
+    d_mu = d_mu + d_omega + 0.004 * mm_val;
 
 	//d_mu = 2.0; // DG, NEED TO REMOVE THIS LATER
     ii += (int) floor(d_mu);

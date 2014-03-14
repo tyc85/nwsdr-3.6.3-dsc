@@ -27,7 +27,7 @@
 #include <gr_bytes_to_syms.h>
 #include <gr_io_signature.h>
 #include <assert.h>
-#include <iostream>
+//#include <iostream>
 
 static const int BITS_PER_BYTE = 8;
 static const int FSK4_PER_BYTE = 4; // DG
